@@ -1,4 +1,4 @@
-// src/services/authService.ts
+
 import { AppDispatch } from "@/redux/store";
 import { apiConnector } from "./apiConnector";
 import { endpoints } from "./apis";
@@ -6,7 +6,7 @@ import { setToken } from "@/redux/authSlice";
 import { setUser } from "@/redux/profileSlice";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
-import { AppRouterInstance } from "next/navigation";
+
 const { LOGIN_API, SIGNUP_API ,USER_LIST_API} = endpoints;
 
 
@@ -20,69 +20,6 @@ interface SignupParams {
   password: string;
   router: any;
 }
-
-// export const signup = ({
-
-
-
-
-//   name,
-//   username,
-//   mobileNo,
-//   roleId,
-//   email,
-//   password,
-//   router,
-// }: SignupParams) => {
-//   return async (dispatch: AppDispatch) => {
-//     const toastId = toast.loading("Registering...");
-
-//     try {
-//       // ✅ Fetch and clean the token from localStorage
-//       const rawToken = localStorage.getItem("token");
-//       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
-
-//       // ✅ Call the signup API with token in Authorization header
-//       const res = await apiConnector<any>(
-//         "POST",
-//         SIGNUP_API,
-//         {
-//           name,
-//           username,
-//           phone_number: mobileNo,
-//           role_id: roleId,
-//           email,
-//           password,
-//           is_active: true,
-//         },
-//         {
-//           // Authorization: `Bearer ${token}`,
-//           "Content-Type": "application/json",
-//         }
-//       );
-
-//       // ✅ Check for success
-//       if (!res.data.success) {
-//         throw new Error(res.data.message || "Registration failed.");
-//       }
-
-//       toast.success("Registration successful!");
-//       router.push("/");
-
-//     } catch (err) {
-//       const error = err as AxiosError;
-//       toast.error(
-//         error.response?.data?.message || error.message || "Signup failed."
-//       );
-//     } finally {
-//       toast.dismiss(toastId);
-//     }
-//   };
-// };
-
-
-
-
 export const signup = ({
   name,
   username,
