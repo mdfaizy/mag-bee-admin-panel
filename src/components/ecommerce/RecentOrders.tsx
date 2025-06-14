@@ -2,7 +2,7 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHeader,
+    TableHead,
   TableRow,
 } from "../ui/table";
 import Badge from "../ui/badge/Badge";
@@ -126,7 +126,7 @@ export default function RecentOrders() {
       <div className="max-w-full overflow-x-auto">
         <Table>
           {/* Table Header */}
-          <TableHeader className="border-gray-100 dark:border-gray-800 border-y">
+          <TableHead className="border-gray-100 dark:border-gray-800 border-y">
             <TableRow>
               <TableCell
                 isHeader
@@ -153,7 +153,7 @@ export default function RecentOrders() {
                 Status
               </TableCell>
             </TableRow>
-          </TableHeader>
+          </TableHead>
 
           {/* Table Body */}
 

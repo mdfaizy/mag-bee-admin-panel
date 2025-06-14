@@ -17,7 +17,8 @@ import {
   TableIcon,
   UserCircleIcon,
 } from "../icons/index";
-import SidebarWidget from "./SidebarWidget";
+import { FaShoppingCart } from "react-icons/fa";
+
 
 type NavItem = {
   name: string;
@@ -32,6 +33,19 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
+  {
+  name: "Ecommerce",
+  icon: <FaShoppingCart />,
+  subItems: [
+    { name: "Add Category", path: "/product-category", pro: false },
+    { name: "View Category", path: "/add-category", pro: false },
+    
+    { name: "Add Product", path: "/add-new-product", pro: false },
+
+  ],
+},
+
+
   {
     icon: <CalenderIcon />,
     name: "Calendar",
@@ -51,7 +65,10 @@ const navItems: NavItem[] = [
   {
     name: "Tables",
     icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false },
+       { name: "Product Category Table Table", path: "/product-category-table", pro: false },
+       { name: "User Table", path: "/user-table", pro: false },
+    ],
   },
   {
     name: "Pages",
@@ -90,6 +107,9 @@ const othersItems: NavItem[] = [
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
       { name: "Sign Up", path: "/signup", pro: false },
+       { name: "Role Ctreate", path: "/rol-", pro: false },
+       { name: "Assign Privelegee", path: "/assign-privelegee", pro: false },
+
     ],
   },
 ];
@@ -374,7 +394,7 @@ const AppSidebar: React.FC = () => {
             </div>
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
+        {isExpanded || isHovered || isMobileOpen ? '': null}
       </div>
     </aside>
   );

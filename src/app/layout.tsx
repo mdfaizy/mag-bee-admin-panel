@@ -1,8 +1,9 @@
 import { Outfit } from 'next/font/google';
 import './globals.css';
-
+import { ToastContainer } from 'react-toastify';
 import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
+import { ReduxProvider } from '@/redux/ReduxProvider';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -16,9 +17,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.className} dark:bg-gray-900`}>
+        <ReduxProvider>
+
+      
         <ThemeProvider>
           <SidebarProvider>{children}</SidebarProvider>
         </ThemeProvider>
+          </ReduxProvider>
+<ToastContainer />
       </body>
     </html>
   );

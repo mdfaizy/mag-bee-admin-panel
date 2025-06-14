@@ -3,7 +3,7 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHeader,
+    TableHead,
   TableRow,
 } from "../ui/table";
 
@@ -118,7 +118,7 @@ export default function BasicTableOne() {
         <div className="min-w-[1102px]">
           <Table>
             {/* Table Header */}
-            <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
+            <TableHead className="border-b border-gray-100 dark:border-white/[0.05]">
               <TableRow>
                 <TableCell
                   isHeader
@@ -151,7 +151,7 @@ export default function BasicTableOne() {
                   Budget
                 </TableCell>
               </TableRow>
-            </TableHeader>
+            </TableHead>
 
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">

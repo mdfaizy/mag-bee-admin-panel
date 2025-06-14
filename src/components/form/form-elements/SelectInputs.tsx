@@ -13,19 +13,19 @@ export default function SelectInputs() {
     { value: "development", label: "Development" },
   ];
 
-  const [selectedValues, setSelectedValues] = useState<string[]>([]);
+  // const [selectedValues, setSelectedValues] = useState<string[]>([]);
 
   const handleSelectChange = (value: string) => {
     console.log("Selected value:", value);
   };
 
-  const multiOptions = [
-    { value: "1", text: "Option 1", selected: false },
-    { value: "2", text: "Option 2", selected: false },
-    { value: "3", text: "Option 3", selected: false },
-    { value: "4", text: "Option 4", selected: false },
-    { value: "5", text: "Option 5", selected: false },
-  ];
+  // const multiOptions = [
+  //   { value: "1", text: "Option 1", selected: false },
+  //   { value: "2", text: "Option 2", selected: false },
+  //   { value: "3", text: "Option 3", selected: false },
+  //   { value: "4", text: "Option 4", selected: false },
+  //   { value: "5", text: "Option 5", selected: false },
+  // ];
 
   return (
     <ComponentCard title="Select Inputs">
@@ -44,7 +44,7 @@ export default function SelectInputs() {
             </span>
          </div>
         </div>
-        <div className="relative">
+        {/* <div className="relative">
           <MultiSelect
             label="Multiple Select Options"
             options={multiOptions}
@@ -54,7 +54,7 @@ export default function SelectInputs() {
           <p className="sr-only">
             Selected Values: {selectedValues.join(", ")}
           </p>
-        </div>
+        </div> */}
       </div>
     </ComponentCard>
   );
