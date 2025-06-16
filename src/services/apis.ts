@@ -13,3 +13,7 @@ export const endpointsCategory={
    CREATE_CATEGORY_API:`${BASE_URL}/products/category`,
    PRODUCT_CATEGORY_GET_ALL:`${BASE_URL}/products/category`
 }
+
+export const endpointsProduct={
+  PRODUCT_GELL_ALL:`${BASE_URL}/products/products`
+}

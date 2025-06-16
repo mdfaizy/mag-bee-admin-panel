@@ -60,13 +60,16 @@ const navItems: NavItem[] = [
   {
     name: "Forms",
     icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false },
+      // { name: "Add Prduct Category", path: "/product-category", pro: false }
+    ],
   },
   {
     name: "Tables",
     icon: <TableIcon />,
     subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false },
-       { name: "Product Category Table Table", path: "/product-category-table", pro: false },
+       { name: "Product Category Table", path: "/product-category-table", pro: false },
+       { name: "Product Table", path: "/product", pro: false },
        { name: "User Table", path: "/user-table", pro: false },
     ],
   },

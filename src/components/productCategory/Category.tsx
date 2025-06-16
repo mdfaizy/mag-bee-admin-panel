@@ -49,16 +49,8 @@ export default function CreateProductCategory() {
   };
 
   return (
-    <div className="flex flex-col flex-1 lg:w-11/12 w-full overflow-y-auto no-scrollbar mx-auto justify-center items-center">
-      <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-        >
-          <ChevronLeftIcon />
-          Back to dashboard
-        </Link>
-      </div>
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+      
 
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <h1 className="text-center font-semibold uppercase mb-6 text-lg">

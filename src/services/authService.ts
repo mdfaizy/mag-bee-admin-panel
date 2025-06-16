@@ -6,6 +6,7 @@ import { setToken } from "@/redux/authSlice";
 import { setUser } from "@/redux/profileSlice";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
+import { NavigateFunction } from "react-router-dom"; 
 
 const { LOGIN_API, SIGNUP_API ,USER_LIST_API} = endpoints;
 
@@ -118,6 +119,13 @@ export const login = ({ identifier, password, router }: LoginParams) => {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
+const updatedUser = { ...user, image: userImage };
+
+dispatch(setToken(token));
+dispatch(setUser(updatedUser));
+
+// Save updated user with image to localStorage
+localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Login successful!");
       router.push("/");
     } catch (err) {
@@ -136,4 +144,15 @@ export const fetchAllUsers = async () => {
     Authorization: `Bearer ${token}`,
   });
   return res.data;
+};
+
+
+
+export const logout = () => (dispatch: AppDispatch) => {
+  dispatch(setToken(null));
+  dispatch(setUser(null));
+
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+  toast.success("Logged Out");
 };

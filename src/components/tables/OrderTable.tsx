@@ -65,17 +65,6 @@ useEffect(() => {
 </TableHead>
 
           <TableBody className="divide-y divide-gray-200 dark:divide-white/[0.05]">
-          {/* {visibleData.map((item) => (
-  <TableRow key={item.id}>
-    <TableCell>{item.id}</TableCell>
-    <TableCell>{item.name}</TableCell>
-    <TableCell>{item.description}</TableCell>
-    <TableCell>{new Date(item.createdAt).toLocaleString()}</TableCell>
-    <TableCell>{new Date(item.updatedAt).toLocaleString()}</TableCell>
-    <TableCell className="text-blue-600 hover:underline cursor-pointer">Edit</TableCell>
-  </TableRow>
-))} */}
-
 {Array.isArray(visibleData) && visibleData.map((item) => (
   <TableRow key={item.id}>
     <TableCell>{item.id}</TableCell>

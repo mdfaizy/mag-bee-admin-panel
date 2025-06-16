@@ -1,14 +1,15 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import ProductCategorttable from "../../../../../components/tables/OrderTable";
-import React from "react";
+// import Pro from "@/components/tables/ProductCategoryTable";
+// import React from "react";
+import ProductTable from "@/components/tables/Product";
 export default function ProductCategortTable() {
   return (
     <div>
       <PageBreadcrumb pageTitle="" />
       <div className="space-y-6">
         <ComponentCard title="Categotry">
-          <ProductCategorttable/>
+          <ProductTable/>
         </ComponentCard>
       </div>
     </div>
