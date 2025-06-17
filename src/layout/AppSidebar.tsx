@@ -62,6 +62,8 @@ const navItems: NavItem[] = [
     icon: <ListIcon />,
     subItems: [{ name: "Form Elements", path: "/form-elements", pro: false },
       // { name: "Add Prduct Category", path: "/product-category", pro: false }
+      { name: "Role Ctreate", path: "/created-role", pro: false },
+       { name: "Assign Privelege", path: "/assign-privelege", pro: false },
     ],
   },
   {

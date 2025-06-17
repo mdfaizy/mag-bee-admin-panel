@@ -6,14 +6,15 @@ import { toast } from "react-toastify";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
-import { createCategory } from "../../services/product-category/categoryService";
 
-export default function CreateProductCategory() {
+
+
+export default function RoleCreate() {
   const dispatch = useDispatch();
   const router = useRouter();
 
   const [form, setForm] = useState({
-    categoryName: "",
+    Name: "",
     description: "",
   });
 
@@ -29,20 +30,20 @@ export default function CreateProductCategory() {
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { categoryName, description } = form;
+    const { Name, description } = form;
 
-    if (!categoryName || !description) {
+    if (!Name || !description) {
       toast.error("Please fill all required fields.");
       return;
     }
 
-    dispatch(
-      createCategory({
-        categoryName,
-        description,
-        router,
-      }) as any
-    );
+//     dispatch(
+//       createCategory({
+//         // Name,
+//         description,
+//         router,
+//       }) as any
+//     );
   };
 
   return (
@@ -58,14 +59,15 @@ export default function CreateProductCategory() {
           <div className="space-y-5">
             <div>
               <Label>
-                Product Category Name <span className="text-error-500">*</span>
+                Role Name <span className="text-error-500">*</span>
               </Label>
               <Input
                 type="text"
                 name="categoryName"
-                placeholder="Enter your category name"
-                value={form.categoryName}
+                placeholder="Enter Role name"
+                value={form.Name}
                 onChange={handleChange}
+                className="text-uppercase"
               />
             </div>
 
@@ -86,7 +88,7 @@ export default function CreateProductCategory() {
                 type="submit"
                 className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
               >
-                Create Category
+                Create Role
               </button>
             </div>
           </div>

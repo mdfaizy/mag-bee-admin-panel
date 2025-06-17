@@ -1,26 +1,16 @@
 "use client";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
-// import { ChevronLeftIcon } from "@/icons";
-// import Link from "next/link";
+
 import React, { } from "react";
-// import DropzoneComponent from "../form/form-elements/DropZone";
+
 import TextArea from "../form/input/TextArea";
-// import SelectInputs from "../form/form-elements/SelectInputs";
-// import React from "react";
-// import CheckboxComponents from "@/components/form/form-elements/CheckboxComponents";
-// import DefaultInputs from "@/components/form/form-elements/DefaultInputs";
+
 import DropzoneComponent from "@/components/form/form-elements/DropZone";
-// import FileInputExample from "@/components/form/form-elements/FileInputExample";
-// import InputGroup from "@/components/form/form-elements/InputGroup";
-// import InputStates from "@/components/form/form-elements/InputStates";
-// import RadioButtons from "@/components/form/form-elements/RadioButtons";
-// import SelectInputs from "@/components/form/form-elements/SelectInputs";
-// import TextAreaInput from "@/components/form/form-elements/TextAreaInput";
-// import ToggleSwitch from "@/components/form/form-elements/ToggleSwitch";
+
 import ChipInput from "../form/input/ChipInput";
 import Select from "../form/Select";
-// import Select from "../form/Select";
+
 import { ChevronDownIcon } from "@/icons";
 
 export default function AddNewProduct() {
