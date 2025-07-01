@@ -10,7 +10,7 @@ export default function RoleForm() {
     <div>
       <PageBreadcrumb pageTitle="Create Role" />
       <div className="space-y-6">
-        < RoleCreate/>
+        <RoleCreate/>
       </div>
 
       

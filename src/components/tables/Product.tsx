@@ -26,6 +26,7 @@ interface Product {
   originalPrice: string;
   price: string;
   offer: number;
+  imageUrl:string;
   updatedAt: string;
   createdAt: string;
   category: Category | null;
@@ -70,6 +71,7 @@ export default function ProductTable() {
               <TableHeadCell>Original Price</TableHeadCell>
               <TableHeadCell>Offer (%)</TableHeadCell>
               <TableHeadCell>Category</TableHeadCell>
+               <TableHeadCell>Image</TableHeadCell>
               <TableHeadCell>Created At</TableHeadCell>
               <TableHeadCell>Updated At</TableHeadCell>
               <TableHeadCell>Actions</TableHeadCell>
@@ -85,6 +87,17 @@ export default function ProductTable() {
                 <TableCell>₹{product.originalPrice}</TableCell>
                 <TableCell>{product.offer}%</TableCell>
                 <TableCell>{product.category?.name || "—"}</TableCell>
+                 <TableCell>
+                  {product.imageUrl ? (
+                    <img
+                      src={product.imageUrl}
+                      alt="Product"
+                      className="w-16 h-auto object-cover rounded" // Tailwind for small image
+                    />
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
                 <TableCell>
                   {new Date(product.createdAt).toLocaleString()}
                 </TableCell>

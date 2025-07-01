@@ -13,33 +13,46 @@ export default function CreateProductCategory() {
   const router = useRouter();
 
   const [form, setForm] = useState({
-    categoryName: "",
+    name: "",
     description: "",
+    image: null as File | null,
   });
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const { name, value, files } = e.target as any;
+
+    if (name === "image") {
+      setForm((prev) => ({
+        ...prev,
+        image: files[0],
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { categoryName, description } = form;
+    const { name, description, image } = form;
 
-    if (!categoryName || !description) {
-      toast.error("Please fill all required fields.");
+    if (!name || !description || !image) {
+      toast.error("Please fill all required fields and upload an image.");
       return;
     }
 
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("description", description);
+    formData.append("imageUrl", image);
+
     dispatch(
       createCategory({
-        categoryName,
-        description,
+        formData,
         router,
       }) as any
     );
@@ -47,9 +60,7 @@ export default function CreateProductCategory() {
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      
-
-      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto mt-8 mb-8">
         <h1 className="text-center font-semibold uppercase mb-6 text-lg">
           Create Product Category
         </h1>
@@ -58,15 +69,14 @@ export default function CreateProductCategory() {
           <div className="space-y-5">
             <div>
               <Label>
-                Product Category Name <span className="text-error-500">*</span>
+                Category Name <span className="text-error-500">*</span>
               </Label>
               <Input
-                type="text"
-                name="categoryName"
-                placeholder="Enter your category name"
-                value={form.categoryName}
-                onChange={handleChange}
-              />
+  type="text"
+  name="name" 
+  value={form.name}
+  onChange={handleChange}
+/>
             </div>
 
             <div>
@@ -82,9 +92,20 @@ export default function CreateProductCategory() {
             </div>
 
             <div>
+              <Label>
+                Category Image <span className="text-error-500">*</span>
+              </Label>
+              <Input
+                type="file"
+                name="image"
+                onChange={handleChange}
+              />
+            </div>
+
+            <div>
               <button
                 type="submit"
-                className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600"
+                className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 mb-8"
               >
                 Create Category
               </button>

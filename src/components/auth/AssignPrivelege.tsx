@@ -83,7 +83,7 @@ export default function AssignPrivelege() {
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto mt-8 mb-8">
         <h1 className="text-center font-semibold uppercase mb-6 text-lg">
         Assign Privillage
         </h1>

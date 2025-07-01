@@ -156,3 +156,54 @@ export const logout = () => (dispatch: AppDispatch) => {
   localStorage.removeItem("user");
   toast.success("Logged Out");
 };
+
+
+interface CreateRoleParams {
+  name: string;
+  description: string;
+  router: any;
+}
+
+const CREATE_ROLE_API = "/api/roles"; // ⬅️ Your backend route here
+
+export const createRole = ({ name, description, router }: CreateRoleParams) => {
+  return async (dispatch: AppDispatch) => {
+    const toastId = toast.loading("Creating role...");
+
+    try {
+      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+
+      const permissions = JSON.parse(localStorage.getItem("user") || "{}")?.permissions || [];
+
+      if (!permissions.includes("CREATE_ROLE")) {
+        toast.error("You do not have permission to create roles.");
+        return;
+      }
+
+      const res = await apiConnector(
+        "POST",
+        CREATE_ROLE_API,
+        {
+          name,
+          description,
+        },
+        {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        }
+      );
+
+      if (!res.data.message?.toLowerCase().includes("created")) {
+        throw new Error(res.data.message || "Role creation failed.");
+      }
+
+      toast.success("Role created successfully!");
+      router.push("/admin/roles");
+    } catch (err) {
+      const error = err as AxiosError;
+      toast.error(error.response?.data?.message || error.message || "Something went wrong");
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
+};

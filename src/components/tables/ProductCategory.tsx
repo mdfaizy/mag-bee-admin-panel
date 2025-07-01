@@ -15,6 +15,7 @@ interface ProductCategory {
   id: number;
   name: string;
   description: string;
+  imageUrl:string;
   createdAt: string;
   updatedAt: string;
 }
@@ -58,6 +59,7 @@ useEffect(() => {
     <TableHeadCell>ID</TableHeadCell>
     <TableHeadCell>Name</TableHeadCell>
     <TableHeadCell>Description</TableHeadCell>
+    <TableHeadCell>Image</TableHeadCell>
     <TableHeadCell>Created At</TableHeadCell>
     <TableHeadCell>Updated At</TableHeadCell>
     <TableHeadCell>Actions</TableHeadCell>
@@ -70,6 +72,20 @@ useEffect(() => {
     <TableCell>{item.id}</TableCell>
     <TableCell>{item.name || "—"}</TableCell>
     <TableCell>{item.description || "—"}</TableCell>
+    {/* <TableCell>{item.imageUrl || "—"}</TableCell> */}
+
+    <TableCell>
+  {item.imageUrl ? (
+    <img
+      src={item.imageUrl}
+      alt="Product"
+      className="w-16 h-auto object-cover rounded" // Tailwind for small image
+    />
+  ) : (
+    "—"
+  )}
+</TableCell>
+
     <TableCell>{new Date(item.createdAt).toLocaleString()}</TableCell>
     <TableCell>{new Date(item.updatedAt).toLocaleString()}</TableCell>
     <TableCell className="text-blue-600 hover:underline cursor-pointer">

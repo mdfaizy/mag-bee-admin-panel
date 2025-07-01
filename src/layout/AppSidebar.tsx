@@ -37,10 +37,11 @@ const navItems: NavItem[] = [
   name: "Ecommerce",
   icon: <FaShoppingCart />,
   subItems: [
-    { name: "Add Category", path: "/product-category", pro: false },
-    { name: "View Category", path: "/add-category", pro: false },
-    
-    { name: "Add Product", path: "/add-new-product", pro: false },
+    { name: "Add Category", path: "/category", pro: false },
+    { name: "Product Category List", path: "/product-category-table", pro: false },
+    { name: "Add Products", path: "/add-new-product", pro: false },
+    { name: "Products List", path: "/product", pro: false },
+
 
   ],
 },
@@ -70,9 +71,9 @@ const navItems: NavItem[] = [
     name: "Tables",
     icon: <TableIcon />,
     subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false },
-       { name: "Product Category Table", path: "/product-category-table", pro: false },
-       { name: "Product Table", path: "/product", pro: false },
-       { name: "User Table", path: "/user-table", pro: false },
+       
+       
+       { name: "User List", path: "/user-table", pro: false },
     ],
   },
   {
@@ -112,8 +113,8 @@ const othersItems: NavItem[] = [
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
       { name: "Sign Up", path: "/signup", pro: false },
-       { name: "Role Ctreate", path: "/rol-", pro: false },
-       { name: "Assign Privelegee", path: "/assign-privelegee", pro: false },
+         { name: "Role Ctreate", path: "/created-role", pro: false },
+       { name: "Assign Privelege", path: "/assign-privelege", pro: false },
 
     ],
   },

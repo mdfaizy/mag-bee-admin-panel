@@ -9,16 +9,11 @@ import { AxiosError } from "axios";
 const { CREATE_CATEGORY_API ,PRODUCT_CATEGORY_GET_ALL} = endpointsCategory;
 
 interface CreateCategoryParams {
-  categoryName: string;
-  description: string;
+  formData: FormData;
   router: any;
 }
 
-export const createCategory = ({
-  categoryName,
-  description,
-  router,
-}: CreateCategoryParams) => {
+export const createCategory = ({ formData, router }: CreateCategoryParams) => {
   return async (dispatch: AppDispatch) => {
     const toastId = toast.loading("Creating Category...");
 
@@ -29,28 +24,21 @@ export const createCategory = ({
       const res = await apiConnector<any>(
         "POST",
         CREATE_CATEGORY_API,
-        {
-          name: categoryName,
-          description,
-        },
+        formData,
         {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         }
       );
 
-      // ✅ Category created: update Redux store
+      // ✅ Update Redux store with the newly created category
       dispatch(setCategories([res.data]));
-
       toast.success("Product category created successfully!");
-      router.push("/product-category");
-
+      router.push("/");
     } catch (err) {
       const error = err as AxiosError;
       const errMessage =
         (error.response?.data as any)?.message || error.message || "Category creation failed.";
 
-      // ✅ Handle duplicate category error
       if (errMessage === "Category already exists") {
         toast.error("Category already exists. Please use a different name.");
       } else {
