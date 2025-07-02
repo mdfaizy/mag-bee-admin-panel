@@ -8,6 +8,9 @@ import {
   TableHeadCell,
   TableCell,
 } from "../ui/table";
+import { TiEye } from "react-icons/ti";
+import { FaRegEdit } from "react-icons/fa";
+import { RiDeleteBin2Line } from "react-icons/ri";
 import Pagination from "./Pagination";
 import { fetchProductAll } from "../../services/product/productService";
 
@@ -104,8 +107,10 @@ export default function ProductTable() {
                 <TableCell>
                   {new Date(product.updatedAt).toLocaleString()}
                 </TableCell>
-                <TableCell className="text-blue-600 hover:underline cursor-pointer">
-                  Edit
+                <TableCell className="text-blue-600 hover:underline cursor-pointer flex gap-3">
+                <TiEye/>
+                <FaRegEdit/>
+                <RiDeleteBin2Line/>
                 </TableCell>
               </TableRow>
             ))}

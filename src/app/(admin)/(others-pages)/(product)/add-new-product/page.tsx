@@ -7,7 +7,7 @@ import React from "react";
 export default function ProductForm() {
   return (
     <div>
-      <PageBreadcrumb pageTitle="Product Category" />
+      <PageBreadcrumb pageTitle="Add Product" />
       <div className="space-y-6">
         <AddNewProduct />
       </div>

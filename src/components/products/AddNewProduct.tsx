@@ -1,10 +1,10 @@
 "use client";
 import FileInput from "../form/input/FileInput";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect ,ChangeEvent} from "react";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
-import ChipInput from "../form/input/ChipInput";
+// import ChipInput from "../form/input/ChipInput";
 import Select from "../form/Select";
 import { ChevronDownIcon } from "@/icons";
 export default function AddNewProduct() {
@@ -19,14 +19,47 @@ export default function AddNewProduct() {
     originalPrice: "",
     offerPercentage: "",
     quantity: "",
-    keywords: [] as string[],
+    image: null as File | null,
+    // keywords: [] as string[],
   });
 
   // 🔁 Common input change handler
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  //   const { name, value } = e.target;
+  //   setFormData((prev) => ({ ...prev, [name]: value }));
+  // };
+
+  // const handleChange = (
+  //     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  //   ) => {
+  //     const { name, value, files } = e.target as any;
+  
+  //     if (name === "image") {
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         image: files[0],
+  //       }));
+  //     } else {
+  //       setFormData((prev) => ({
+  //         ...prev,
+  //         [name]: value,
+  //       }));
+  //     }
+  //   };
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const { name, value, files } = e.target as HTMLInputElement;
+
+  if (name === "image" && files && files.length > 0) {
+    setSelectedFile(files[0]);
+  } else {
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+};
+
 
   const handleRoleChange = (value: string) => {
     setFormData((prev) => ({ ...prev, categoryId: value }));
@@ -57,46 +90,62 @@ export default function AddNewProduct() {
     fetchRoles();
   }, []);
 
-  //Form submit handler
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
 
-    if (!selectedFile) {
-      alert("Please upload an image.");
-      return;
-    }
 
-    const submissionData = new FormData();
-    submissionData.append("name", formData.name);
-    submissionData.append("description", formData.description);
-    submissionData.append("categoryId", formData.categoryId);
-    submissionData.append("price", formData.price);
-    submissionData.append("originalPrice", formData.originalPrice);
-    submissionData.append("offerPercentage", formData.offerPercentage);
-    submissionData.append("quantity", formData.quantity);
-    submissionData.append("keywords", JSON.stringify(formData.keywords)); 
-    submissionData.append("image", selectedFile); 
 
-    try {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-      const response = await fetch("http://localhost:8000/api/products/product", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: submissionData,
-      });
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-      if (response.ok) {
-        alert("Product added successfully!");
-      } else {
-        console.error("Failed to submit:", await response.text());
-        alert("Submission failed.");
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    }
+  if (!selectedFile) {
+    alert("Please upload an image.");
+    return;
+  }
+
+  const safeNumber = (val: string) => {
+    const num = Number(val);
+    return isNaN(num) ? 0 : num;
   };
+
+  const submissionData = new FormData();
+  submissionData.append("name", formData.name);
+  submissionData.append("description", formData.description);
+  submissionData.append("categoryId", formData.categoryId);
+  submissionData.append("originalPrice", String(safeNumber(formData.originalPrice)));
+  submissionData.append("price", String(safeNumber(formData.price)));
+  submissionData.append("offer", String(safeNumber(formData.offerPercentage))); 
+  submissionData.append("quantity", String(safeNumber(formData.quantity)));
+  submissionData.append("keywords", JSON.stringify(formData.keywords));
+  submissionData.append("imageUrl", selectedFile);
+
+  // Debug payload
+  for (const [key, val] of submissionData.entries()) {
+    console.log(`${key}: ${val}`);
+  }
+
+  try {
+    const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+    const response = await fetch("http://localhost:8000/api/products/product", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: submissionData,
+    });
+
+    const result = await response.text();
+
+    if (response.ok) {
+      alert("Product added successfully!");
+    } else {
+      console.error("Failed to submit:", result);
+      alert("Submission failed.");
+    }
+  } catch (error) {
+    console.error("Error submitting form:", error);
+  }
+};
+
+
 
   return (
     <div className="flex flex-col flex-1 lg:w-11/12 w-full mx-auto items-center">
@@ -167,18 +216,21 @@ export default function AddNewProduct() {
                   onChange={handleChange}
                 />
               </div>
-              <ChipInput
+              {/* <ChipInput
                 id="keywords"
                 label="Keywords"
                 placeholder="e.g. red, cotton, summer"
                 onChange={(chips) =>
                   setFormData((prev) => ({ ...prev, keywords: chips }))
                 }
-              />
-              <div>
-                                       <h1 className="text-xl font-bold mb-4">Upload Your Image</h1>                                         {/* <DropzoneComponent /> */}
-                                         <FileInput />
-                                    </div>
+              /> */}
+             <input
+  type="file"
+  name="image"
+  accept="image/*"
+  onChange={handleChange}
+/>
+
             </div>
           </div>
 
