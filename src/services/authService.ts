@@ -164,7 +164,7 @@ interface CreateRoleParams {
   router: any;
 }
 
-const CREATE_ROLE_API = "/api/roles"; // ⬅️ Your backend route here
+const CREATE_ROLE_API = "http://localhost:8000/api/roles"; // ⬅️ Your backend route here
 
 export const createRole = ({ name, description, router }: CreateRoleParams) => {
   return async (dispatch: AppDispatch) => {

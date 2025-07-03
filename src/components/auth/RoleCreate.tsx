@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
-
+import { createRole } from "@/services/authService";
 
 
 export default function RoleCreate() {
@@ -14,7 +14,7 @@ export default function RoleCreate() {
   const router = useRouter();
 
   const [form, setForm] = useState({
-    Name: "",
+    name: "",
     description: "",
   });
 
@@ -30,16 +30,16 @@ export default function RoleCreate() {
 
 const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
   e.preventDefault();
-  const { Name, description } = form;
+  const { name, description } = form;
 
-  if (!Name || !description) {
+  if (!name || !description) {
     toast.error("Please fill all required fields.");
     return;
   }
 
   dispatch(
     createRole({
-      name: Name,
+      name: name,
       description,
       router,
     }) as any
@@ -58,7 +58,7 @@ const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-5">
-            <div>
+            {/* <div>
               <Label>
                 Role Name <span className="text-error-500">*</span>
               </Label>
@@ -71,6 +71,18 @@ const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
                 className="text-uppercase"
               />
             </div>
+            
+            */}
+            <div>
+                  <Label>Name<span className="text-error-500">*</span></Label>
+                  <Input
+                    type="text"
+                    name="name"
+                    placeholder="Enter your name"
+                    value={form.name}
+                    onChange={handleChange}
+                  />
+                </div>
 
             <div>
               <Label>

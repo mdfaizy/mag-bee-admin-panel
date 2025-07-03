@@ -9,7 +9,9 @@ import {
   TableCell,
 } from "../ui/table";
 import Pagination from "./Pagination";
-import { fetchProductCategory } from "../../services/product-category/categoryService";
+import { fetchProductCategory ,deleteCategory} from "../../services/product-category/categoryService";
+import { useDispatch } from "react-redux";
+
 
 interface ProductCategory {
   id: number;
@@ -25,7 +27,7 @@ export default function ProductCategorttable() {
   const [currentPage, setCurrentPage] = useState(1);
   const [tableData, setTableData] = useState<ProductCategory[]>([]);
   const [loading, setLoading] = useState(true);
-
+const dispatch = useDispatch();
 
 useEffect(() => {
   const getData = async () => {
@@ -49,6 +51,12 @@ useEffect(() => {
   const visibleData = tableData.slice(startIndex, startIndex + itemsPerPage);
 
   if (loading) return <div className="p-4">Loading...</div>;
+
+  const handleDelete = async (id: number) => {
+  if (!confirm("Are you sure you want to delete this category?")) return;
+
+  dispatch<any>(deleteCategory(id));
+};
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
@@ -88,7 +96,13 @@ useEffect(() => {
 
     <TableCell>{new Date(item.createdAt).toLocaleString()}</TableCell>
     <TableCell>{new Date(item.updatedAt).toLocaleString()}</TableCell>
-    <TableCell className="text-blue-600 hover:underline cursor-pointer">
+    <TableCell className="text-blue-600 hover:underline cursor-pointer flex gap-3">
+        <button
+    onClick={() => handleDelete(item.id)}
+    className="text-red-600 hover:underline"
+  >
+    Delete
+  </button>
       Edit
     </TableCell>
   </TableRow>
