@@ -146,6 +146,25 @@ export const fetchAllUsers = async () => {
   return res.data;
 };
 
+// import { apiConnector } from "../apiConnector"; // your helper
+
+// export const fetchAllUsers = () => {
+//   return apiConnector("GET", "http://localhost:8000/api/auth/users");
+// };
+
+export async function toggleUserStatus(id: number) {
+  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
+  
+  return await apiConnector(
+    "PATCH", // assuming your backend route is PATCH for toggle
+    `http://localhost:8000/api/users/${id}/toggle`,
+    null,
+    {
+      Authorization: `Bearer ${token}`,
+    }
+  );
+}
+
 
 
 export const logout = () => (dispatch: AppDispatch) => {

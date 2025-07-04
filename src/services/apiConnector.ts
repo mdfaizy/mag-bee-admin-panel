@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const apiConnector = async (
-  method: "GET" | "POST" | "PUT" | "DELETE",
+  method: "GET" | "POST" | "PUT" | "DELETE"|"PATCH",
   url: string,
   body?: any,
   headers?: any
