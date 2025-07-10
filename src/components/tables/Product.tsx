@@ -1,4 +1,6 @@
+
 "use client";
+
 import React, { useEffect, useState } from "react";
 import {
   Table,
@@ -8,38 +10,43 @@ import {
   TableHeadCell,
   TableCell,
 } from "../ui/table";
-import { TiEye } from "react-icons/ti";
-import { FaRegEdit } from "react-icons/fa";
-import { RiDeleteBin2Line } from "react-icons/ri";
 import Pagination from "./Pagination";
 import { fetchProductAll } from "../../services/product/productService";
-
-// Define interfaces
-interface Category {
-  id: number;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { useDispatch } from "react-redux";
+import { Modal } from "../ui/modal";
+import Input from "../form/input/InputField";
+import Label from "../form/Label";
+import Button from "../ui/button/Button";
 
 interface Product {
   id: number;
   name: string;
-  originalPrice: string;
-  price: string;
+  description: string;
+  price: number;
+  originalPrice: number;
   offer: number;
-  imageUrl:string;
-  updatedAt: string;
+  categoryName: string;
+  imageUrl: string;
   createdAt: string;
-  category: Category | null;
+  updatedAt: string;
 }
+
+// Helper to calculate price after discount
+const calculateFinalPrice = (originalPrice: number, offer: number): number => {
+  if (!originalPrice || !offer) return originalPrice || 0;
+  return parseFloat((originalPrice - (originalPrice * offer) / 100).toFixed(2));
+};
 
 export default function ProductTable() {
   const itemsPerPage = 10;
   const [currentPage, setCurrentPage] = useState(1);
   const [tableData, setTableData] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState<Product | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const getData = async () => {
@@ -56,6 +63,101 @@ export default function ProductTable() {
     getData();
   }, []);
 
+  const handleEdit = (product: Product) => {
+    setEditData(product);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!editData) return;
+    const { name, value } = e.target;
+
+    const parsedValue =
+      name === "price" || name === "originalPrice" || name === "offer"
+        ? parseFloat(value)
+        : value;
+
+    const updated = {
+      ...editData,
+      [name]: parsedValue,
+    };
+
+    // Update price if originalPrice or offer changes
+    if (name === "originalPrice" || name === "offer") {
+      updated.price = calculateFinalPrice(updated.originalPrice, updated.offer);
+    }
+
+    setEditData(updated);
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !editData) return;
+
+    setUploading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "ecommerce_uploads");
+      formData.append("folder", "products");
+
+      const res = await fetch("https://api.cloudinary.com/v1_1/dditvtnis/image/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Upload failed");
+
+      const data = await res.json();
+      setEditData({ ...editData, imageUrl: data.secure_url });
+    } catch (err) {
+      console.error("Image upload error:", err);
+      alert("Image upload failed. Try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editData) return;
+
+    try {
+      const rawToken = localStorage.getItem("token");
+      const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
+
+      const res = await fetch(`http://localhost:8000/api/products/products/${editData.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name: editData.name,
+          description: editData.description,
+          price: editData.price,
+          originalPrice: editData.originalPrice,
+          offer: editData.offer,
+          imageUrl: editData.imageUrl || null,
+        }),
+      });
+      const result = await res.json();
+      if (!res.ok) {
+        console.error("Backend error response:", result);
+        throw new Error(result.message || "Failed to update product");
+      }
+      alert("✅ Product updated successfully!");
+      const updated = tableData.map((item) =>
+        item.id === editData.id ? result.updatedProduct : item
+      );
+      setTableData(updated);
+      setIsEditModalOpen(false);
+    } catch (error: any) {
+      console.error("Update failed:", error);
+      alert(error.message || "Something went wrong while updating.");
+    }
+  };
+
   const totalPages = Math.ceil(tableData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const visibleData = tableData.slice(startIndex, startIndex + itemsPerPage);
@@ -63,67 +165,169 @@ export default function ProductTable() {
   if (loading) return <div className="p-4">Loading...</div>;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
-      <div className="w-full overflow-x-auto">
-        <Table className="divide-y divide-gray-200 dark:divide-white/[0.05] text-sm">
-          <TableHead className="bg-gray-100 dark:bg-white/[0.05]">
-            <TableRow>
-              <TableHeadCell>ID</TableHeadCell>
-              <TableHeadCell>Name</TableHeadCell>
-              <TableHeadCell>Price</TableHeadCell>
-              <TableHeadCell>Original Price</TableHeadCell>
-              <TableHeadCell>Offer (%)</TableHeadCell>
-              <TableHeadCell>Category</TableHeadCell>
-               <TableHeadCell>Image</TableHeadCell>
-              <TableHeadCell>Created At</TableHeadCell>
-              <TableHeadCell>Updated At</TableHeadCell>
-              <TableHeadCell>Actions</TableHeadCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody className="divide-y divide-gray-200 dark:divide-white/[0.05]">
-            {visibleData.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>{product.id}</TableCell>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>₹{product.price}</TableCell>
-                <TableCell>₹{product.originalPrice}</TableCell>
-                <TableCell>{product.offer}%</TableCell>
-                <TableCell>{product.category?.name || "—"}</TableCell>
-                 <TableCell>
-                  {product.imageUrl ? (
-                    <img
-                      src={product.imageUrl}
-                      alt="Product"
-                      className="w-16 h-auto object-cover rounded" // Tailwind for small image
-                    />
-                  ) : (
-                    "—"
-                  )}
-                </TableCell>
-                <TableCell>
-                  {new Date(product.createdAt).toLocaleString()}
-                </TableCell>
-                <TableCell>
-                  {new Date(product.updatedAt).toLocaleString()}
-                </TableCell>
-                <TableCell className="text-blue-600 hover:underline cursor-pointer flex gap-3">
-                <TiEye/>
-                <FaRegEdit/>
-                <RiDeleteBin2Line/>
-                </TableCell>
+    <>
+      <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
+        <div className="w-full overflow-x-auto">
+          <Table className="divide-y divide-gray-200 dark:divide-white/[0.05] text-sm">
+            <TableHead className="bg-gray-100 dark:bg-white/[0.05]">
+              <TableRow>
+                <TableHeadCell>ID</TableHeadCell>
+                <TableHeadCell>Name</TableHeadCell>
+                <TableHeadCell>Description</TableHeadCell>
+                <TableHeadCell>Original Price</TableHeadCell>
+                <TableHeadCell>Offer (%)</TableHeadCell>
+                <TableHeadCell>Final Price</TableHeadCell>
+                <TableHeadCell>Category</TableHeadCell>
+                <TableHeadCell>Image</TableHeadCell>
+                <TableHeadCell>Actions</TableHeadCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHead>
+
+            <TableBody className="divide-y divide-gray-200 dark:divide-white/[0.05]">
+              {visibleData.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{item.id}</TableCell>
+                  <TableCell>{item.name}</TableCell>
+                  <TableCell>{item.description}</TableCell>
+                  <TableCell>₹{item.originalPrice}</TableCell>
+                  <TableCell>{item.offer}%</TableCell>
+                  <TableCell>₹{item.price}</TableCell>
+                  <TableCell className="px-3 py-2">{item.category?.name || "—"}</TableCell>
+                  <TableCell>
+                    {item.imageUrl ? (
+                      <img
+                        src={item.imageUrl}
+                        alt="Product"
+                        className="w-16 h-auto object-cover rounded"
+                      />
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="text-blue-600 hover:underline"
+                    >
+                      Edit
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="flex justify-end px-4 py-3">
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
+        </div>
       </div>
-      <div className="flex justify-end px-4 py-3">
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
-      </div>
-    </div>
+
+      {/* Edit Modal */}
+      <Modal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        className="max-w-[600px] m-4"
+      >
+        <div className="p-6 bg-white dark:bg-gray-900 rounded-2xl">
+          <h2 className="text-xl font-semibold mb-4">Edit Product</h2>
+          {editData && (
+            <form
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveEdit();
+              }}
+            >
+              <div>
+                <Label>Name</Label>
+                <Input name="name" type="text" value={editData.name} onChange={handleEditChange} />
+              </div>
+
+              <div>
+                <Label>Description</Label>
+               
+                <Input
+                    type="text"
+                    name="description"
+                  value={editData.description}
+                  onChange={handleEditChange}
+               
+                  />
+              </div>
+
+              <div>
+                <Label>Original Price</Label>
+                <Input
+
+                  name="originalPrice"
+                  type="number"
+                   step="0.01"
+                  value={editData.originalPrice}
+                  onChange={handleEditChange}
+                />
+              </div>
+
+              <div>
+                <Label>Offer (%)</Label>
+                <Input
+                  name="offer"
+                  type="number"
+                   step="0.01"
+                  value={editData.offer}
+                  onChange={handleEditChange}
+                />
+              </div>
+
+              <div>
+                <Label>Upload Image</Label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  disabled={uploading}
+                  className="mt-1 block w-full text-sm text-gray-500
+                   file:mr-4 file:py-2 file:px-4
+                   file:rounded-full file:border-0
+                   file:text-sm file:font-semibold
+                   file:bg-blue-50 file:text-blue-700
+                   hover:file:bg-blue-100"
+                />
+                {uploading && <p className="text-sm text-blue-600 mt-1">Uploading image...</p>}
+              </div>
+
+              {editData.imageUrl && (
+                <img
+                  src={editData.imageUrl}
+                  alt="Preview"
+                  className="w-24 h-auto mt-2 rounded"
+                />
+              )}
+
+              <div className="flex justify-end gap-2 mt-4">
+                <Button type="button" variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={uploading}>
+                  Save
+                </Button>
+              </div>
+            </form>
+          )}
+        </div>
+      </Modal>
+    </>
   );
 }
+
+
+
+
+
+
+
+
+

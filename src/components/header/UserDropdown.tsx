@@ -31,7 +31,7 @@ export default function UserDropdown() {
 
  const handleLogout = () => {
     dispatch(logout());
-    router.push('/'); // Redirect to homepage or login
+    router.push('/signin'); // Redirect to homepage or login
   };
 
 

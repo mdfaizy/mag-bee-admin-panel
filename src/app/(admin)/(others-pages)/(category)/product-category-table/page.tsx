@@ -5,9 +5,9 @@ import React from "react";
 export default function ProductCategortTable() {
   return (
     <div>
-      <PageBreadcrumb pageTitle="" />
+      <PageBreadcrumb pageTitle="Product" />
       <div className="space-y-6">
-        <ComponentCard title="Categotry">
+        <ComponentCard title="Product">
           <ProductCategorttable/>
         </ComponentCard>
       </div>
