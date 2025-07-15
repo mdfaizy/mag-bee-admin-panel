@@ -4,7 +4,7 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import Link from "next/link";
-import { EyeIcon, EyeCloseIcon, ChevronLeftIcon } from "@/icons";
+import { EyeIcon, EyeCloseIcon } from "@/icons";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";

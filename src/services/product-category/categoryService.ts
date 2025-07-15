@@ -52,9 +52,9 @@ export const createCategory = ({ formData, router }: CreateCategoryParams) => {
 
 
 export const fetchProductCategory = async () => {
-  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
+  // const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
   const res = await apiConnector("GET", PRODUCT_CATEGORY_GET_ALL, null, {
-    Authorization: `Bearer ${token}`,
+    // Authorization: `Bearer ${token}`,
   });
   return res.data;
 };

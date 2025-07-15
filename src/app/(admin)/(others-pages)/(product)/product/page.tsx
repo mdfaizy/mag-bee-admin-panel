@@ -1,6 +1,5 @@
 import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-
 import ProductTable from "@/components/tables/Product";
 export default function ProductCategortTable() {
   return (
