@@ -128,14 +128,14 @@ export default function RecentOrders() {
 
 <TableHead className="border-gray-100 dark:border-gray-800 border-y">
   <TableRow>
-    <TableCell isHeader>Product</TableCell>
-    <TableCell isHeader>Price</TableCell>
-    <TableCell isHeader>Quantity</TableCell>
-    <TableCell isHeader>Address</TableCell>
-    <TableCell isHeader>Customer Name</TableCell>
-    <TableCell isHeader>Mobile</TableCell>
-    <TableCell isHeader>Status</TableCell>
-    <TableCell isHeader>Actions</TableCell>
+    <TableCell >Product</TableCell>
+    <TableCell >Price</TableCell>
+    <TableCell >Quantity</TableCell>
+    <TableCell >Address</TableCell>
+    <TableCell >Customer Name</TableCell>
+    <TableCell >Mobile</TableCell>
+    <TableCell >Status</TableCell>
+    <TableCell >Actions</TableCell>
   </TableRow>
 </TableHead>
 

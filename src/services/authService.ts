@@ -6,7 +6,8 @@ import { setToken } from "@/redux/authSlice";
 import { setUser } from "@/redux/profileSlice";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
-import { NavigateFunction } from "react-router-dom"; 
+import { useRouter } from "next/navigation"; // ✅ correct
+type AppRouter = ReturnType<typeof useRouter>; 
 
 const { LOGIN_API, SIGNUP_API ,USER_LIST_API} = endpoints;
 
@@ -19,7 +20,7 @@ interface SignupParams {
   roleId: number;
   email: string;
   password: string;
-  router: any;
+  router: AppRouter;
 }
 export const signup = ({
   name,
@@ -77,7 +78,7 @@ export const signup = ({
 
     } catch (err) {
       const error = err as AxiosError;
-      toast.error(error.response?.data?.message || error.message || "Signup failed.");
+      toast.error(error.message || "Signup failed.");
     } finally {
       toast.dismiss(toastId);
     }
@@ -87,7 +88,7 @@ export const signup = ({
 interface LoginParams {
   identifier: string;
   password: string;
-  router: NextRouter;
+  router: AppRouter;
 }
 
 export const login = ({ identifier, password, router }: LoginParams) => {
@@ -130,7 +131,7 @@ localStorage.setItem("user", JSON.stringify(updatedUser));
       router.push("/");
     } catch (err) {
       const error = err as AxiosError;
-      toast.error(error.response?.data?.message || error.message);
+      toast.error(error.message);
     } finally {
       toast.dismiss(toastId);
     }
@@ -180,7 +181,7 @@ export const logout = () => (dispatch: AppDispatch) => {
 interface CreateRoleParams {
   name: string;
   description: string;
-  router: any;
+  router: AppRouter;
 }
 
 const CREATE_ROLE_API = "http://localhost:8000/api/roles"; // ⬅️ Your backend route here
@@ -220,7 +221,7 @@ export const createRole = ({ name, description, router }: CreateRoleParams) => {
       router.push("/admin/roles");
     } catch (err) {
       const error = err as AxiosError;
-      toast.error(error.response?.data?.message || error.message || "Something went wrong");
+      toast.error(error.message || "Something went wrong");
     } finally {
       toast.dismiss(toastId);
     }

@@ -1,16 +1,15 @@
 "use client";
 import React, { useState, ChangeEvent, FormEvent } from "react";
-import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
 import { createRole } from "@/services/authService";
-
+import { useAppDispatch } from '@/redux/hooks'; 
 
 export default function RoleCreate() {
-  const dispatch = useDispatch();
+const dispatch = useAppDispatch();
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -42,7 +41,7 @@ const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
       name: name,
       description,
       router,
-    }) as any
+    }) 
   );
 };
 

@@ -15,5 +15,20 @@ export const endpointsCategory={
 }
 
 export const endpointsProduct={
-  PRODUCT_GELL_ALL:`${BASE_URL}/products/products`
+  PRODUCT_GELL_ALL:`${BASE_URL}/products/products`,
+ PRODUCT_CREATE:`${BASE_URL}/products/product`,
+  //  PRODUCT_GELL_ALL: "/api/products",
+  // PRODUCT_CREATE: "/api/products/product",
+  // products/product
+  // PRODUCT_DELETE: "/api/products", // DELETE /:id
+  // PRODUCT_UPDATE: "/api/products",
 }
+
+// apis/index.ts
+
+// export const endpointsProduct = {
+//   PRODUCT_GELL_ALL: "/api/products",
+//   PRODUCT_CREATE: "/api/products/product",
+//   PRODUCT_DELETE: "/api/products", // DELETE /:id
+//   PRODUCT_UPDATE: "/api/products", // PUT /:id
+// };

@@ -1,15 +1,15 @@
 "use client";
 import React, { useState, ChangeEvent, FormEvent } from "react";
-import { useDispatch } from "react-redux";
+import { useAppDispatch } from '@/redux/hooks'; 
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
 import { createCategory } from "../../services/product-category/categoryService";
-
 export default function CreateProductCategory() {
-  const dispatch = useDispatch();
+  const dispatch = useAppDispatch();
+
   const router = useRouter();
 
   const [form, setForm] = useState({
@@ -21,9 +21,9 @@ export default function CreateProductCategory() {
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
-    const { name, value, files } = e.target as any;
+    const { name, value, files } = e.target as HTMLInputElement
 
-    if (name === "image") {
+    if (name === "image" && files && files.length > 0) {
       setForm((prev) => ({
         ...prev,
         image: files[0],
@@ -37,26 +37,28 @@ export default function CreateProductCategory() {
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const { name, description, image } = form;
+  e.preventDefault();
 
-    if (!name || !description || !image) {
-      toast.error("Please fill all required fields and upload an image.");
-      return;
-    }
+  const { name, description, image } = form;
 
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("description", description);
-    formData.append("imageUrl", image);
+  if (!name || !description || !image) {
+    toast.error("Please fill all required fields and upload an image.");
+    return;
+  }
 
-    dispatch(
-      createCategory({
-        formData,
-        router,
-      }) as any
-    );
-  };
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("description", description);
+  formData.append("imageUrl", image); // image is File, not any
+
+  dispatch(
+    createCategory({
+      formData,
+      router,
+    })
+  );
+};
+
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">

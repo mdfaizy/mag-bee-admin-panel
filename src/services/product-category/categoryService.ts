@@ -1,16 +1,33 @@
 
+
+
 import { AppDispatch } from "@/redux/store";
 import { toast } from "react-toastify";
 import { apiConnector } from "@/services/apiConnector";
 import { endpointsCategory } from "../apis";
 import { setCategories } from "../../redux/productCategory";
 import { AxiosError } from "axios";
+import { useRouter } from "next/navigation"; // ✅ correct
+type AppRouter = ReturnType<typeof useRouter>; // ✅ extract type from useRouter
 
-const { CREATE_CATEGORY_API ,PRODUCT_CATEGORY_GET_ALL} = endpointsCategory;
+const { CREATE_CATEGORY_API, PRODUCT_CATEGORY_GET_ALL } = endpointsCategory;
 
 interface CreateCategoryParams {
   formData: FormData;
-  router: any;
+  router: AppRouter ;
+}
+
+interface Category {
+  id: number;
+  name: string;
+  description: string;
+  imageUrl: string;
+  createdAt: string;
+}
+
+// If your API response is { data: { ...category } }
+interface CategoryResponse {
+  data: Category;
 }
 
 export const createCategory = ({ formData, router }: CreateCategoryParams) => {
@@ -21,7 +38,7 @@ export const createCategory = ({ formData, router }: CreateCategoryParams) => {
       const rawToken = localStorage.getItem("token");
       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
 
-      const res = await apiConnector<any>(
+      const res = await apiConnector<CategoryResponse>(
         "POST",
         CREATE_CATEGORY_API,
         formData,
@@ -30,8 +47,9 @@ export const createCategory = ({ formData, router }: CreateCategoryParams) => {
         }
       );
 
-      // ✅ Update Redux store with the newly created category
-      dispatch(setCategories([res.data]));
+      // ✅ If your backend sends `data` inside `res.data`
+      dispatch(setCategories([res.data.data])); // 🔍 Fixed: res.data.data
+
       toast.success("Product category created successfully!");
       router.push("/");
     } catch (err) {
@@ -59,38 +77,6 @@ export const fetchProductCategory = async () => {
   return res.data;
 };
 
-
-
-
-// export const deleteCategory = (id: number) => {
-//   return async (dispatch: AppDispatch) => {
-//     const toastId = toast.loading("Deleting category...");
-
-//     try {
-//       const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
-
-//       await apiConnector(
-//         "DELETE",
-//         `http://localhost:8000/api/products/category/${id}`,
-//         null,
-//         {
-//           Authorization: `Bearer ${token}`,
-//         }
-//       );
-
-//       toast.success("Category deleted successfully!");
-
-//       // Optionally refetch updated list after deletion
-//       const updatedList = await fetchProductCategory();
-//       dispatch(setCategories(updatedList));
-//     } catch (error: any) {
-//       const errMsg = error?.response?.data?.message || "Delete failed.";
-//       toast.error(errMsg);
-//     } finally {
-//       toast.dismiss(toastId);
-//     }
-//   };
-// };
 
 
 
@@ -123,6 +109,9 @@ export const deleteCategory = (id: number) => {
     }
   };
 };
+
+
+
 
 
 

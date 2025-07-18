@@ -12,12 +12,12 @@ import {
 } from "../ui/table";
 import Pagination from "./Pagination";
 import { fetchProductAll } from "../../services/product/productService";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 import { Modal } from "../ui/modal";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import Button from "../ui/button/Button";
-
+import { AxiosError } from "axios";
 interface Product {
   id: number;
   name: string;
@@ -27,6 +27,7 @@ interface Product {
   offer: number;
   categoryName: string;
   imageUrl: string;
+  slug:string;
   createdAt: string;
   updatedAt: string;
 }
@@ -46,7 +47,7 @@ export default function ProductTable() {
   const [editData, setEditData] = useState<Product | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
   useEffect(() => {
     const getData = async () => {
@@ -153,9 +154,10 @@ export default function ProductTable() {
       );
       setTableData(updated);
       setIsEditModalOpen(false);
-    } catch (error: any) {
-      console.error("Update failed:", error);
-      alert(error.message || "Something went wrong while updating.");
+    } catch (err) {
+  const axiosErr = err as AxiosError;
+  console.error("Update failed:", axiosErr);
+  alert(axiosErr.message || "Something went wrong while updating.");
     }
   };
 
@@ -332,7 +334,6 @@ export default function ProductTable() {
     </>
   );
 }
-
 
 
 

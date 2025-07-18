@@ -1,10 +1,12 @@
 
 "use client";
 
-import React, { useEffect, useState, ChangeEvent, FormEvent } from "react";
+import React, { useEffect, useState, ChangeEvent, FormEvent,useCallback, } from "react";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+// import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/redux/store";
 
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
@@ -14,13 +16,16 @@ import Link from "next/link";
 import { signup } from "@/services/authService";
 import Select from "../form/Select";
 
+
 interface RoleOption {
   value: string;
   label: string;
 }
 
+
 export default function SignUpForm() {
-  const dispatch = useDispatch();
+
+const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -55,29 +60,29 @@ export default function SignUpForm() {
     setShowPassword((prev) => !prev);
   };
 
+interface APIRole {
+    id: number;
+    name: string;
+  }
 
-const fetchRoles = async () => {
+
+const fetchRoles = useCallback(async () => {
   try {
-    const token = localStorage.getItem("token"); // Or sessionStorage.getItem("token")
-
-    if (!token) {
-      throw new Error("No token found");
-    }
+    const token = localStorage.getItem("token");
+    if (!token) throw new Error("No token found");
 
     const res = await fetch("http://localhost:8000/api/roles", {
       headers: {
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     });
 
-    if (!res.ok) {
-      throw new Error("Failed to fetch roles");
-    }
+    if (!res.ok) throw new Error("Failed to fetch roles");
 
     const data = await res.json();
 
-    const formattedRoles = data.roles.map((role: any) => ({
+    const formattedRoles = (data.roles as APIRole[]).map((role) => ({
       value: String(role.id),
       label: role.name,
     }));
@@ -86,10 +91,12 @@ const fetchRoles = async () => {
   } catch (error) {
     console.error("Failed to fetch roles:", error);
   }
-};
-  useEffect(() => {
+}, []);
+
+
+useEffect(() => {
     fetchRoles();
-  }, []);
+  }, [fetchRoles]);
 
   const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -106,6 +113,18 @@ const fetchRoles = async () => {
       return;
     }
 
+    // dispatch(
+    //   signup({
+    //     name,
+    //     username,
+    //     mobileNo,
+    //     roleId: Number(roleId),
+    //     email,
+    //     password,
+    //     router,
+    //   }) 
+    // );
+
     dispatch(
       signup({
         name,
@@ -115,8 +134,9 @@ const fetchRoles = async () => {
         email,
         password,
         router,
-      }) as any
+      })
     );
+  
   };
 
   return (
@@ -182,12 +202,19 @@ const fetchRoles = async () => {
 
                 <div>
                   <Label>Select Role<span className="text-error-500">*</span></Label>
-                  <Select
+                  {/* <Select
                     options={roles}
                     placeholder="Select a role"
                     onChange={handleRoleChange}
                     defaultValue={formData.roleId}
-                  />
+                  /> */}
+
+                  <Select
+  options={roles}
+  placeholder="Select a role"
+  onChange={handleRoleChange}
+  value={formData.roleId}
+/>
                 </div>
               </div>
 

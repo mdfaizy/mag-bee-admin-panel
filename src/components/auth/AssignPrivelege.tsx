@@ -74,10 +74,10 @@ export default function AssignPrivilege() {
   }, []);
 
   // Handle form changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
+  // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, value } = e.target;
+  //   setForm((prev) => ({ ...prev, [name]: value }));
+  // };
 
   const handleRoleChange = (value: string) => {
     setForm((prev) => ({ ...prev, roleId: value }));

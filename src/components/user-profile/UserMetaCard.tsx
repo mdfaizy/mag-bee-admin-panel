@@ -9,14 +9,22 @@ import Image from "next/image";
 import { useSelector } from "react-redux";
 export default function UserMetaCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
+ 
+   
+interface User {
+  name: string;
+  email: string;
+  role?: {
+    name: string;
+  };
+}
+
+ const user = useSelector((state: { profile: { user: User } }) => state.profile.user);
+ const handleSave = () => {
     // Handle save logic here
     console.log("Saving changes...");
     closeModal();
   };
-   
-
-  const user = useSelector((state: any) => state.profile.user);
   return (
     <>
       <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">

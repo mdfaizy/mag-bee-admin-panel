@@ -70,8 +70,6 @@ export default function ProductCategoryTable() {
     setEditData({ ...editData, [e.target.name]: e.target.value });
   };
 
-
-
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
   const file = e.target.files?.[0];
   if (!file || !editData) return;
@@ -96,13 +94,6 @@ export default function ProductCategoryTable() {
     alert("Image upload failed. Try again.");
   }
 };
-
-
-
-
-
-
-
 
 const handleSaveEdit = async () => {
   if (!editData) return;
@@ -281,3 +272,6 @@ Show preview
     </>
   );
 }
+
+
+

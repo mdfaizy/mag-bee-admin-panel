@@ -12,7 +12,7 @@ export default function ClientLoader() {
     if (user) {
       dispatch(setUser(JSON.parse(user)));
     }
-  }, []);
+  }, [dispatch]);
 
   return null;
 }
