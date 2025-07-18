@@ -1,4 +1,4 @@
-import ComponentCard from "@/components/common/ComponentCard";
+// import ComponentCard from "@/components/common/ComponentCard";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import UserTable from "@/components/tables/UserTable";
 
@@ -17,9 +17,9 @@ export default function BasicTables() {
     <div>
       <PageBreadcrumb pageTitle="User Role Table" />
       <div className="space-y-6">
-        <ComponentCard title="User Role Table">
+        {/* <ComponentCard title="User Role Table"> */}
           <UserTable/>
-        </ComponentCard>
+        {/* </ComponentCard> */}
       </div>
     </div>
   );

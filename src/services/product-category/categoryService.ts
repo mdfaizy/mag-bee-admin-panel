@@ -53,7 +53,7 @@ export const createCategory = ({ formData, router }: CreateCategoryParams) => {
 
 export const fetchProductCategory = async () => {
   // const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
-  const res = await apiConnector("GET", PRODUCT_CATEGORY_GET_ALL, null, {
+  const res = await apiConnector("GET", PRODUCT_CATEGORY_GET_ALL, undefined, {
     // Authorization: `Bearer ${token}`,
   });
   return res.data;
@@ -104,7 +104,7 @@ export const deleteCategory = (id: number) => {
       await apiConnector(
         "DELETE",
         `http://localhost:8000/api/products/category/${id}`,
-        null,
+        undefined,
         {
           Authorization: `Bearer ${token}`,
         }

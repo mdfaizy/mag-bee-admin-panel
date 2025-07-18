@@ -6,7 +6,9 @@ import { setToken } from "@/redux/authSlice";
 import { setUser } from "@/redux/profileSlice";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
-import { NavigateFunction } from "react-router-dom"; 
+import { useRouter } from "next/navigation";
+
+type AppRouter = ReturnType<typeof useRouter>;
 
 const { LOGIN_API, SIGNUP_API ,USER_LIST_API} = endpoints;
 
@@ -19,8 +21,84 @@ interface SignupParams {
   roleId: number;
   email: string;
   password: string;
-  router: any;
+  router: AppRouter;
 }
+interface ErrorResponse {
+  message?: string;
+}
+
+interface SignupResponse {
+  message: string;
+  success?: boolean;
+}
+
+// export const signup = ({
+//   name,
+//   username,
+//   mobileNo,
+//   roleId,
+//   email,
+//   password,
+//   router,
+// }: SignupParams) => {
+//   return async (dispatch: AppDispatch) => {
+//     const toastId = toast.loading("Registering...");
+
+//     try {
+//       const rawToken = localStorage.getItem("token");
+//       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
+
+//       const permissions = JSON.parse(localStorage.getItem("user") || "{}")?.permissions || [];
+
+//       // ✅ Check permission before sending API request
+//       if (!permissions.includes("CREATE_USER")) {
+//         toast.error("You do not have permission to create users.");
+//         return;
+//       }
+
+//       const res = await apiConnector<SignupResponse>(
+//         "POST",
+//         SIGNUP_API,
+//         {
+//           name,
+//           username,
+//           phone_number: mobileNo,
+//           role_id: roleId,
+//           email,
+//           password,
+//           is_active: true,
+//         },
+//         {
+//           Authorization: `Bearer ${token}`,
+//           "Content-Type": "application/json",
+//         }
+//       );
+
+//       // if (!res.data.success) {
+//       //   throw new Error(res.data.message || "Registration failed.");
+//       // }
+
+//       if (!res.data.message?.toLowerCase().includes("register")) {
+//         throw new Error(res.data.message || "Registration failed.");
+//       }
+
+
+//       toast.success("Registration successful!");
+//       router.push("/");
+
+//     } catch (err) {
+//       const error = err as AxiosError<ErrorResponse>;
+// toast.error(error.response?.data?.message || error.message || "Signup failed.");
+//     } finally {
+//       toast.dismiss(toastId);
+//     }
+//   };
+// };
+
+
+
+
+
 export const signup = ({
   name,
   username,
@@ -34,18 +112,16 @@ export const signup = ({
     const toastId = toast.loading("Registering...");
 
     try {
-      const rawToken = localStorage.getItem("token");
-      const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
+      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const permissions = user?.permissions || [];
 
-      const permissions = JSON.parse(localStorage.getItem("user") || "{}")?.permissions || [];
-
-      // ✅ Check permission before sending API request
       if (!permissions.includes("CREATE_USER")) {
         toast.error("You do not have permission to create users.");
         return;
       }
 
-      const res = await apiConnector<any>(
+      const res = await apiConnector<SignupResponse>(
         "POST",
         SIGNUP_API,
         {
@@ -63,31 +139,25 @@ export const signup = ({
         }
       );
 
-      // if (!res.data.success) {
-      //   throw new Error(res.data.message || "Registration failed.");
-      // }
-
       if (!res.data.message?.toLowerCase().includes("register")) {
         throw new Error(res.data.message || "Registration failed.");
       }
-
 
       toast.success("Registration successful!");
       router.push("/");
 
     } catch (err) {
-      const error = err as AxiosError;
+      const error = err as AxiosError<ErrorResponse>;
       toast.error(error.response?.data?.message || error.message || "Signup failed.");
     } finally {
       toast.dismiss(toastId);
     }
   };
 };
-
 interface LoginParams {
   identifier: string;
   password: string;
-  router: NextRouter;
+  router: AppRouter;
 }
 
 export const login = ({ identifier, password, router }: LoginParams) => {
@@ -130,7 +200,7 @@ localStorage.setItem("user", JSON.stringify(updatedUser));
       router.push("/");
     } catch (err) {
       const error = err as AxiosError;
-      toast.error(error.response?.data?.message || error.message);
+      toast.error(error.message);
     } finally {
       toast.dismiss(toastId);
     }
@@ -140,7 +210,7 @@ localStorage.setItem("user", JSON.stringify(updatedUser));
 
 export const fetchAllUsers = async () => {
   const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
-  const res = await apiConnector("GET", USER_LIST_API, null, {
+  const res = await apiConnector("GET", USER_LIST_API, undefined, {
     Authorization: `Bearer ${token}`,
   });
   return res.data;
@@ -158,7 +228,7 @@ export async function toggleUserStatus(id: number) {
   return await apiConnector(
     "PATCH", // assuming your backend route is PATCH for toggle
     `http://localhost:8000/api/users/${id}/toggle`,
-    null,
+    undefined,
     {
       Authorization: `Bearer ${token}`,
     }
@@ -168,7 +238,7 @@ export async function toggleUserStatus(id: number) {
 
 
 export const logout = () => (dispatch: AppDispatch) => {
-  dispatch(setToken(null));
+  // dispatch(setToken(null));
   dispatch(setUser(null));
 
   localStorage.removeItem("token");
@@ -180,7 +250,7 @@ export const logout = () => (dispatch: AppDispatch) => {
 interface CreateRoleParams {
   name: string;
   description: string;
-  router: any;
+  router: AppRouter;
 }
 
 const CREATE_ROLE_API = "http://localhost:8000/api/roles"; // ⬅️ Your backend route here
@@ -220,9 +290,61 @@ export const createRole = ({ name, description, router }: CreateRoleParams) => {
       router.push("/admin/roles");
     } catch (err) {
       const error = err as AxiosError;
-      toast.error(error.response?.data?.message || error.message || "Something went wrong");
+      toast.error(error.message || "Something went wrong");
     } finally {
       toast.dismiss(toastId);
     }
   };
 };
+
+
+// services/authService.ts
+
+export async function getRolesAndPrivileges(token: string) {
+  const [rolesRes, privilegesRes] = await Promise.all([
+    fetch("http://localhost:8000/api/roles", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+    fetch("http://localhost:8000/api/privileges", {
+      headers: { Authorization: `Bearer ${token}` },
+    }),
+  ]);
+
+  if (!rolesRes.ok || !privilegesRes.ok) {
+    throw new Error("Failed to fetch roles or privileges");
+  }
+
+  const roles = await rolesRes.json();
+  const privileges = await privilegesRes.json();
+
+  return { roles, privileges };
+}
+
+export async function assignPrivilegesToRole({
+  token,
+  roleId,
+  privilegeIds,
+}: {
+  token: string;
+  roleId: string;
+  privilegeIds: number[];
+}) {
+  const response = await fetch(
+    "http://localhost:8000/api/roles/assign-privileges",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ roleId, privilegeIds }),
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || "Failed to assign privileges");
+  }
+
+  return true;
+}

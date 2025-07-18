@@ -7,8 +7,12 @@ import TextArea from "@/components/form/input/TextArea";
 // import ChipInput from "../form/input/ChipInput";
 import Select from "../form/Select";
 import { ChevronDownIcon } from "@/icons";
+type CategoryOption = {
+  value: string;
+  label: string;
+};
 export default function AddNewProduct() {
-  const [category, setCategory] = useState<RoleOption[]>([]);
+  const [category, setCategory] = useState<CategoryOption[]>([]);
   const [selectedFile, setSelectedFile] = useState<File | null>(null); 
 
   const [formData, setFormData] = useState({
@@ -21,32 +25,10 @@ export default function AddNewProduct() {
     quantity: "",
     image: null as File | null,
     // keywords: [] as string[],
+     keywords: [],
   });
 
-  // 🔁 Common input change handler
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-  //   const { name, value } = e.target;
-  //   setFormData((prev) => ({ ...prev, [name]: value }));
-  // };
-
-  // const handleChange = (
-  //     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  //   ) => {
-  //     const { name, value, files } = e.target as any;
   
-  //     if (name === "image") {
-  //       setFormData((prev) => ({
-  //         ...prev,
-  //         image: files[0],
-  //       }));
-  //     } else {
-  //       setFormData((prev) => ({
-  //         ...prev,
-  //         [name]: value,
-  //       }));
-  //     }
-  //   };
-
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
   const { name, value, files } = e.target as HTMLInputElement;
 
@@ -65,7 +47,7 @@ export default function AddNewProduct() {
     setFormData((prev) => ({ ...prev, categoryId: value }));
   };
 
-  const fetchRoles = async () => {
+  const fetchCategory = async () => {
     try {
       const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
       const res = await fetch("http://localhost:8000/api/products/category", {
@@ -87,7 +69,7 @@ export default function AddNewProduct() {
   };
 
   useEffect(() => {
-    fetchRoles();
+    fetchCategory();
   }, []);
 
 
@@ -165,12 +147,14 @@ export default function AddNewProduct() {
                 />
               </div>
               <div className="relative">
+
                 <Select
-                  options={category}
-                  placeholder="Select Category"
-                  onChange={handleRoleChange}
-                  className="appearance-none pr-10"
-                />
+  options={category}
+  placeholder="Select Category"
+  onChange={handleRoleChange}
+  // className="appearance-none pr-10"
+/>
+
                 <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500">
                   <ChevronDownIcon className="w-4 h-4" />
                 </span>
@@ -216,14 +200,7 @@ export default function AddNewProduct() {
                   onChange={handleChange}
                 />
               </div>
-              {/* <ChipInput
-                id="keywords"
-                label="Keywords"
-                placeholder="e.g. red, cotton, summer"
-                onChange={(chips) =>
-                  setFormData((prev) => ({ ...prev, keywords: chips }))
-                }
-              /> */}
+          
              <input
   type="file"
   name="image"

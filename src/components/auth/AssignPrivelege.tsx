@@ -3,12 +3,13 @@ import React, { useState, useEffect, FormEvent } from "react";
 import dynamic from "next/dynamic";
 import { toast } from "react-toastify";
 
+// Components
 import Label from "@/components/form/Label";
 import Select from "@/components/form/Select";
 
-// Dynamically import your multiselect
+// Dynamically load MultiSelecterInput
 const MultiSelecterInput = dynamic(
-  () => import("@/components/form/form-elements/MultiSelecterInput"),
+  () => import("../form/MultiSelect"),
   { ssr: false }
 );
 
@@ -16,6 +17,7 @@ const MultiSelecterInput = dynamic(
 import { fetchRoles } from "@/services/role";
 import { fetchPrivileges } from "@/services/usePrivillage";
 
+// Types
 interface RoleOption {
   value: string;
   label: string;
@@ -33,12 +35,11 @@ export default function AssignPrivilege() {
 
   // Form state
   const [form, setForm] = useState({
-  
     roleId: "",
     privileges: [] as PrivilegeOption[],
   });
 
-  // Load roles and privileges on mount
+  // Load roles and privileges on component mount
   useEffect(() => {
     async function loadData() {
       try {
@@ -73,12 +74,7 @@ export default function AssignPrivilege() {
     loadData();
   }, []);
 
-  // Handle form changes
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
+  // Handlers
   const handleRoleChange = (value: string) => {
     setForm((prev) => ({ ...prev, roleId: value }));
   };
@@ -87,52 +83,49 @@ export default function AssignPrivilege() {
     setForm((prev) => ({ ...prev, privileges: selected || [] }));
   };
 
-  // Handle submit
-const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-  const { roleId, privileges } = form;
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const { roleId, privileges } = form;
 
-  if ( !roleId || privileges.length === 0) {
-    toast.error("Please fill all required fields including privileges.");
-    return;
-  }
-
-  try {
-    setIsLoading(true);
-    const token = localStorage.getItem("token");
-    if (!token) throw new Error("Not authenticated");
-
-    const response = await fetch(
-      "http://localhost:8000/api/roles/assign-privileges",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-         
-          roleId,
-          privilegeIds: privileges.map((p) => Number(p.value)),
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(text);
+    if (!roleId || privileges.length === 0) {
+      toast.error("Please fill all required fields including privileges.");
+      return;
     }
 
-    toast.success("Privileges assigned successfully!");
-    setForm({ roleId: "", privileges: [] });
-  } catch (error) {
-    console.error("Error submitting:", error);
-    toast.error("Failed to assign privileges.");
-  } finally {
-    setIsLoading(false);
-  }
-};
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Not authenticated");
 
+      const response = await fetch(
+        "http://localhost:8000/api/roles/assign-privileges",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            roleId,
+            privilegeIds: privileges.map((p) => Number(p.value)),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text);
+      }
+
+      toast.success("Privileges assigned successfully!");
+      setForm({ roleId: "", privileges: [] });
+    } catch (error) {
+      console.error("Error submitting:", error);
+      toast.error("Failed to assign privileges.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
@@ -142,8 +135,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          
-
+          {/* Role Select */}
           <div>
             <Label>
               Select Role <span className="text-error-500">*</span>
@@ -156,6 +148,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
             />
           </div>
 
+          {/* Privilege MultiSelect */}
           <div>
             <Label>
               Select Privileges <span className="text-error-500">*</span>
@@ -168,6 +161,7 @@ const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
             />
           </div>
 
+          {/* Submit Button */}
           <div className="mb-8 mt-8">
             <button
               type="submit"

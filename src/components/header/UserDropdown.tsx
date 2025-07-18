@@ -9,8 +9,13 @@ import { FaChevronDown,FaUserCircle } from 'react-icons/fa';
 import { FiSettings ,FiInfo,FiLogOut} from "react-icons/fi";
 import { logout } from "../../services/authService";
 import { useRouter } from 'next/navigation';
+
+import type { AppDispatch } from "../../redux/store"; // adjust path as needed
+
+
 export default function UserDropdown() {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const user = useSelector((state: any) => state.profile.user);

@@ -13,14 +13,20 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import { signup } from "@/services/authService";
 import Select from "../form/Select";
+import type { AppDispatch } from "@/redux/store";
+
+
 
 interface RoleOption {
   value: string;
   label: string;
 }
-
+interface Role {
+  id: number;
+  name: string;
+}
 export default function SignUpForm() {
-  const dispatch = useDispatch();
+  const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -77,10 +83,14 @@ const fetchRoles = async () => {
 
     const data = await res.json();
 
-    const formattedRoles = data.roles.map((role: any) => ({
-      value: String(role.id),
-      label: role.name,
-    }));
+    // const formattedRoles = data.roles.map((role: any) => ({
+    //   value: String(role.id),
+    //   label: role.name,
+    // }));
+    const formattedRoles = (data.roles as Role[]).map((role) => ({
+  value: String(role.id),
+  label: role.name,
+}));
 
     setRoles(formattedRoles);
   } catch (error) {
@@ -115,7 +125,7 @@ const fetchRoles = async () => {
         email,
         password,
         router,
-      }) as any
+      }) 
     );
   };
 
@@ -182,12 +192,14 @@ const fetchRoles = async () => {
 
                 <div>
                   <Label>Select Role<span className="text-error-500">*</span></Label>
-                  <Select
-                    options={roles}
-                    placeholder="Select a role"
-                    onChange={handleRoleChange}
-                    defaultValue={formData.roleId}
-                  />
+              <Select
+  options={roles}
+  placeholder="Select a role"
+  onChange={handleRoleChange}
+  value={formData.roleId}
+/>
+
+
                 </div>
               </div>
 

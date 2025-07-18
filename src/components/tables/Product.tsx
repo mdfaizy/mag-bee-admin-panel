@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Table,
   TableHead,
@@ -11,160 +11,38 @@ import {
   TableCell,
 } from "../ui/table";
 import Pagination from "./Pagination";
-import { fetchProductAll } from "../../services/product/productService";
-import { useDispatch } from "react-redux";
+// import { fetchProductAll } from "../../services/product/productService";
+// import { useDispatch } from "react-redux";
 import { Modal } from "../ui/modal";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import Button from "../ui/button/Button";
 
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  originalPrice: number;
-  offer: number;
-  categoryName: string;
-  imageUrl: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { useProductTableLogic } from "../../hooks/useEditProduct";
 
-// Helper to calculate price after discount
-const calculateFinalPrice = (originalPrice: number, offer: number): number => {
-  if (!originalPrice || !offer) return originalPrice || 0;
-  return parseFloat((originalPrice - (originalPrice * offer) / 100).toFixed(2));
-};
 
 export default function ProductTable() {
-  const itemsPerPage = 10;
-  const [currentPage, setCurrentPage] = useState(1);
-  const [tableData, setTableData] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editData, setEditData] = useState<Product | null>(null);
-  const [uploading, setUploading] = useState(false);
 
-  const dispatch = useDispatch();
 
-  useEffect(() => {
-    const getData = async () => {
-      try {
-        const result = await fetchProductAll();
-        console.log("resilt product",result)
-        setTableData(result);
-      } catch (error) {
-        console.error("Failed to fetch product data:", error);
-        setTableData([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    getData();
-  }, []);
+const {
+    currentPage,
+    setCurrentPage,
+    visibleData,
+    totalPages,
+    formData,
+    handleChange,
+    handleReset,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    editData,
+    handleEdit,
+    handleEditChange,
+    handleImageChange,
+    handleSaveEdit,
+    uploading,
+  } = useProductTableLogic();
 
-  const handleEdit = (product: Product) => {
-    setEditData(product);
-    setIsEditModalOpen(true);
-  };
-
-  const handleEditChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!editData) return;
-    const { name, value } = e.target;
-
-    const parsedValue =
-      name === "price" || name === "originalPrice" || name === "offer"
-        ? parseFloat(value)
-        : value;
-
-    const updated = {
-      ...editData,
-      [name]: parsedValue,
-    };
-
-    // Update price if originalPrice or offer changes
-    if (name === "originalPrice" || name === "offer") {
-      updated.price = calculateFinalPrice(updated.originalPrice, updated.offer);
-    }
-
-    setEditData(updated);
-  };
-
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !editData) return;
-
-    setUploading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", "ecommerce_uploads");
-      formData.append("folder", "products");
-
-      const res = await fetch("https://api.cloudinary.com/v1_1/dditvtnis/image/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const data = await res.json();
-      setEditData({ ...editData, imageUrl: data.secure_url });
-    } catch (err) {
-      console.error("Image upload error:", err);
-      alert("Image upload failed. Try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSaveEdit = async () => {
-    if (!editData) return;
-
-    try {
-      const rawToken = localStorage.getItem("token");
-      const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
-
-      const res = await fetch(`http://localhost:8000/api/products/products/${editData.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: editData.name,
-          description: editData.description,
-          price: editData.price,
-          originalPrice: editData.originalPrice,
-          offer: editData.offer,
-          imageUrl: editData.imageUrl || null,
-        }),
-      });
-      const result = await res.json();
-      if (!res.ok) {
-        console.error("Backend error response:", result);
-        throw new Error(result.message || "Failed to update product");
-      }
-      alert("✅ Product updated successfully!");
-      const updated = tableData.map((item) =>
-        item.id === editData.id ? result.updatedProduct : item
-      );
-      setTableData(updated);
-      setIsEditModalOpen(false);
-    } catch (error: any) {
-      console.error("Update failed:", error);
-      alert(error.message || "Something went wrong while updating.");
-    }
-  };
-
-  const totalPages = Math.ceil(tableData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const visibleData = tableData.slice(startIndex, startIndex + itemsPerPage);
-
-  if (loading) return <div className="p-4">Loading...</div>;
-
+  
   return (
     <>
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
@@ -275,7 +153,7 @@ export default function ProductTable() {
 
                   name="originalPrice"
                   type="number"
-                   step="0.01"
+                   step={0.01}
                   value={editData.originalPrice}
                   onChange={handleEditChange}
                 />
@@ -286,7 +164,7 @@ export default function ProductTable() {
                 <Input
                   name="offer"
                   type="number"
-                   step="0.01"
+                   step={0.01}
                   value={editData.offer}
                   onChange={handleEditChange}
                 />

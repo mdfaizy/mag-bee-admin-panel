@@ -140,6 +140,21 @@ import Pagination from "./Pagination";
 import { fetchAllUsers, toggleUserStatus } from "../../services/authService";
 
 // ✅ Define your user type
+// interface User {
+//   id: number;
+//   name: string;
+//   email: string;
+//   username: string;
+//   phone_number: string;
+//   role_id: number;
+//   is_active: boolean;
+// }
+
+interface Role {
+  id: number;
+  name: string;
+}
+
 interface User {
   id: number;
   name: string;
@@ -148,6 +163,8 @@ interface User {
   phone_number: string;
   role_id: number;
   is_active: boolean;
+  createdAt?: string; // add this if you're using it
+  role?: Role; // ✅ Add this
 }
 
 export default function BasicTableOne() {
@@ -226,8 +243,9 @@ export default function BasicTableOne() {
                 <TableCell>{user.phone_number}</TableCell>
                <TableCell>{user.role?.name || '—'}</TableCell>
 <TableCell>
-  {new Date(user.createdAt).toLocaleString()}
+  {user.createdAt ? new Date(user.createdAt).toLocaleString() : '—'}
 </TableCell>
+
 
 
                 <TableCell>

@@ -58,21 +58,7 @@ const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-5">
-            {/* <div>
-              <Label>
-                Role Name <span className="text-error-500">*</span>
-              </Label>
-              <Input
-                type="text"
-                name="categoryName"
-                placeholder="Enter Role name"
-                value={form.Name}
-                onChange={handleChange}
-                className="text-uppercase"
-              />
-            </div>
-            
-            */}
+  
             <div>
                   <Label>Name<span className="text-error-500">*</span></Label>
                   <Input

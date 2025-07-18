@@ -23,6 +23,7 @@ import Button from "../ui/button/Button";
 interface ProductCategory {
   id: number;
   name: string;
+  slug: string; 
   description: string;
   imageUrl: string;
   createdAt: string;
