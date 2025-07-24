@@ -1,5 +1,3 @@
-// src/components/logic/productTableLogic.ts
-
 import { useEffect, useState } from "react";
 import { fetchProductAll } from "../services/product/productService";
 

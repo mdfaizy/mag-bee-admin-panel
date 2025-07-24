@@ -10,10 +10,10 @@ export const endpoints = {
 
 
 export const endpointsCategory={
-   CREATE_CATEGORY_API:`${BASE_URL}/products/category`,
-   PRODUCT_CATEGORY_GET_ALL:`${BASE_URL}/products/category`
+   CREATE_CATEGORY_API:`${BASE_URL}/category`,
+   PRODUCT_CATEGORY_GET_ALL:`${BASE_URL}/category`
 }
 
 export const endpointsProduct={
-  PRODUCT_GELL_ALL:`${BASE_URL}/products/products`
+  PRODUCT_GELL_ALL:`${BASE_URL}/products`
 }

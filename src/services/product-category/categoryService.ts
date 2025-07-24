@@ -103,7 +103,7 @@ export const deleteCategory = (id: number) => {
 
       await apiConnector(
         "DELETE",
-        `http://localhost:8000/api/products/category/${id}`,
+        `http://localhost:8000/api/category/${id}`,
         undefined,
         {
           Authorization: `Bearer ${token}`,

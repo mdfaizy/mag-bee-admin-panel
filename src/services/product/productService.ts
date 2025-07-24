@@ -36,7 +36,7 @@ export const uploadProductImage = async (file: File): Promise<string> => {
 };
 
 export const updateProductById = async (product: any, token: string) => {
-  const res = await fetch(`http://localhost:8000/api/products/products/${product.id}`, {
+  const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

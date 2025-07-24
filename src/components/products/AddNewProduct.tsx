@@ -50,7 +50,7 @@ export default function AddNewProduct() {
   const fetchCategory = async () => {
     try {
       const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-      const res = await fetch("http://localhost:8000/api/products/category", {
+      const res = await fetch("http://localhost:8000/api/category", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -106,7 +106,7 @@ export default function AddNewProduct() {
 
   try {
     const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-    const response = await fetch("http://localhost:8000/api/products/product", {
+    const response = await fetch("http://localhost:8000/api/product", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
