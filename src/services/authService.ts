@@ -298,8 +298,6 @@ export const createRole = ({ name, description, router }: CreateRoleParams) => {
 };
 
 
-// services/authService.ts
-
 export async function getRolesAndPrivileges(token: string) {
   const [rolesRes, privilegesRes] = await Promise.all([
     fetch("http://localhost:8000/api/roles", {
@@ -348,3 +346,21 @@ export async function assignPrivilegesToRole({
 
   return true;
 }
+import { User } from "../utils/type";
+import axios from "axios";
+export const updateUserById = async (user: User, token: string): Promise<User> => {
+  const response = await axios.put(`${'http://localhost:8000/api'}/user/${user.id}`, user, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+export const deleteUserById = async (userId: number, token: string): Promise<void> => {
+  await axios.delete(`${'http://localhost:8000/api'}/user/${userId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+};

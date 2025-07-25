@@ -6,12 +6,12 @@ import { RootState } from "@/redux/store";
 import {
   setSelectedProduct,
   setProducts,
+  setLoading
 } from "@/redux/productSlice";
-import { fetchProductAll } from "@/services/product/productService";
-import { deleteCategory } from "@/services/product-category/categoryService";
+import { fetchProductAll ,deleteProductById,fetchPaginatedProducts} from "@/services/product/productService";
 
 import ViewProductModal from "../products/ViewProductModal";
-import EditProductModal from "../products/EditProductModal"; // ✅ Correct import
+import EditProductModal from "../products/EditProductModal";
 
 import { FaEye, FaEdit } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
@@ -23,7 +23,8 @@ import {
   TableHeadCell,
   TableCell,
 } from "../ui/table";
-
+import DeleteProductModal from "../products/DeleteProductModal";
+import { toast } from "react-toastify";
 const ProductTable = () => {
   const dispatch = useDispatch();
   const { products } = useSelector((state: RootState) => state.product);
@@ -32,11 +33,10 @@ const ProductTable = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [viewModalOpen, setViewModalOpen] = useState(false);
 const [editModalOpen, setEditModalOpen] = useState(false);
-
-  const itemsPerPage = 10;
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const visibleData = tableData.slice(startIndex, startIndex + itemsPerPage);
-  const totalPages = Math.ceil(tableData.length / itemsPerPage);
+const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+const [totalPages, setTotalPages] = useState(1);
+const [itemsPerPage, setItemsPerPage] = useState(4);
 
   useEffect(() => {
     const getProducts = async () => {
@@ -54,6 +54,24 @@ const [editModalOpen, setEditModalOpen] = useState(false);
     setTableData(products || []);
   }, [products]);
 
+
+  const fetchProducts = async (page: number) => {
+  dispatch(setLoading(true)); 
+  try {
+    const res = await fetchPaginatedProducts(page, itemsPerPage);
+    setTableData(res.products);
+    setTotalPages(res.totalPages);
+  } catch (error) {
+    toast.error("Failed to fetch products");
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+
+useEffect(() => {
+  fetchProducts(currentPage);
+}, [currentPage]);
   const handleView = (product: any) => {
     dispatch(setSelectedProduct(product));
     setViewModalOpen(true);
@@ -67,10 +85,32 @@ const handleEdit = (product: any) => {
 };
 
 
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-    await dispatch<any>(deleteCategory(id));
-  };
+const handleDeleteClick = (id: number) => {
+  setSelectedProductId(id);
+  setDeleteModalOpen(true);
+};
+
+const confirmDeleteProduct = async () => {
+  if (selectedProductId !== null) {
+    const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+
+    try {
+      await deleteProductById(selectedProductId, token);
+      const updatedList = await fetchProductAll();
+      dispatch(setProducts(updatedList));
+
+      toast.success("Product deleted successfully!",);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete product.");
+    } finally {
+      setDeleteModalOpen(false);
+      setSelectedProductId(null);
+    }
+  }
+};
+
+
+
 
   return (
     <>
@@ -91,7 +131,7 @@ const handleEdit = (product: any) => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {visibleData.map((item) => (
+            {tableData.map((item) => (
               <TableRow key={item.id}>
                 <TableCell>{item.id}</TableCell>
                 <TableCell>{item.name}</TableCell>
@@ -119,12 +159,13 @@ const handleEdit = (product: any) => {
                   >
                     <FaEdit />
                   </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="text-red-600 hover:underline"
-                  >
-                    <MdDeleteForever />
-                  </button>
+                 <button
+  onClick={() => handleDeleteClick(item.id)}
+  className="text-red-600 hover:underline"
+>
+  <MdDeleteForever />
+</button>
+
                   <button
                     onClick={() => handleView(item)}
                     className="text-green-600 hover:underline"
@@ -169,6 +210,13 @@ const handleEdit = (product: any) => {
   onClose={() => setEditModalOpen(false)}
   // product={editProduct}
 />
+
+<DeleteProductModal
+  isOpen={deleteModalOpen}
+  onClose={() => setDeleteModalOpen(false)}
+  onConfirm={confirmDeleteProduct}
+/>
+
     </>
   );
 };

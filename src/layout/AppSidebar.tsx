@@ -54,31 +54,31 @@ const navItems: NavItem[] = [
   // },
  
 
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [
-      // { name: "Form Elements", path: "/form-elements", pro: false },
-      // { name: "Add Prduct Category", path: "/product-category", pro: false }
-      // { name: "Role Ctreate", path: "/created-role", pro: false },
-      //  { name: "Assign Privelege", path: "/assign-privelege", pro: false },
-    ],
-  },
+  // {
+  //   name: "Forms",
+  //   icon: <ListIcon />,
+  //   subItems: [
+  //     // { name: "Form Elements", path: "/form-elements", pro: false },
+  //     // { name: "Add Prduct Category", path: "/product-category", pro: false }
+  //     // { name: "Role Ctreate", path: "/created-role", pro: false },
+  //     //  { name: "Assign Privelege", path: "/assign-privelege", pro: false },
+  //   ],
+  // },
   {
     name: "Tables",
     icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false },
+    subItems: [{ name: "Resent Order", path: "/basic-tables", pro: false },
        { name: "User List", path: "/user-table", pro: false },
     ],
   },
-   {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
+  //  {
+  //   icon: <PieChartIcon />,
+  //   name: "Charts",
+  //   subItems: [
+  //     { name: "Line Chart", path: "/line-chart", pro: false },
+  //     { name: "Bar Chart", path: "/bar-chart", pro: false },
+  //   ],
+  // },
   {
     icon: <PlugInIcon />,
     name: "Authentication",

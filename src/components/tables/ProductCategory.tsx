@@ -1,6 +1,5 @@
 "use client";
 
-
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -24,17 +23,16 @@ import {
   TableHeadCell,
   TableCell,
 } from "../ui/table";
-
+import { Modal } from "../ui/modal";
 const CategoryTable = () => {
   const dispatch = useDispatch();
   const { categories } = useSelector((state: RootState) => state.category);
-
-  // const [tableData, setTableData] = useState<ProductCategory[]>([]);
-
-const [tableData, setTableData] = useState<CategoryItem[]>([]);
+  const [tableData, setTableData] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [selectedDeleteId, setSelectedDeleteId] = useState<number | null>(null);
 
   const itemsPerPage = 10;
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -68,10 +66,9 @@ const [tableData, setTableData] = useState<CategoryItem[]>([]);
     dispatch(setSelectedCategory(category));
     setEditModalOpen(true);
   };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this category?")) return;
-    await dispatch<any>(deleteCategory(id));
+  const handleDeleteClick = (id: number) => {
+    setSelectedDeleteId(id);
+    setDeleteModalOpen(true);
   };
 
   return (
@@ -86,7 +83,7 @@ const [tableData, setTableData] = useState<CategoryItem[]>([]);
               <TableHeadCell>Slug</TableHeadCell>
               <TableHeadCell>Image</TableHeadCell>
               <TableHeadCell>Created At</TableHeadCell>
-                <TableHeadCell>Updated At</TableHeadCell>
+              <TableHeadCell>Updated At</TableHeadCell>
               <TableHeadCell>Actions</TableHeadCell>
             </TableRow>
           </TableHead>
@@ -109,8 +106,8 @@ const [tableData, setTableData] = useState<CategoryItem[]>([]);
                     "—"
                   )}
                 </TableCell>
-                 <TableCell>{new Date(item.createdAt).toLocaleString()}</TableCell>
-                  <TableCell>{new Date(item.updatedAt).toLocaleString()}</TableCell>
+                <TableCell>{new Date(item.createdAt).toLocaleString()}</TableCell>
+                <TableCell>{new Date(item.updatedAt).toLocaleString()}</TableCell>
                 <TableCell className="flex gap-3">
                   <button
                     onClick={() => handleEdit(item)}
@@ -119,11 +116,12 @@ const [tableData, setTableData] = useState<CategoryItem[]>([]);
                     <FaEdit />
                   </button>
                   <button
-                    onClick={() => handleDelete(item.id)}
+                    onClick={() => handleDeleteClick(item.id)}
                     className="text-red-600 hover:underline"
                   >
                     <MdDeleteForever />
                   </button>
+
                   <button
                     onClick={() => handleView(item)}
                     className="text-green-600 hover:underline"
@@ -160,14 +158,48 @@ const [tableData, setTableData] = useState<CategoryItem[]>([]);
       {viewModalOpen && (
         <ViewCategoryModal onClose={() => setViewModalOpen(false)} />
       )}
-      {/* {editModalOpen && (
-        <EditCategoryModal onClose={() => setEditModalOpen(false)} />
+      <EditCategoryModal
+        isOpen={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+      />
+      {deleteModalOpen && (
+        <Modal
+          isOpen={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          className="max-w-[500px] m-4" >  <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full shadow-lg">
+              <h2 className="text-lg font-semibold mb-4 text-center">
+                Are you sure you want to delete this category?
+              </h2>
+              <div className="flex justify-center gap-4 mt-6">
+                <button
+                  onClick={async () => {
+                    if (selectedDeleteId) {
+                      await dispatch<any>(deleteCategory(selectedDeleteId));
+                      setDeleteModalOpen(false);
+                      setSelectedDeleteId(null);
+                    }
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => {
+                    setDeleteModalOpen(false);
+                    setSelectedDeleteId(null);
+                  }}
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </Modal>
+
       )}
-       */}
-       <EditCategoryModal
-  isOpen={editModalOpen}
-  onClose={() => setEditModalOpen(false)}
-/>
 
     </>
   );

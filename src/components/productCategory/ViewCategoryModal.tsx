@@ -29,13 +29,13 @@ const ViewCategoryModal: React.FC<Props> = ({ onClose }) => {
           <div>
             <strong>Slug:</strong> {selectedCategory.slug}
           </div>
-         <div>
+         {/* <div>
              
-  <strong>Created At:</strong> {new Date(selectedCategory.createdAt).toLocaleString()}
+  <span>Created At:</span> {new Date(selectedCategory.createdAt).toLocaleString()}
 </div>
 <div>
-  <strong>Updated At:</strong> {new Date(selectedCategory.updatedAt).toLocaleString()}
-</div>
+  <span>Updated At:</span> {new Date(selectedCategory.updatedAt).toLocaleString()}
+</div> */}
 
           {selectedCategory.imageUrl && (
             <div>

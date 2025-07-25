@@ -8,8 +8,7 @@ import React from "react";
 
 export const metadata: Metadata = {
   title: "",
-  description:
-    "",
+  description:"",
   // other metadata
 };
 

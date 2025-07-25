@@ -1,14 +1,14 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-
-interface Category {
-  id: string;
-  name: string;
-  description: string;
-  imageUrl: string;
-  slug:string,
-  createdAt?: string;
-  updatedAt?: string;
-}
+import { Category } from '../utils/type'
+// interface Category {
+//   id: string;
+//   name: string;
+//   description: string;
+//   imageUrl: string;
+//   slug:string,
+//   createdAt?: string;
+//   updatedAt?: string;
+// }
 
 interface ProductCategoryState {
   categories: Category[];

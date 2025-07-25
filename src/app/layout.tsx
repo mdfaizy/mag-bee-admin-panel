@@ -25,7 +25,7 @@ export default function RootLayout({
           <SidebarProvider>{children}</SidebarProvider>
         </ThemeProvider>
           </ReduxProvider>
-<ToastContainer />
+<ToastContainer  style={{ top: "70px" }} />
       </body>
     </html>
   );

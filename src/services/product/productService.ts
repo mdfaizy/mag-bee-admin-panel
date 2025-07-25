@@ -50,3 +50,36 @@ export const updateProductById = async (product: any, token: string) => {
 
   return result.updatedProduct;
 };
+
+
+export const deleteProductById = async (id: number, token: string): Promise<string> => {
+  const res = await fetch(`http://localhost:8000/api/products/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.message || "Failed to delete product");
+
+  return result.message || "Product deleted successfully";
+};
+
+
+export const fetchPaginatedProducts = async (page: number, limit: number = 10) => {
+  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+
+  const res = await apiConnector(
+    "GET",
+    `http://localhost:8000/api/pagination-products?page=${page}&limit=${limit}`,
+    {},
+    {
+      Authorization: `Bearer ${token}`,
+    }
+  );
+
+  return res.data; // Should be { products, total, currentPage, totalPages }
+};
+
+

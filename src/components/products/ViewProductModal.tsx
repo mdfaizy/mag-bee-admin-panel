@@ -20,19 +20,19 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       <div className="p-4">
         <h2 className="text-xl font-semibold mb-4">Product Details</h2>
         <div className="space-y-2 text-sm">
-          <div><strong>ID:</strong> {selectedProduct.id}</div>
-          <div><strong>Name:</strong> {selectedProduct.name}</div>
-          <div><strong>Description:</strong> {selectedProduct.description}</div>
-          <div><strong>Original Price:</strong> ₹{selectedProduct.originalPrice}</div>
-          <div><strong>Offer (%):</strong> {selectedProduct.offer}%</div>
-          <div><strong>Final Price:</strong> ₹{selectedProduct.finalPrice}</div>
-          <div><strong>URL:</strong> <a href={selectedProduct.url} target="_blank" className="text-blue-600 underline">{selectedProduct.url}</a></div>
-          <div><strong>Created At:</strong> {selectedProduct.createdAt ? new Date(selectedProduct.createdAt).toLocaleString() : 'N/A'}</div>
-          <div><strong>Updated At:</strong> {selectedProduct.updatedAt ? new Date(selectedProduct.updatedAt).toLocaleString() : 'N/A'}</div>
+          <div><span>ID:</span> {selectedProduct.id}</div>
+          <div><span>Name:</span> {selectedProduct.name}</div>
+          <div><span>Description:</span> {selectedProduct.description}</div>
+          <div><span>Original Price:</span> ₹{selectedProduct.originalPrice}</div>
+          <div><span>Offer (%):</span> {selectedProduct.offer}%</div>
+          <div><span>Final Price:</span> ₹{selectedProduct.finalPrice}</div>
+          <div><span>URL:</span> <a href={selectedProduct.url} target="_blank" className="text-blue-600 underline">{selectedProduct.url}</a></div>
+          {/* <div><span>Created At:</span> {selectedProduct.createdAt ? new Date(selectedProduct.createdAt).toLocaleString() : 'N/A'}</div>
+          <div><span>Updated At:</span> {selectedProduct.updatedAt ? new Date(selectedProduct.updatedAt).toLocaleString() : 'N/A'}</div> */}
 
           {selectedProduct.imageUrl && (
             <div>
-              <strong>Image:</strong>
+              <span>Image:</span>
               <img
                 src={selectedProduct.imageUrl}
                 alt={selectedProduct.name}
