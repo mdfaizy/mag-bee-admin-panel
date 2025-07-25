@@ -95,7 +95,7 @@ export default function AddNewProduct() {
   submissionData.append("originalPrice", String(safeNumber(formData.originalPrice)));
   submissionData.append("price", String(safeNumber(formData.price)));
   submissionData.append("offer", String(safeNumber(formData.offerPercentage))); 
-  submissionData.append("quantity", String(safeNumber(formData.quantity)));
+  // submissionData.append("quantity", String(safeNumber(formData.quantity)));
   submissionData.append("keywords", JSON.stringify(formData.keywords));
   submissionData.append("imageUrl", selectedFile);
 
@@ -185,7 +185,7 @@ export default function AddNewProduct() {
                   value={formData.offerPercentage}
                   onChange={handleChange}
                 />
-                <Input
+                {/* <Input
                   name="price"
                   placeholder="Final Price"
                   type="number"
@@ -198,7 +198,7 @@ export default function AddNewProduct() {
                   type="number"
                   value={formData.quantity}
                   onChange={handleChange}
-                />
+                /> */}
               </div>
           
              <input
