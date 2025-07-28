@@ -43,11 +43,6 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       [name]: parsedValue,
     };
 
-    // if (name === "originalPrice" || name === "offer") {
-    //   updated.price = parseFloat(
-    //     (updated.originalPrice - (updated.originalPrice * updated.offer) / 100).toFixed(2)
-    //   );
-    // }
 
     setFormData(updated);
   };
