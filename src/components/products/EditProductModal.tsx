@@ -107,7 +107,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       dispatch(setSelectedProduct(null));
 
       onClose();
-       toast.success("Product deleted successfully!",);
+       toast.success("Product Update successfully!",);
     } catch (err: any) {
      toast.error(err.message || "Updated Failed");
     }
