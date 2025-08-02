@@ -165,6 +165,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     submissionData.append("imageUrl", file);
   });
 
+  
   // ✅ Append specifications ONCE
   submissionData.append("specifications", JSON.stringify(specifications));
 
