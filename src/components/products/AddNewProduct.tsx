@@ -38,6 +38,7 @@ export default function AddNewProduct() {
     height: "",
     weight: "",
     weightUnit: "kg",
+    stock:"",
     shippingAvailable: false,
     skuCode: "",
     returnPolicy: "",
@@ -349,6 +350,21 @@ const removeAttribute = (variantIndex: number, attrIndex: number) => {
                       <option value="kg">kg</option>
                       <option value="g">g</option>
                     </select>
+                  </div>
+                </div>
+                 <div className="flex-1">
+                  <Label>Stock<span className="text-error-500">*</span></Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="number"
+                      name="stock"
+                      placeholder="Enter Stock"
+                      value={formData.stock}
+                      onChange={handleChange}
+                      className="w-full"
+                    
+                    />
+                    
                   </div>
                 </div>
               </div>
