@@ -142,18 +142,20 @@ const ProductTable = () => {
 
       {/* Product Table */}
       <div className="overflow-x-auto ">
-    
+
         <Table className="min-w-full">
           <TableHead className="bg-gray-50">
             <TableRow>
-             
+
               <TableHeadCell className="w-20 sticky left-0 bg-gray-50 z-20">ID</TableHeadCell>
-<TableHeadCell className="min-w-[200px] sticky left-20 bg-gray-50 z-20">Name</TableHeadCell>
-              <TableHeadCell className="hidden md:table-cell">Description</TableHeadCell>
+              <TableHeadCell className="min-w-[200px] sticky left-20 bg-gray-50 z-20">Name</TableHeadCell>
+              {/* <TableHeadCell className="hidden md:table-cell">Description</TableHeadCell> */}
               <TableHeadCell>Price</TableHeadCell>
               <TableHeadCell className="hidden md:table-cell">Offer</TableHeadCell>
               <TableHeadCell className="hidden lg:table-cell">Category</TableHeadCell>
               <TableHeadCell className="hidden lg:table-cell">Image</TableHeadCell>
+              <TableHeadCell className="hidden lg:table-cell">Active</TableHeadCell>
+              <TableHeadCell className="hidden lg:table-cell">Stock</TableHeadCell>
               <TableHeadCell>Actions</TableHeadCell>
             </TableRow>
           </TableHead>
@@ -177,9 +179,7 @@ const ProductTable = () => {
                 <TableRow key={item.id} className="hover:bg-gray-50">
                   <TableCell>{item.id}</TableCell>
                   <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell className="hidden md:table-cell truncate max-w-xs">
-                    {item.description || "—"}
-                  </TableCell>
+
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="font-semibold">₹{item.price}</span>
@@ -206,6 +206,21 @@ const ProductTable = () => {
                     ) : (
                       "—"
                     )}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell truncate max-w-xs">
+                    <div
+                      // onClick={() => handleToggle(user.id)}
+                      className={`relative w-12 h-6 flex items-center rounded-full cursor-pointer transition-colors ${item.is_active ? 'bg-green-500' : 'bg-red-400'
+                        }`}
+                    >
+                      <div
+                        className={`absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform ${item.is_active ? 'translate-x-6' : ''
+                          }`}
+                      />
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden lg:table-cell">
+                    {item.stock || "—"}
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
@@ -269,11 +284,10 @@ const ProductTable = () => {
               <button
                 key={pageNum}
                 onClick={() => setCurrentPage(pageNum)}
-                className={`px-4 py-2 border rounded-md ${
-                  currentPage === pageNum
+                className={`px-4 py-2 border rounded-md ${currentPage === pageNum
                     ? "bg-blue-600 text-white border-blue-600"
                     : "hover:bg-gray-50"
-                } transition-colors`}
+                  } transition-colors`}
               >
                 {pageNum}
               </button>
