@@ -44,6 +44,7 @@ const CategoryTable = () => {
     const getCategories = async () => {
       try {
         const result = await fetchProductCategory();
+        console.log('reasult',result);
         dispatch(setCategories(result));
       } catch (error) {
         console.error("Failed to load categories", error);

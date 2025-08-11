@@ -7,6 +7,7 @@ import TextArea from "@/components/form/input/TextArea";
 import Select from "@/components/form/Select";
 import ChipInput from "@/components/form/input/ChipInput";
 import { ChevronDownIcon } from "@/icons";
+import { createCategory } from "@/services/product-category/categoryService";
 
 type CategoryOption = {
   value: string;
@@ -58,30 +59,38 @@ export default function AddNewProduct() {
     { value: "30-day return", label: "30-day return" },
     { value: "No return", label: "No return" },
   ];
-
+ const handleRoleChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, categoryId: value }));
+  };
   useEffect(() => {
-    const fetchCategory = async () => {
-      try {
-        const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-        const res = await fetch("http://localhost:8000/api/category", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await res.json();
-        const formatted = data.map((item: any) => ({
-          value: String(item.id),
-          label: item.name,
-        }));
-        setCategory(formatted);
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
-    };
-    fetchCategory();
-  }, []);
+  const fetchCategories = async () => {
+    const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
 
+    try {
+      const res = await fetch("http://localhost:8000/api/category", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+
+      // ✅ Convert API data to Select's format
+      const formatted = data.map((item: any) => ({
+        value: String(item.id),
+        label: item.name,
+      }));
+
+      setCategory(formatted);
+    } catch (error) {
+      console.error("Failed to fetch categories:", error);
+    }
+  };
+  fetchCategories();
+}, []);
+
+
+  
   const removeVariant = (index: number) => {
   setFormData(prev => ({
     ...prev,
@@ -212,11 +221,11 @@ const removeAttribute = (variantIndex: number, attrIndex: number) => {
               </div>
 
               <div className="relative">
-                <Label>Select Category<span className="text-error-500">*</span></Label>
                 <Select
                   options={category}
                   placeholder="Select Category"
-                  onChange={(value) => handleSelectChange("categoryId", value)}
+                  onChange={handleRoleChange}
+                  className="appearance-none pr-10"
                 />
                 <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500">
                   <ChevronDownIcon className="w-4 h-4" />

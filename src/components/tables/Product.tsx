@@ -37,12 +37,61 @@ const ProductTable = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+const handleToggleActive = async (product: any) => {
+  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+  try {
+    const updated = { ...product, is_active: !product.is_active };
+
+    const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ is_active: updated.is_active }),
+    });
+
+    if (!res.ok) throw new Error("Failed to update active status");
+
+    setTableData(prev =>
+      prev.map(p => (p.id === product.id ? updated : p))
+    );
+    toast.success("Product status updated!");
+  } catch (error) {
+    toast.error("Error updating status");
+  }
+};
+const handleStockChange = async (product: any, newStock: number) => {
+  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+  try {
+    const updated = { ...product, stock: newStock };
+
+    const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ stock: newStock }),
+    });
+
+    if (!res.ok) throw new Error("Failed to update stock");
+
+    setTableData(prev =>
+      prev.map(p => (p.id === product.id ? updated : p))
+    );
+    toast.success("Stock updated!");
+  } catch (error) {
+    toast.error("Error updating stock");
+  }
+};
 
   useEffect(() => {
     const getProducts = async () => {
       try {
         dispatch(setLoading(true));
         const result = await fetchProductAll();
+        console.log(result);
         dispatch(setProducts(result));
         setTableData(result);
       } catch (error) {
@@ -207,7 +256,7 @@ const ProductTable = () => {
                       "—"
                     )}
                   </TableCell>
-                  <TableCell className="hidden md:table-cell truncate max-w-xs">
+                  {/* <TableCell className="hidden md:table-cell truncate max-w-xs">
                     <div
                       // onClick={() => handleToggle(user.id)}
                       className={`relative w-12 h-6 flex items-center rounded-full cursor-pointer transition-colors ${item.is_active ? 'bg-green-500' : 'bg-red-400'
@@ -218,10 +267,30 @@ const ProductTable = () => {
                           }`}
                       />
                     </div>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
+                  </TableCell> */}
+                  <TableCell className="hidden md:table-cell truncate max-w-xs">
+  <div
+    onClick={() => handleToggleActive(item)}
+    className={`relative w-12 h-6 flex items-center rounded-full cursor-pointer transition-colors ${item.is_active ? 'bg-green-500' : 'bg-red-400'}`}
+  >
+    <div
+      className={`absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform ${item.is_active ? 'translate-x-6' : ''}`}
+    />
+  </div>
+</TableCell>
+
+                  {/* <TableCell className="hidden lg:table-cell">
                     {item.stock || "—"}
-                  </TableCell>
+                  </TableCell> */}
+                  <TableCell className="hidden lg:table-cell">
+  <input
+    type="number"
+    className="w-16 border rounded px-1 text-center"
+    value={item.stock || 0}
+    onChange={(e) => handleStockChange(item, Number(e.target.value))}
+  />
+</TableCell>
+
                   <TableCell>
                     <div className="flex gap-2">
                       <button

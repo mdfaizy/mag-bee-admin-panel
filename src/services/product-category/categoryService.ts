@@ -62,36 +62,6 @@ export const fetchProductCategory = async () => {
 
 
 
-// export const deleteCategory = (id: number) => {
-//   return async (dispatch: AppDispatch) => {
-//     const toastId = toast.loading("Deleting category...");
-
-//     try {
-//       const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
-
-//       await apiConnector(
-//         "DELETE",
-//         `http://localhost:8000/api/products/category/${id}`,
-//         null,
-//         {
-//           Authorization: `Bearer ${token}`,
-//         }
-//       );
-
-//       toast.success("Category deleted successfully!");
-
-//       // Optionally refetch updated list after deletion
-//       const updatedList = await fetchProductCategory();
-//       dispatch(setCategories(updatedList));
-//     } catch (error: any) {
-//       const errMsg = error?.response?.data?.message || "Delete failed.";
-//       toast.error(errMsg);
-//     } finally {
-//       toast.dismiss(toastId);
-//     }
-//   };
-// };
-
 
 
 export const deleteCategory = (id: number) => {

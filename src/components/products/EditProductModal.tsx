@@ -377,3 +377,5 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 };
 
 export default EditProductModal;
+
+
