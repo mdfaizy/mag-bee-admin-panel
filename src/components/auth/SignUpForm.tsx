@@ -9,7 +9,11 @@ import { toast } from "react-toastify";
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+// import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
+import { FaArrowLeft } from "react-icons/fa6";
+
+import { IoEyeOff } from "react-icons/io5";
+import { IoEye } from "react-icons/io5";
 import Link from "next/link";
 import { signup } from "@/services/authService";
 import Select from "../form/Select";
@@ -136,7 +140,7 @@ const fetchRoles = async () => {
           href="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          <ChevronLeftIcon />
+          <FaArrowLeft />
           Back to dashboard
         </Link>
       </div>
@@ -229,9 +233,9 @@ const fetchRoles = async () => {
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
                   >
                     {showPassword ? (
-                      <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
+                      <IoEye className="fill-gray-500 dark:fill-gray-400" />
                     ) : (
-                      <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
+                      <IoEyeOff className="fill-gray-500 dark:fill-gray-400" />
                     )}
                   </span>
                 </div>

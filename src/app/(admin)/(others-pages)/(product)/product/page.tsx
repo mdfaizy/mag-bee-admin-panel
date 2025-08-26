@@ -5,7 +5,7 @@ export default function ProductCategortTable() {
   return (
     <div>
       <PageBreadcrumb pageTitle="Product List" />
-      <div className="space-y-6">
+      <div className="space-y-6 w-full">
         {/* <ComponentCard title="Product"> */}
           <ProductTable/>
         {/* </ComponentCard> */}

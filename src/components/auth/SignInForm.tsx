@@ -4,7 +4,10 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import Link from "next/link";
-import { EyeIcon, EyeCloseIcon } from "@/icons";
+// import { EyeIcon, EyeCloseIcon } from "@/icons";
+import { IoEyeOff } from "react-icons/io5";
+import { IoEye } from "react-icons/io5";
+
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
@@ -110,9 +113,9 @@ export default function SignInForm() {
                   className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                 >
                   {formData.showPassword ? (
-                    <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
+                    <IoEye className="fill-gray-500 dark:fill-gray-400" />
                   ) : (
-                    <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
+                    <IoEyeOff className="fill-gray-500 dark:fill-gray-400" />
                   )}
                 </span>
               </div>

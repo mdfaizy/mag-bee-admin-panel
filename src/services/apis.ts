@@ -15,5 +15,11 @@ export const endpointsCategory={
 }
 
 export const endpointsProduct={
-  PRODUCT_GELL_ALL:`${BASE_URL}/products`
+  PRODUCT_GELL_ALL:`${BASE_URL}/products`,
+  PRODUCT_BY_ID: `${BASE_URL}/products/id`,
 }
+
+
+export const endpointsOrder = {
+  ORDER_GET_ALL: `${BASE_URL}/get-order`,
+};

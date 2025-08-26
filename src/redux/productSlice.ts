@@ -1,10 +1,36 @@
 // redux/features/productSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+// interface Attribute {
+//   id?: string;
+//   key: string;
+//   value: string;
+// }
 
+// interface Variant {
+//   id?: string;
+//   sku: string;
+//   price: number;
+//   stock: number;
+//   attributes: Attribute[];
+// }
+interface VariantAttribute {
+  id?: number;
+  key: string;
+  value: string;
+}
+
+interface Variant {
+  id?: number;
+  sku: string;
+  price: number | string;
+  stock: number;
+  attributes: VariantAttribute[];
+}
 interface Product {
   id: string;
   name: string;
   description: string;
+  stock:number;
   originalPrice: number;
   offer: number; // percentage value
   finalPrice: number;
@@ -14,6 +40,7 @@ interface Product {
   };
   url: string;
   imageUrl: string;
+    variants?: Variant[];  
   createdAt?: string;
   updatedAt?: string;
 }
@@ -40,6 +67,7 @@ const productSlice = createSlice({
       state.products = action.payload;
     },
     setSelectedProduct: (state, action: PayloadAction<Product | null>) => {
+     
       state.selectedProduct = action.payload;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {

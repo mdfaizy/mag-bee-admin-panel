@@ -4,19 +4,31 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+// import {
+//   // BoxCubeIcon,
+//   // CalenderIcon,
+//   ChevronDownIcon,
+//   GridIcon,
+//   HorizontaLDots,
+//   ListIcon,
+//   // PageIcon,
+//   PieChartIcon,
+//   PlugInIcon,
+//   TableIcon,
+//   UserCircleIcon,
+// } from "../icons/index";
+
 import {
-  // BoxCubeIcon,
-  // CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  // PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
-} from "../icons/index";
+  FaChevronDown,     // ChevronDownIcon
+  FaThLarge,         // GridIcon
+  FaEllipsisH,       // HorizontaLDots
+  FaList,            // ListIcon
+  FaChartPie,        // PieChartIcon
+  FaPlug,            // PlugInIcon
+  FaTable,           // TableIcon
+  FaUserCircle       // UserCircleIcon
+} from 'react-icons/fa';
+
 import { FaShoppingCart } from "react-icons/fa";
 
 
@@ -29,7 +41,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
+    icon: <FaThLarge />,
     name: "Dashboard",
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
@@ -66,7 +78,7 @@ const navItems: NavItem[] = [
   // },
   {
     name: "Tables",
-    icon: <TableIcon />,
+    icon: <FaTable />,
     subItems: [{ name: "Resent Order", path: "/basic-tables", pro: false },
        { name: "User List", path: "/user-table", pro: false },
     ],
@@ -80,7 +92,7 @@ const navItems: NavItem[] = [
   //   ],
   // },
   {
-    icon: <PlugInIcon />,
+    icon: <FaPlug />,
     name: "Authentication",
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
@@ -103,7 +115,7 @@ const navItems: NavItem[] = [
 const othersItems: NavItem[] = [
  
    {
-    icon: <UserCircleIcon />,
+    icon: <FaUserCircle />,
     name: "User Profile",
     path: "/profile",
   },
@@ -159,7 +171,7 @@ const AppSidebar: React.FC = () => {
                 <span className={`menu-item-text`}>{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDownIcon
+                <FaChevronDown
                   className={`ml-auto w-5 h-5 transition-transform duration-200  ${
                     openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
@@ -368,7 +380,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
                 ) : (
-                  <HorizontaLDots />
+                  <FaEllipsisH />
                 )}
               </h2>
               {renderMenuItems(navItems, "main")}
@@ -385,7 +397,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Others"
                 ) : (
-                  <HorizontaLDots />
+                  <FaEllipsisH />
                 )}
               </h2>
               {renderMenuItems(othersItems, "others")}

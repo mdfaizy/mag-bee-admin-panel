@@ -9,6 +9,18 @@ export interface Category {
   updatedAt?: string;
 }
 
+export interface Attribute {
+  key: string;
+  value: string;
+}
+
+
+export interface Variant {
+  sku: string;
+  price: string;
+  stock: string;
+  attributes: { key: string; value: string }[];
+}
 export interface Product {
   id: string;
   name: string;
@@ -22,9 +34,15 @@ export interface Product {
   };
   url: string;
   imageUrl: string;
+  variants: Variant[]; 
   createdAt?: string;
   updatedAt?: string;
 }
+
+
+
+
+
 interface Role {
   id: number;
   name: string;

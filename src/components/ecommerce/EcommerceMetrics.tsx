@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
 // import Badge from "../ui/badge/Badge";
-import {  BoxIconLine, GroupIcon } from "@/icons";
+// import {  BoxIconLine, GroupIcon } from "@/icons";
 import { fetchAllUsers } from "@/services/authService";
 import { User } from "@/utils/type";
+import { BiBox } from 'react-icons/bi';
 export const EcommerceMetrics = () => {
 
   const [users, setUsers] = useState<User[]>([]);
@@ -26,9 +27,9 @@ export const EcommerceMetrics = () => {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {/* <!-- Metric Item Start --> */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
-        <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
+        {/* <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
           <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
-        </div>
+        </div> */}
 
         <div className="flex items-end justify-between mt-5">
           <div>
@@ -50,7 +51,7 @@ export const EcommerceMetrics = () => {
       {/* <!-- Metric Item Start --> */}
       <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6">
         <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
-          <BoxIconLine className="text-gray-800 dark:text-white/90" />
+          <BiBox className="text-gray-800 dark:text-white/90" />
         </div>
         <div className="flex items-end justify-between mt-5">
           <div>

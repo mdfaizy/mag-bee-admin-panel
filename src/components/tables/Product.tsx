@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -8,7 +8,7 @@ import {
   setProducts,
   setLoading
 } from "@/redux/productSlice";
-import { fetchProductAll, deleteProductById, fetchPaginatedProducts } from "@/services/product/productService";
+import { fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus } from "@/services/product/productService";
 import { toast } from "react-toastify";
 import { FaEye, FaEdit, FaSearch } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
@@ -26,7 +26,8 @@ import DeleteProductModal from "../products/DeleteProductModal";
 
 const ProductTable = () => {
   const dispatch = useDispatch();
-  const { products, loading } = useSelector((state: RootState) => state.product);
+  const { loading } = useSelector((state: RootState) => state.product);
+const [products, setProducts] = useState<Product[]>([]);
 
   const [tableData, setTableData] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,7 +43,7 @@ const handleToggleActive = async (product: any) => {
   try {
     const updated = { ...product, is_active: !product.is_active };
 
-    const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {
+    const res = await fetch(`http://localhost:8000/api/products/${product.id}/toggle-active`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -61,6 +62,8 @@ const handleToggleActive = async (product: any) => {
     toast.error("Error updating status");
   }
 };
+
+
 const handleStockChange = async (product: any, newStock: number) => {
   const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
   try {
@@ -90,8 +93,11 @@ const handleStockChange = async (product: any, newStock: number) => {
     const getProducts = async () => {
       try {
         dispatch(setLoading(true));
+
         const result = await fetchProductAll();
         console.log(result);
+      console.log(result.images[0].imageUrl);
+
         dispatch(setProducts(result));
         setTableData(result);
       } catch (error) {
@@ -102,6 +108,7 @@ const handleStockChange = async (product: any, newStock: number) => {
     };
     getProducts();
   }, [dispatch]);
+ 
 
   const fetchProducts = async (page: number) => {
     dispatch(setLoading(true));
@@ -127,14 +134,32 @@ const handleStockChange = async (product: any, newStock: number) => {
   );
 
   const handleView = (product: any) => {
-    dispatch(setSelectedProduct(product));
+    // dispatch(setSelectedProduct(product));
+    setSelectedProductId(product.id);
     setViewModalOpen(true);
   };
 
-  const handleEdit = (product: any) => {
-    dispatch(setSelectedProduct(product));
+
+  // const handleEdit = (product: any) => {
+  //   dispatch(setSelectedProduct(product));
+  //   setEditModalOpen(true);
+  // };
+
+
+const handleEdit = async (product: any) => {
+  try {
+    const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+    const productData = await fetchProductById(product.id, token);
+    console.log(product)
+    dispatch(setSelectedProduct(productData));
     setEditModalOpen(true);
-  };
+  } catch (error) {
+    toast.error("Failed to load product details");
+  }
+};
+
+
+
 
   const handleDeleteClick = (id: number) => {
     setSelectedProductId(id);
@@ -211,7 +236,7 @@ const handleStockChange = async (product: any, newStock: number) => {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8">
+                <TableCell  className="text-center py-8">
                   <div className="animate-pulse flex justify-center">
                     <div className="h-8 w-8 bg-blue-200 rounded-full"></div>
                   </div>
@@ -219,7 +244,7 @@ const handleStockChange = async (product: any, newStock: number) => {
               </TableRow>
             ) : filteredData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                <TableCell  className="text-center py-8 text-gray-500">
                   No products found
                 </TableCell>
               </TableRow>
@@ -245,29 +270,24 @@ const handleStockChange = async (product: any, newStock: number) => {
                   <TableCell className="hidden lg:table-cell">
                     {item.category?.name || "—"}
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {item.imageUrl ? (
-                      <img
-                        src={item.imageUrl}
-                        alt="Product"
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  {/* <TableCell className="hidden md:table-cell truncate max-w-xs">
-                    <div
-                      // onClick={() => handleToggle(user.id)}
-                      className={`relative w-12 h-6 flex items-center rounded-full cursor-pointer transition-colors ${item.is_active ? 'bg-green-500' : 'bg-red-400'
-                        }`}
-                    >
-                      <div
-                        className={`absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform ${item.is_active ? 'translate-x-6' : ''
-                          }`}
-                      />
-                    </div>
-                  </TableCell> */}
+                  {/* import Image from "next/image"; */}
+
+<TableCell className="hidden lg:table-cell">
+  {item.images && item.images.length > 0 ? (
+    <Image
+      src={item.images[0].imageUrl} // ✅ Next.js optimized image
+      alt={item.name}
+      width={48}
+      height={48}
+      className="w-12 h-12 object-cover rounded"
+    />
+  ) : (
+    "—"
+  )}
+</TableCell>
+
+
+
                   <TableCell className="hidden md:table-cell truncate max-w-xs">
   <div
     onClick={() => handleToggleActive(item)}
@@ -376,11 +396,18 @@ const handleStockChange = async (product: any, newStock: number) => {
       <ViewProductModal
         isOpen={viewModalOpen}
         onClose={() => setViewModalOpen(false)}
-      />
+          // productId={selectedProductId}
+          productId={selectedProductId !== null ? selectedProductId.toString() : null}
+
+        />
       <EditProductModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
       />
+    
+
+
+
       <DeleteProductModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}

@@ -6,7 +6,8 @@ import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
 import Select from "@/components/form/Select";
 import ChipInput from "@/components/form/input/ChipInput";
-import { ChevronDownIcon } from "@/icons";
+// import { ChevronDownIcon } from "@/icons";
+import { HiChevronDown } from 'react-icons/hi';
 import { createCategory } from "@/services/product-category/categoryService";
 
 type CategoryOption = {
@@ -20,6 +21,11 @@ type Variant = {
   stock: string;
   attributes: { key: string; value: string }[];
 };
+type Options = {
+  variantIndex: number;
+  attrIndex?: number;
+  attrField?: string;
+}
 
 export default function AddNewProduct() {
   const [category, setCategory] = useState<CategoryOption[]>([]);
@@ -118,21 +124,45 @@ const removeAttribute = (variantIndex: number, attrIndex: number) => {
   ) => {
     const { name, value, type } = e.target;
     const checked = type === "checkbox" ? (e.target as HTMLInputElement).checked : undefined;
+// if (options?.variantIndex !== undefined) {
+//   setFormData((prev) => {
+//     const updatedVariants = [...prev.variants];
+    
+//     if (options.attrIndex !== undefined && options.attrField) {
+//       updatedVariants[options.variantIndex].attributes[options.attrIndex][options.attrField] = value;
+//     } else {
+//       updatedVariants[options.variantIndex][name as keyof Variant] = value;
+//     }
 
-    if (options?.variantIndex !== undefined) {
-      setFormData((prev) => {
-        const updatedVariants = [...prev.variants];
-        
-        if (options.attrIndex !== undefined && options.attrField) {
-          updatedVariants[options.variantIndex].attributes[options.attrIndex][options.attrField] = value;
-        } else {
-          updatedVariants[options.variantIndex][name as keyof Variant] = value;
-        }
+//     return { ...prev, variants: updatedVariants };
+//   });
+// }
+if (options?.variantIndex !== undefined) {
+  const variantIndex = options.variantIndex;
+  const attrIndex = options.attrIndex;
+  const attrField = options.attrField;
 
-        return { ...prev, variants: updatedVariants };
-      });
-      return;
+  setFormData((prev) => {
+    const updatedVariants = [...prev.variants];
+
+    if (
+      attrIndex !== undefined &&
+      attrField &&
+      updatedVariants[variantIndex]?.attributes[attrIndex]
+    ) {
+      updatedVariants[variantIndex].attributes[attrIndex][attrField] = value;
+    } else {
+      // updatedVariants[variantIndex][name as keyof Variant] = value;
+       if (name !== "attributes") {
+    updatedVariants[variantIndex][name as Exclude<keyof Variant, "attributes">] = value;
+  }
     }
+
+    return { ...prev, variants: updatedVariants };
+  });
+
+  return; // 🛑 Prevents double-setting formData
+}
 
     setFormData((prev) => ({
       ...prev,
@@ -228,7 +258,7 @@ const removeAttribute = (variantIndex: number, attrIndex: number) => {
                   className="appearance-none pr-10"
                 />
                 <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500">
-                  <ChevronDownIcon className="w-4 h-4" />
+                  <HiChevronDown className="w-4 h-4" />
                 </span>
               </div>
 
@@ -286,7 +316,7 @@ const removeAttribute = (variantIndex: number, attrIndex: number) => {
                   onChange={(value) => handleSelectChange("returnPolicy", value)}
                 />
                 <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500">
-                  <ChevronDownIcon className="w-4 h-4" />
+                  <HiChevronDown className="w-4 h-4" />
                 </span>
               </div>
 
@@ -331,7 +361,8 @@ const removeAttribute = (variantIndex: number, attrIndex: number) => {
                     placeholder="Final Price"
                     type="number"
                     value={formData.price}
-                    readOnly
+                    // readOnly
+                     {...({ readOnly: true } as any)}
                     className="bg-gray-100 cursor-not-allowed"
                   />
                 </div>
@@ -348,7 +379,8 @@ const removeAttribute = (variantIndex: number, attrIndex: number) => {
                       value={formData.weight}
                       onChange={handleChange}
                       className="w-full"
-                      min={0}
+                     min="0"
+
                     />
                     <select
                       name="weightUnit"
