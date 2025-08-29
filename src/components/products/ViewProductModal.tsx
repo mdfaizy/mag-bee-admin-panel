@@ -17,7 +17,7 @@ interface Product {
   description?: string;
   url?: string;
   stock?: number;
-  is_active?: boolean;
+  isActive?: boolean;
 // productId?:number;
   category?: {
     id: number;
@@ -164,8 +164,10 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
                   <p className="text-sm text-gray-500 mb-4">Product ID: {selectedProduct.id}</p>
                   
                   <div className="flex items-center gap-4 mb-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedProduct.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {selectedProduct.is_active ? "Active" : "Inactive"}
+                
+
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedProduct.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {selectedProduct.isActive ? "Active" : "Inactive"}
                     </span>
                     <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
                       {selectedProduct.category?.name || "Uncategorized"}

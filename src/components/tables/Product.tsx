@@ -3,14 +3,17 @@ import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
+import Link from "next/link";
 import {
   setSelectedProduct,
-  setProducts,
+  setProducts as setReduxProducts,
+  // setProducts,
   setLoading
 } from "@/redux/productSlice";
-import { fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus } from "@/services/product/productService";
+import { fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus,
+  updateProductStock } from "@/services/product/productService";
 import { toast } from "react-toastify";
-import { FaEye, FaEdit, FaSearch } from "react-icons/fa";
+import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp,FaPlus } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import {
   Table,
@@ -23,12 +26,12 @@ import {
 import ViewProductModal from "../products/ViewProductModal";
 import EditProductModal from "../products/EditProductModal";
 import DeleteProductModal from "../products/DeleteProductModal";
+import Pagination from "./Pagination";
 
 const ProductTable = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state: RootState) => state.product);
-const [products, setProducts] = useState<Product[]>([]);
-
+  const [products, setProducts] = useState<Product[]>([]);
   const [tableData, setTableData] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -38,128 +41,167 @@ const [products, setProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-const handleToggleActive = async (product: any) => {
-  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-  try {
-    const updated = { ...product, is_active: !product.is_active };
+  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
+  const [categories, setCategories] = useState<string[]>([]);
+const [totalItems, setTotalItems] = useState(0);
 
-    const res = await fetch(`http://localhost:8000/api/products/${product.id}/toggle-active`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ is_active: updated.is_active }),
-    });
+  const handleToggleActive = async (product: any) => {
+    try {
+      const data = await toggleProductStatus(product.id);
+      setTableData(prev =>
+        prev.map(p => (p.id === product.id ? { ...p, isActive: data.isActive } : p))
+      );
+      toast.success(`Product is now ${data.isActive ? "active" : "inactive"}`);
+    } catch (error) {
+      toast.error("Error updating status");
+    }
+  };
 
-    if (!res.ok) throw new Error("Failed to update active status");
+  const handleStockChange = async (product: any, newStock: number) => {
+    try {
+      await updateProductStock(product.id, newStock);
+      setTableData(prev =>
+        prev.map(p => (p.id === product.id ? { ...p, stock: newStock } : p))
+      );
+      toast.success("Stock updated!");
+    } catch (error) {
+      toast.error("Error updating stock");
+    }
+  };
 
-    setTableData(prev =>
-      prev.map(p => (p.id === product.id ? updated : p))
-    );
-    toast.success("Product status updated!");
-  } catch (error) {
-    toast.error("Error updating status");
-  }
-};
+  // useEffect(() => {
+  //   const getProducts = async () => {
+  //     try {
+  //       dispatch(setLoading(true));
+  //       const result = await fetchProductAll();
+  //       console.log(result)
+  //       dispatch(setProducts(result));
+  //       setTableData(result);
+        
+  //       // Extract unique categories
+  //       const uniqueCategories = [...new Set(result.map((product: any) => product.category?.name).filter(Boolean))];
+  //       setCategories(uniqueCategories as string[]);
+  //     } catch (error) {
+  //       toast.error("Failed to load products");
+  //     } finally {
+  //       dispatch(setLoading(false));
+  //     }
+  //   };
+  //   getProducts();
+  // }, [dispatch]);
 
-
-const handleStockChange = async (product: any, newStock: number) => {
-  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-  try {
-    const updated = { ...product, stock: newStock };
-
-    const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {
-      method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ stock: newStock }),
-    });
-
-    if (!res.ok) throw new Error("Failed to update stock");
-
-    setTableData(prev =>
-      prev.map(p => (p.id === product.id ? updated : p))
-    );
-    toast.success("Stock updated!");
-  } catch (error) {
-    toast.error("Error updating stock");
-  }
-};
 
   useEffect(() => {
-    const getProducts = async () => {
-      try {
-        dispatch(setLoading(true));
-
-        const result = await fetchProductAll();
-        console.log(result);
-      console.log(result.images[0].imageUrl);
-
-        dispatch(setProducts(result));
-        setTableData(result);
-      } catch (error) {
-        toast.error("Failed to load products");
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-    getProducts();
-  }, [dispatch]);
- 
-
-  const fetchProducts = async (page: number) => {
-    dispatch(setLoading(true));
+  const getProducts = async () => {
     try {
-      const res = await fetchPaginatedProducts(page, itemsPerPage);
-      setTableData(res.products);
-      setTotalPages(res.totalPages);
-    } catch (error) {
-      toast.error("Failed to fetch products");
+      dispatch(setLoading(true));
+      const result = await fetchProductAll();
+      console.log("Fetched products:", result);
+   
+      dispatch(setReduxProducts(result));
+      setTableData(result);
+
+
+      const uniqueCategories = [
+        ...new Set(
+          result
+            .filter((product: any) => product.category?.name)
+            .map((product: any) => product.category.name)
+        ),
+      ];
+      setCategories(uniqueCategories);
+    } catch (error: any) {
+      console.error("Error while processing products:", error);
+      toast.error(error?.message || "Failed to load products");
     } finally {
       dispatch(setLoading(false));
     }
   };
+  getProducts();
+}, [dispatch]);
 
+
+const fetchProducts = async (page: number) => {
+  dispatch(setLoading(true));
+  try {
+    const res = await fetchPaginatedProducts(page, itemsPerPage);
+    setTableData(res.products);
+    setTotalPages(res.totalPages);
+    setTotalItems(res.total); // ✅ Set it here
+  } catch (error) {
+    toast.error("Failed to fetch products");
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage, itemsPerPage]);
 
-  const filteredData = tableData.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter and sort products
+  const filteredAndSortedData = React.useMemo(() => {
+    let filtered = tableData.filter(product =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // Apply status filter
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(product => 
+        statusFilter === "active" ? product.isActive : !product.isActive
+      );
+    }
+
+    // Apply category filter
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(product => 
+        product.category?.name === categoryFilter
+      );
+    }
+
+    // Apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [tableData, searchTerm, statusFilter, categoryFilter, sortConfig]);
+
+  const handleSort = (key: string) => {
+    let direction = "asc";
+    if (sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
+  };
 
   const handleView = (product: any) => {
-    // dispatch(setSelectedProduct(product));
     setSelectedProductId(product.id);
     setViewModalOpen(true);
   };
 
-
-  // const handleEdit = (product: any) => {
-  //   dispatch(setSelectedProduct(product));
-  //   setEditModalOpen(true);
-  // };
-
-
-const handleEdit = async (product: any) => {
-  try {
-    const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-    const productData = await fetchProductById(product.id, token);
-    console.log(product)
-    dispatch(setSelectedProduct(productData));
-    setEditModalOpen(true);
-  } catch (error) {
-    toast.error("Failed to load product details");
-  }
-};
-
-
-
+  const handleEdit = async (product: any) => {
+    try {
+      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+      const productData = await fetchProductById(product.id, token);
+      dispatch(setSelectedProduct(productData));
+      setEditModalOpen(true);
+    } catch (error) {
+      toast.error("Failed to load product details");
+    }
+  };
 
   const handleDeleteClick = (id: number) => {
     setSelectedProductId(id);
@@ -173,6 +215,7 @@ const handleEdit = async (product: any) => {
         await deleteProductById(selectedProductId, token);
         const updatedList = await fetchProductAll();
         dispatch(setProducts(updatedList));
+        setTableData(updatedList);
         toast.success("Product deleted successfully!");
       } catch (error: any) {
         toast.error(error.message || "Failed to delete product.");
@@ -183,231 +226,315 @@ const handleEdit = async (product: any) => {
     }
   };
 
+  // Reset filters
+  const resetFilters = () => {
+    setStatusFilter("all");
+    setCategoryFilter("all");
+    setSearchTerm("");
+    setSortConfig({ key: "", direction: "asc" });
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      {/* Search and Filter Section */}
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <div className="relative w-full md:w-64">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" />
+    <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100">
+      {/* Header with Search and Controls */}
+      <div className="flex flex-col gap-4 mb-6">
+        
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                  <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
+                 <Link href="/add-new-product"> <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    <FaPlus size={14} />
+                    <span>Add Product</span>
+                  </button></Link>
+                </div>
+        <div className="flex flex-col md:flex-row gap-4 justify-between">
+          <div className="relative flex-1 max-w-2xl">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <FaSearch className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search products by name, description or category..."
+              className="pl-10 pr-4 py-2.5 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-          <input
-            type="text"
-            placeholder="Search products..."
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            >
+              <FaFilter className="text-gray-600" />
+              <span className="hidden sm:inline">Filters</span>
+              {showFilters ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+            </button>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600 hidden md:inline">Show:</span>
+              <select
+                className="border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              >
+                <option value="5">5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+            </div>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-600">Items per page:</span>
-          <select
-            className="border rounded px-2 py-1 text-sm"
-            value={itemsPerPage}
-            onChange={(e) => setItemsPerPage(Number(e.target.value))}
-          >
-            <option value="5">5</option>
-            <option value="10">10</option>
-            <option value="20">20</option>
-            <option value="50">50</option>
-          </select>
-        </div>
+        
+        {/* Expandable Filters */}
+        {showFilters && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg mt-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+              >
+                <option value="all">All Categories</option>
+                {categories.map((category, index) => (
+                  <option key={index} value={category}>{category}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="flex items-end">
+              <button
+                onClick={resetFilters}
+                className="w-full py-2 px-4 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors"
+              >
+                Reset Filters
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Product Table */}
-      <div className="overflow-x-auto ">
-
-        <Table className="min-w-full">
-          <TableHead className="bg-gray-50">
-            <TableRow>
-
-              <TableHeadCell className="w-20 sticky left-0 bg-gray-50 z-20">ID</TableHeadCell>
-              <TableHeadCell className="min-w-[200px] sticky left-20 bg-gray-50 z-20">Name</TableHeadCell>
-              {/* <TableHeadCell className="hidden md:table-cell">Description</TableHeadCell> */}
-              <TableHeadCell>Price</TableHeadCell>
-              <TableHeadCell className="hidden md:table-cell">Offer</TableHeadCell>
-              <TableHeadCell className="hidden lg:table-cell">Category</TableHeadCell>
-              <TableHeadCell className="hidden lg:table-cell">Image</TableHeadCell>
-              <TableHeadCell className="hidden lg:table-cell">Active</TableHeadCell>
-              <TableHeadCell className="hidden lg:table-cell">Stock</TableHeadCell>
-              <TableHeadCell>Actions</TableHeadCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {loading ? (
+      {/* Product Table Container with Horizontal Scroll */}
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <div className="min-w-[1000px] lg:min-w-full"> {/* Ensure table has minimum width on mobile */}
+          <Table className="min-w-full">
+            <TableHead className="bg-gray-50 sticky top-0 z-10">
               <TableRow>
-                <TableCell  className="text-center py-8">
-                  <div className="animate-pulse flex justify-center">
-                    <div className="h-8 w-8 bg-blue-200 rounded-full"></div>
+                <TableHeadCell 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort("id")}
+                >
+                  <div className="flex items-center gap-1">
+                    ID
+                    {sortConfig.key === "id" && (
+                      sortConfig.direction === "asc" ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />
+                    )}
                   </div>
-                </TableCell>
+                </TableHeadCell>
+                <TableHeadCell 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort("name")}
+                >
+                  <div className="flex items-center gap-1">
+                    Name
+                    {sortConfig.key === "name" && (
+                      sortConfig.direction === "asc" ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />
+                    )}
+                  </div>
+                </TableHeadCell>
+                <TableHeadCell 
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSort("price")}
+                >
+                  <div className="flex items-center gap-1">
+                    Price
+                    {sortConfig.key === "price" && (
+                      sortConfig.direction === "asc" ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />
+                    )}
+                  </div>
+                </TableHeadCell>
+                <TableHeadCell className="hidden md:table-cell">Offer</TableHeadCell>
+                <TableHeadCell className="hidden lg:table-cell">Category</TableHeadCell>
+                <TableHeadCell className="hidden lg:table-cell">Image</TableHeadCell>
+                <TableHeadCell className="hidden md:table-cell">Status</TableHeadCell>
+                <TableHeadCell className="hidden lg:table-cell">Stock</TableHeadCell>
+                <TableHeadCell>Actions</TableHeadCell>
               </TableRow>
-            ) : filteredData.length === 0 ? (
-              <TableRow>
-                <TableCell  className="text-center py-8 text-gray-500">
-                  No products found
-                </TableCell>
-              </TableRow>
-            ) : (
-              filteredData.map((item) => (
-                <TableRow key={item.id} className="hover:bg-gray-50">
-                  <TableCell>{item.id}</TableCell>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-semibold">₹{item.price}</span>
-                      {item.originalPrice && (
-                        <span className="text-xs text-gray-500 line-through">
-                          ₹{item.originalPrice}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {item.offer ? `${item.offer}%` : "—"}
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    {item.category?.name || "—"}
-                  </TableCell>
-                  {/* import Image from "next/image"; */}
-
-<TableCell className="hidden lg:table-cell">
-  {item.images && item.images.length > 0 ? (
-    <Image
-      src={item.images[0].imageUrl} // ✅ Next.js optimized image
-      alt={item.name}
-      width={48}
-      height={48}
-      className="w-12 h-12 object-cover rounded"
-    />
-  ) : (
-    "—"
-  )}
-</TableCell>
-
-
-
-                  <TableCell className="hidden md:table-cell truncate max-w-xs">
-  <div
-    onClick={() => handleToggleActive(item)}
-    className={`relative w-12 h-6 flex items-center rounded-full cursor-pointer transition-colors ${item.is_active ? 'bg-green-500' : 'bg-red-400'}`}
-  >
-    <div
-      className={`absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white shadow transform transition-transform ${item.is_active ? 'translate-x-6' : ''}`}
-    />
-  </div>
-</TableCell>
-
-                  {/* <TableCell className="hidden lg:table-cell">
-                    {item.stock || "—"}
-                  </TableCell> */}
-                  <TableCell className="hidden lg:table-cell">
-  <input
-    type="number"
-    className="w-16 border rounded px-1 text-center"
-    value={item.stock || 0}
-    onChange={(e) => handleStockChange(item, Number(e.target.value))}
-  />
-</TableCell>
-
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleView(item)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
-                        title="View"
-                      >
-                        <FaEye size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleEdit(item)}
-                        className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
-                        title="Edit"
-                      >
-                        <FaEdit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(item.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                        title="Delete"
-                      >
-                        <MdDeleteForever size={18} />
-                      </button>
-                    </div>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                Array.from({ length: itemsPerPage }).map((_, index) => (
+                  <TableRow key={index} className="animate-pulse">
+                    <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                    <TableCell className="hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                    <TableCell className="hidden lg:table-cell"><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                    <TableCell className="hidden lg:table-cell"><div className="h-10 w-10 bg-gray-200 rounded"></div></TableCell>
+                    <TableCell className="hidden md:table-cell"><div className="h-6 w-12 bg-gray-200 rounded-full"></div></TableCell>
+                    <TableCell className="hidden lg:table-cell"><div className="h-8 w-16 bg-gray-200 rounded"></div></TableCell>
+                    <TableCell><div className="h-8 w-24 bg-gray-200 rounded"></div></TableCell>
+                  </TableRow>
+                ))
+              ) : filteredAndSortedData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                    No products found. Try adjusting your search or filters.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredAndSortedData.map((item) => (
+                  <TableRow key={item.id} className="hover:bg-gray-50 even:bg-gray-50/30">
+                    <TableCell className="font-medium">{item.id}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-gray-900">{item.name}</span>
+                        <span className="text-xs text-gray-500 truncate max-w-xs">
+                          {item.description.substring(0, 50)}...
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-gray-900">₹{item.price}</span>
+                        {item.originalPrice && item.originalPrice > item.price && (
+                          <span className="text-xs text-gray-500 line-through">
+                            ₹{item.originalPrice}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {item.offer ? (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                          {item.offer}% OFF
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      {item.category?.name ? (
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+                          {item.category.name}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      {item.images && item.images.length > 0 ? (
+                        <div className="relative w-12 h-12">
+                          <Image
+                            src={item.images[0].imageUrl}
+                            alt={item.name}
+                            fill
+                            className="object-cover rounded-md"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </TableCell>
+                    
+                    <TableCell className="hidden md:table-cell">
+                      <div 
+                        onClick={() => handleToggleActive(item)}
+                        className={`relative inline-flex items-center cursor-pointer w-12 h-6 rounded-full transition-colors ${item.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
+                      >
+                        <div
+                          className={`absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform ${item.isActive ? 'translate-x-6' : ''}`}
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell">
+                      <input
+                        type="number"
+                        min="0"
+                        className="w-16 border rounded-md px-2 py-1 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        value={item.stock || 0}
+                        onChange={(e) => handleStockChange(item, Number(e.target.value))}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleView(item)}
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                          title="View"
+                        >
+                          <FaEye size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleEdit(item)}
+                          className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
+                          title="Edit"
+                        >
+                          <FaEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(item.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                          title="Delete"
+                        >
+                          <MdDeleteForever size={18} />
+                        </button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
+    
+{/* <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  onPageChange={setCurrentPage}
+/>
+ */}
 
-      {/* Pagination */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
-        <div className="text-sm text-gray-600">
-          Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-          {Math.min(currentPage * itemsPerPage, filteredData.length)} of{" "}
-          {filteredData.length} products
-        </div>
-        <div className="flex gap-2">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-4 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-          >
-            Previous
-          </button>
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
-            } else {
-              pageNum = currentPage - 2 + i;
-            }
-            return (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                className={`px-4 py-2 border rounded-md ${currentPage === pageNum
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "hover:bg-gray-50"
-                  } transition-colors`}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-4 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-          >
-            Next
-          </button>
-        </div>
-      </div>
+ <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  itemsPerPage={itemsPerPage}
+  totalItems={totalItems}
+  onPageChange={setCurrentPage}
+/>
+
+
 
       {/* Modals */}
       <ViewProductModal
         isOpen={viewModalOpen}
         onClose={() => setViewModalOpen(false)}
-          // productId={selectedProductId}
-          productId={selectedProductId !== null ? selectedProductId.toString() : null}
-
-        />
+        productId={selectedProductId !== null ? selectedProductId.toString() : null}
+      />
+      
       <EditProductModal
         isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        onClose={() => {
+          setEditModalOpen(false);
+          fetchProducts(currentPage); // Refresh data after editing
+        }}
       />
-    
-
-
-
+      
       <DeleteProductModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}

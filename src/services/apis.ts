@@ -23,3 +23,11 @@ export const endpointsProduct={
 export const endpointsOrder = {
   ORDER_GET_ALL: `${BASE_URL}/get-order`,
 };
+
+export const endPointCustomer={
+    GET_ALL_CUSTOMER:`${BASE_URL}/customers`,
+    DELETE_BYID_CUSTOMER:`${BASE_URL}/customer/id`,
+    UPDATE_CUSTOMER:`${BASE_URL}/customer/id`,
+
+
+}

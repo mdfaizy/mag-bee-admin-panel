@@ -14,39 +14,6 @@ export const fetchProductAll = async () => {
   }
 };
 
-// export const fetchProductById = async (id: number) => {
-//   try {
-//     console.log(`Fetching product with ID: ${id}`); // Debug log
-//     const res = await apiConnector("GET", `${PRODUCT_BY_ID}/${id}`, undefined, {});
-//     console.log("API Response:", res); // Debug log
-    
-//     if (!res.data) {
-//       throw new Error("No data received from API");
-//     }
-    
-//     return res.data;
-//   } catch (err: any) {
-//     console.error(`Error fetching product ${id}:`, err.response?.data || err.message);
-//     throw err;
-//   }
-// };
-
-// services/product/productService.ts
-
-// export const fetchProductById = async (id: number, token: string) => {
-//   const res = await fetch(`${PRODUCT_BY_ID}/${id}`, {
-//     headers: {
-//       Authorization: `Bearer ${token}`,
-//     },
-//   });
-
-//   if (!res.ok) throw new Error("Failed to fetch product details");
-
-//   const data = await res.json();
-
-//   return data.product || data; 
-// };
-
 
 export const fetchProductById = async (id: number, token: string) => {
   const res = await apiConnector(
@@ -62,26 +29,38 @@ export const fetchProductById = async (id: number, token: string) => {
 };
 
 
-// services/product/productService.ts
 
-export const toggleProductStatus = async (id: number, token: string) => {
-  const res = await apiConnector(
-    "PATCH",
-    `/products/${id}/toggle-active`,
-    undefined,
-    {
+export const toggleProductStatus = async (productId: number) => {
+  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+  const res = await fetch(`http://localhost:8000/api/products/${productId}/toggle-active`, {
+    method: "PATCH",
+    headers: {
       Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    }
-  );
+    },
+  });
 
-  if (!res || !res.data) {
-    throw new Error("Failed to toggle product status");
-  }
+  if (!res.ok) throw new Error("Failed to update active status");
 
-  return res.data; // { isActive: true/false }
+  const data = await res.json();
+  return data; // { isActive: boolean }
 };
 
+export const updateProductStock = async (productId: number, newStock: number) => {
+  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+
+  const res = await fetch(`http://localhost:8000/api/products/${productId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ stock: newStock }),
+  });
+
+  if (!res.ok) throw new Error("Failed to update stock");
+
+  return await res.json();
+};
 
 
 export const uploadProductImage = async (file: File): Promise<string> => {

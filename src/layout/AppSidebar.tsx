@@ -81,6 +81,7 @@ const navItems: NavItem[] = [
     icon: <FaTable />,
     subItems: [{ name: "Resent Order", path: "/basic-tables", pro: false },
        { name: "User List", path: "/user-table", pro: false },
+       { name: "Customer List", path: "/customer", pro: false },
     ],
   },
   //  {
