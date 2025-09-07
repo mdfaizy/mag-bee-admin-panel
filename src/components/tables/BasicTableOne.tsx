@@ -75,24 +75,7 @@ export default function OrdersTable() {
     }
   };
 
-  const openOrderModal = async (orderId: string) => {
-    try {
-      // Try to get detailed order info
-      const orderDetail = await getOrderById(orderId);
-      setModalOrder(orderDetail);
-    } catch (error) {
-      // If API fails, try to find the order in our existing data
-      const order = orders.find(o => o.id === orderId);
-      if (order) {
-        setModalOrder(order);
-      } else {
-        console.error("Order not found");
-        return;
-      }
-    }
-    setIsModalOpen(true);
-  };
-
+ 
   const closeOrderModal = () => {
     setIsModalOpen(false);
     setModalOrder(null);
@@ -356,7 +339,7 @@ export default function OrdersTable() {
           <TableBody className="divide-y divide-gray-200">
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="px-6 py-8 text-center">
+                <TableCell className="px-6 py-8 text-center">
                   <div className="flex justify-center">
                     <FiRefreshCw className="h-8 w-8 text-gray-400 animate-spin" />
                   </div>
@@ -365,7 +348,7 @@ export default function OrdersTable() {
               </TableRow>
             ) : ordersWithItems.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="px-6 py-12 text-center">
+                <TableCell className="px-6 py-12 text-center">
                   <div className="flex flex-col items-center">
                     <FaShoppingBag className="h-12 w-12 text-gray-300 mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-1">No orders found</h3>
@@ -464,21 +447,21 @@ export default function OrdersTable() {
                       <div className="flex gap-1">
                       
                         
-                        <Button
+                        {/* <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => openOrderModal(order.id)}
-                          title="View Details"
+                          // title="View Details"
                         >
                           <FiEye className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                         
                         {order.totalProducts > 1 && (
                           <Button
-                            variant="ghost"
+                            // variant="ghost"
                             size="sm"
                             onClick={() => toggleOrderExpansion(order.id)}
-                            title="Expand/Collapse"
+                            // title="Expand/Collapse"
                           >
                             {expandedOrder === order.id ? (
                               <FiChevronUp className="h-4 w-4" />
@@ -493,7 +476,7 @@ export default function OrdersTable() {
                   
                   {expandedOrder === order.id && (
                     <TableRow className="bg-gray-50">
-                      <TableCell colSpan={8} className="px-6 py-4">
+                      <TableCell  className="px-6 py-4">
                         <div className="grid gap-4">
                           <div className="flex justify-between items-start">
                             <div>
@@ -580,7 +563,7 @@ export default function OrdersTable() {
                 Order #{modalOrder.orderCode}
               </h2>
               <Button
-                variant="ghost"
+                // variant="ghost"
                 size="sm"
                 onClick={closeOrderModal}
                 className="text-gray-500 hover:text-gray-700"

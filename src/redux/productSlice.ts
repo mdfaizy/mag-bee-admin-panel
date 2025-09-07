@@ -22,7 +22,7 @@ interface VariantAttribute {
 interface Variant {
   id?: number;
   sku: string;
-  price: number | string;
+  price: number;
   stock: number;
   attributes: VariantAttribute[];
 }
@@ -39,6 +39,12 @@ interface Product {
     name: string;
   };
   url: string;
+   shippingAvailable?: boolean; 
+  warrantyInfo?: string;
+  skuCode?: string;
+  material?: string;
+  returnPolicy?: string;
+  manufactureDetails?: string;
   imageUrl: string;
     variants?: Variant[];  
   createdAt?: string;

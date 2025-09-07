@@ -217,7 +217,7 @@ const CategoryTable = () => {
             <TableRow>
               <TableHeadCell 
                 className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort("id")}
+                // onClick={() => handleSort("id")}
               >
                 <div className="flex items-center gap-1">
                   ID
@@ -228,7 +228,7 @@ const CategoryTable = () => {
               </TableHeadCell>
               <TableHeadCell 
                 className="cursor-pointer hover:bg-gray-100"
-                onClick={() => handleSort("name")}
+                // onClick={() => handleSort("name")}
               >
                 <div className="flex items-center gap-1">
                   Name
@@ -261,7 +261,7 @@ const CategoryTable = () => {
               ))
             ) : visibleData.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                <TableCell  className="text-center py-8 text-gray-500">
                   {searchTerm ? "No categories found matching your search" : "No categories available"}
                 </TableCell>
               </TableRow>

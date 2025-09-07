@@ -28,6 +28,43 @@ import EditProductModal from "../products/EditProductModal";
 import DeleteProductModal from "../products/DeleteProductModal";
 import Pagination from "./Pagination";
 
+interface VariantAttribute {
+  id?: number;
+  key: string;
+  value: string;
+}
+export interface Variant {
+  id?: number;
+  sku: string;
+  price: number;
+  stock: number;
+  attributes: VariantAttribute[];
+}
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  stock: number;
+  originalPrice: number;
+  offer: number;
+  finalPrice: number;
+  category: {
+    id: string;
+    name: string;
+  };
+  url: string;
+  shippingAvailable?: boolean;
+  warrantyInfo?: string;
+  skuCode?: string;
+  material?: string;
+  returnPolicy?: string;
+  manufactureDetails?: string;
+  imageUrl: string;
+  variants?: Variant[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 const ProductTable = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state: RootState) => state.product);
@@ -72,27 +109,6 @@ const [totalItems, setTotalItems] = useState(0);
     }
   };
 
-  // useEffect(() => {
-  //   const getProducts = async () => {
-  //     try {
-  //       dispatch(setLoading(true));
-  //       const result = await fetchProductAll();
-  //       console.log(result)
-  //       dispatch(setProducts(result));
-  //       setTableData(result);
-        
-  //       // Extract unique categories
-  //       const uniqueCategories = [...new Set(result.map((product: any) => product.category?.name).filter(Boolean))];
-  //       setCategories(uniqueCategories as string[]);
-  //     } catch (error) {
-  //       toast.error("Failed to load products");
-  //     } finally {
-  //       dispatch(setLoading(false));
-  //     }
-  //   };
-  //   getProducts();
-  // }, [dispatch]);
-
 
   useEffect(() => {
   const getProducts = async () => {
@@ -100,8 +116,10 @@ const [totalItems, setTotalItems] = useState(0);
       dispatch(setLoading(true));
       const result = await fetchProductAll();
       console.log("Fetched products:", result);
-   
+  
       dispatch(setReduxProducts(result));
+      
+
       setTableData(result);
 
 
@@ -112,7 +130,11 @@ const [totalItems, setTotalItems] = useState(0);
             .map((product: any) => product.category.name)
         ),
       ];
-      setCategories(uniqueCategories);
+      // setCategories(uniqueCategories );
+      setCategories(uniqueCategories as string[]);
+
+     
+
     } catch (error: any) {
       console.error("Error while processing products:", error);
       toast.error(error?.message || "Failed to load products");
@@ -214,7 +236,9 @@ const fetchProducts = async (page: number) => {
       try {
         await deleteProductById(selectedProductId, token);
         const updatedList = await fetchProductAll();
-        dispatch(setProducts(updatedList));
+        // dispatch(setProducts(updatedList));
+        dispatch(setProducts(updatedList) as any);
+
         setTableData(updatedList);
         toast.success("Product deleted successfully!");
       } catch (error: any) {
@@ -336,7 +360,7 @@ const fetchProducts = async (page: number) => {
               <TableRow>
                 <TableHeadCell 
                   className="cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("id")}
+                  // onClick={() => handleSort("id")}
                 >
                   <div className="flex items-center gap-1">
                     ID
@@ -347,7 +371,7 @@ const fetchProducts = async (page: number) => {
                 </TableHeadCell>
                 <TableHeadCell 
                   className="cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("name")}
+                  // onClick={() => handleSort("name")}
                 >
                   <div className="flex items-center gap-1">
                     Name
@@ -358,7 +382,7 @@ const fetchProducts = async (page: number) => {
                 </TableHeadCell>
                 <TableHeadCell 
                   className="cursor-pointer hover:bg-gray-100"
-                  onClick={() => handleSort("price")}
+                  // onClick={() => handleSort("price")}
                 >
                   <div className="flex items-center gap-1">
                     Price
@@ -392,7 +416,7 @@ const fetchProducts = async (page: number) => {
                 ))
               ) : filteredAndSortedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-gray-500">
+                  <TableCell  className="text-center py-8 text-gray-500">
                     No products found. Try adjusting your search or filters.
                   </TableCell>
                 </TableRow>

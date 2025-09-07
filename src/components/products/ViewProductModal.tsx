@@ -50,6 +50,7 @@ interface Product {
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+ 
   productId: string | null;
 }
 
@@ -71,7 +72,9 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
     setError(null);
     try {
       const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-      const productData = await fetchProductById(productId, token);
+      // const productData = await fetchProductById(productId, token);
+      const productData = await fetchProductById(Number(productId), token);
+
       console.log(productData);
       setSelectedProduct(productData.product || productData);
     } catch (error) {

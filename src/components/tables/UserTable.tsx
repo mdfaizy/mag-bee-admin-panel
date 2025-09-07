@@ -191,11 +191,19 @@ const handleDeleteUser = async () => {
         </Table>
       </div>
       <div className="flex justify-end px-4 py-3">
-        <Pagination
+        {/* <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={(page) => setCurrentPage(page)}
-        />
+        /> */}
+        <Pagination
+  currentPage={currentPage}
+  totalPages={totalPages}
+  itemsPerPage={itemsPerPage}
+  totalItems={tableData.length}
+  onPageChange={(page) => setCurrentPage(page)}
+/>
+
       </div>
 
       <EditUserModal

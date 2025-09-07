@@ -59,7 +59,15 @@ export default function AddNewProduct() {
       },
     ] as Variant[],
   });
+ const calculateFinalPrice = () => {
+    const originalPrice = parseFloat(formData.originalPrice);
+    const offer = parseFloat(formData.offer);
 
+    if (!isNaN(originalPrice) && !isNaN(offer)) {
+      return originalPrice - (originalPrice * offer) / 100;
+    }
+    return 0; // Return 0 if input values are invalid
+  };
   const returnPolicyOptions = [
     { value: "7-day return", label: "7-day return" },
     { value: "30-day return", label: "30-day return" },
@@ -330,7 +338,7 @@ if (options?.variantIndex !== undefined) {
                   rows={2}
                 />
               </div>
-
+                 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                 <div>
                   <Label>Original Price<span className="text-error-500">*</span></Label>
@@ -360,8 +368,7 @@ if (options?.variantIndex !== undefined) {
                     name="price"
                     placeholder="Final Price"
                     type="number"
-                    value={formData.price}
-                    // readOnly
+                    value={calculateFinalPrice().toFixed(2)}
                      {...({ readOnly: true } as any)}
                     className="bg-gray-100 cursor-not-allowed"
                   />

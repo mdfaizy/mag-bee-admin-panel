@@ -13,7 +13,7 @@ import { setSelectedProduct, setProducts } from "@/redux/productSlice";
 interface Variant {
   id?: number;
   sku: string;
-  price: number;
+  price: number; 
   stock: number;
   attributes: { key: string; value: string }[];
 }
@@ -22,6 +22,8 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
 }
+
+
 
 const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
@@ -36,10 +38,12 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     if (selectedProduct) {
       setFormData({
         ...selectedProduct,
-        categoryId: selectedProduct.category?.id ?? selectedProduct.categoryId ?? 0,
+        // categoryId: selectedProduct.category?.id ?? selectedProduct.categoryId ?? 0,
+          categoryId: selectedProduct.category?.id ?? 0,
         originalPrice: selectedProduct.originalPrice ?? 0,
         offer: selectedProduct.offer ?? 0,
         stock: selectedProduct.stock ?? 0,
+        // shippingAvailable: selectedProduct.shippingAvailable ?? false,
         shippingAvailable: selectedProduct.shippingAvailable ?? false,
         warrantyInfo: selectedProduct.warrantyInfo ?? "",
         skuCode: selectedProduct.skuCode ?? "",
@@ -60,30 +64,59 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
   }, [isOpen]);
 
   // Handle change for product fields
+  // const handleChange = (
+  //   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  // ) => {
+  //   if (!formData) return;
+  //   const { name, value, type, checked } = e.target;
+
+  //   let parsedValue: any = value;
+  //   if (type === "checkbox") {
+  //     parsedValue = checked;
+  //   } else if (
+  //     name === "price" ||
+  //     name === "originalPrice" ||
+  //     name === "offer" ||
+  //     name === "categoryId"
+  //   ) {
+  //     parsedValue = parseFloat(value);
+  //     if (isNaN(parsedValue)) parsedValue = 0;
+  //   }
+
+  //   setFormData({
+  //     ...formData,
+  //     [name]: parsedValue,
+  //   });
+  // };
+
+
+
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    if (!formData) return;
-    const { name, value, type, checked } = e.target;
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+) => {
+  if (!formData) return;
+  const { name, value, type } = e.target;
 
-    let parsedValue: any = value;
-    if (type === "checkbox") {
-      parsedValue = checked;
-    } else if (
-      name === "price" ||
-      name === "originalPrice" ||
-      name === "offer" ||
-      name === "categoryId"
-    ) {
-      parsedValue = parseFloat(value);
-      if (isNaN(parsedValue)) parsedValue = 0;
-    }
+  let parsedValue: any = value;
 
-    setFormData({
-      ...formData,
-      [name]: parsedValue,
-    });
-  };
+  if (type === "checkbox" && e.target instanceof HTMLInputElement) {
+    parsedValue = e.target.checked;
+  } else if (
+    name === "price" ||
+    name === "originalPrice" ||
+    name === "offer" ||
+    name === "categoryId"
+  ) {
+    parsedValue = parseFloat(value);
+    if (isNaN(parsedValue)) parsedValue = 0;
+  }
+
+  setFormData({
+    ...formData,
+    [name]: parsedValue,
+  });
+};
+
 
   // Variant management functions
   const addVariant = () => {
@@ -208,7 +241,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 value={formData.originalPrice}
                 onChange={handleChange}
                 min="0"
-                step="0.01"
+                // step="0.01"
               />
             </div>
 
@@ -221,7 +254,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 onChange={handleChange}
                 min="0"
                 max="100"
-                step="0.01"
+                // step="0.01"
               />
             </div>
 
@@ -347,7 +380,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
                         handleVariantChange(vIndex, "price", parseFloat(e.target.value) || 0)
                       }
                       min="0"
-                      step="0.01"
+                      // step="0.01"
                     />
                   </div>
 
@@ -429,3 +462,4 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 };
 
 export default EditProductModal;
+

@@ -80,7 +80,7 @@ const navItems: NavItem[] = [
     name: "Tables",
     icon: <FaTable />,
     subItems: [{ name: "Resent Order", path: "/basic-tables", pro: false },
-       { name: "User List", path: "/user-table", pro: false },
+       { name: "Employees For MagBee", path: "/user-table", pro: false },
        { name: "Customer List", path: "/customer", pro: false },
     ],
   },
@@ -107,7 +107,6 @@ const navItems: NavItem[] = [
   //   name: "Pages",
   //   icon: <PageIcon />,
   //   subItems: [
-  //     // { name: "Blank Page", path: "/blank", pro: false },
   //     { name: "404 Error", path: "/error-404", pro: false },
   //   ],
   // },
@@ -120,19 +119,6 @@ const othersItems: NavItem[] = [
     name: "User Profile",
     path: "/profile",
   },
-  // {
-  //   icon: <BoxCubeIcon />,
-  //   name: "UI Elements",
-  //   subItems: [
-  //     { name: "Alerts", path: "/alerts", pro: false },
-  //     { name: "Avatar", path: "/avatars", pro: false },
-  //     { name: "Badge", path: "/badge", pro: false },
-  //     { name: "Buttons", path: "/buttons", pro: false },
-  //     { name: "Images", path: "/images", pro: false },
-  //     { name: "Videos", path: "/videos", pro: false },
-  //   ],
-  // },
-  
 ];
 
 const AppSidebar: React.FC = () => {

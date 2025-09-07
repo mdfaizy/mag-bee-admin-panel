@@ -5,8 +5,7 @@ import React from "react";
 
 export const metadata: Metadata = {
   title: "",
-  description:
-    "",
+  description:"",
 };
 export default function LineChart() {
   return (

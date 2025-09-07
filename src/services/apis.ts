@@ -21,7 +21,7 @@ export const endpointsProduct={
 
 
 export const endpointsOrder = {
-  ORDER_GET_ALL: `${BASE_URL}/get-order`,
+  ORDER_GET_ALL: `${BASE_URL}/orders/get-order`,
 };
 
 export const endPointCustomer={

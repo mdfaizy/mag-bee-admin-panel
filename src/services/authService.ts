@@ -31,74 +31,6 @@ interface SignupResponse {
   message: string;
   success?: boolean;
 }
-
-// export const signup = ({
-//   name,
-//   username,
-//   mobileNo,
-//   roleId,
-//   email,
-//   password,
-//   router,
-// }: SignupParams) => {
-//   return async (dispatch: AppDispatch) => {
-//     const toastId = toast.loading("Registering...");
-
-//     try {
-//       const rawToken = localStorage.getItem("token");
-//       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
-
-//       const permissions = JSON.parse(localStorage.getItem("user") || "{}")?.permissions || [];
-
-//       // ✅ Check permission before sending API request
-//       if (!permissions.includes("CREATE_USER")) {
-//         toast.error("You do not have permission to create users.");
-//         return;
-//       }
-
-//       const res = await apiConnector<SignupResponse>(
-//         "POST",
-//         SIGNUP_API,
-//         {
-//           name,
-//           username,
-//           phone_number: mobileNo,
-//           role_id: roleId,
-//           email,
-//           password,
-//           is_active: true,
-//         },
-//         {
-//           Authorization: `Bearer ${token}`,
-//           "Content-Type": "application/json",
-//         }
-//       );
-
-//       // if (!res.data.success) {
-//       //   throw new Error(res.data.message || "Registration failed.");
-//       // }
-
-//       if (!res.data.message?.toLowerCase().includes("register")) {
-//         throw new Error(res.data.message || "Registration failed.");
-//       }
-
-
-//       toast.success("Registration successful!");
-//       router.push("/");
-
-//     } catch (err) {
-//       const error = err as AxiosError<ErrorResponse>;
-// toast.error(error.response?.data?.message || error.message || "Signup failed.");
-//     } finally {
-//       toast.dismiss(toastId);
-//     }
-//   };
-// };
-
-
-
-
-
 export const signup = ({
   name,
   username,
@@ -216,18 +148,12 @@ export const fetchAllUsers = async () => {
   return res.data;
 };
 
-// import { apiConnector } from "../apiConnector"; // your helper
-
-// export const fetchAllUsers = () => {
-//   return apiConnector("GET", "http://localhost:8000/api/auth/users");
-// };
-
 export async function toggleUserStatus(id: number) {
   const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
   
   return await apiConnector(
-    "PATCH", // assuming your backend route is PATCH for toggle
-    `http://localhost:8000/api/users/${id}/toggle`,
+    "PATCH",
+    `http://localhost:8000/api/customers/${id}/toggle`,
     undefined,
     {
       Authorization: `Bearer ${token}`,
@@ -253,7 +179,7 @@ interface CreateRoleParams {
   router: AppRouter;
 }
 
-const CREATE_ROLE_API = "http://localhost:8000/api/roles"; // ⬅️ Your backend route here
+const CREATE_ROLE_API = "http://localhost:8000/api/roles"; 
 
 export const createRole = ({ name, description, router }: CreateRoleParams) => {
   return async (dispatch: AppDispatch) => {

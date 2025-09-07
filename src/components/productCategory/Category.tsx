@@ -18,25 +18,7 @@ export default function CreateProductCategory() {
     image: null as File | null,
   });
 
-  // const handleChange = (
-  //   e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  // ) => {
-  //   const { name, value, files } = e.target as any;
-
-  //   if (name === "image") {
-  //     setForm((prev) => ({
-  //       ...prev,
-  //       image: files[0],
-  //     }));
-  //   } else {
-  //     setForm((prev) => ({
-  //       ...prev,
-  //       [name]: value,
-  //     }));
-  //   }
-  // };
-
-
+ 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -132,16 +114,7 @@ export default function CreateProductCategory() {
               />
             </div>
 
-            {/* <div>
-              <Label>
-                Category Image <span className="text-error-500">*</span>
-              </Label>
-              <Input
-                type="file"
-                name="image"
-                onChange={handleChange}
-              />
-            </div> */}
+            
 
             <div>
               <Label className="block mb-2">
@@ -169,7 +142,7 @@ export default function CreateProductCategory() {
                         onChange={handleChange}
                         className="hidden"
                         accept="image/*"
-                        required
+                        // required
                       />
                     </label>
                   </div>
