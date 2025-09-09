@@ -10,10 +10,12 @@ import {
   // setProducts,
   setLoading
 } from "@/redux/productSlice";
-import { fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus,
-  updateProductStock } from "@/services/product/productService";
+import {
+  fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus,
+  updateProductStock
+} from "@/services/product/productService";
 import { toast } from "react-toastify";
-import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp,FaPlus } from "react-icons/fa";
+import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import {
   Table,
@@ -27,6 +29,7 @@ import ViewProductModal from "../products/ViewProductModal";
 import EditProductModal from "../products/EditProductModal";
 import DeleteProductModal from "../products/DeleteProductModal";
 import Pagination from "./Pagination";
+import { getPriceDetails } from "@/utils/getPriceDB";
 
 interface VariantAttribute {
   id?: number;
@@ -83,8 +86,10 @@ const ProductTable = () => {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
   const [categories, setCategories] = useState<string[]>([]);
-const [totalItems, setTotalItems] = useState(0);
-
+  const [totalItems, setTotalItems] = useState(0);
+  // const { displayPrice, displayOriginalPrice, offer } = getPriceDetails(
+  //     products
+  //   );
   const handleToggleActive = async (product: any) => {
     try {
       const data = await toggleProductStatus(product.id);
@@ -111,54 +116,54 @@ const [totalItems, setTotalItems] = useState(0);
 
 
   useEffect(() => {
-  const getProducts = async () => {
+    const getProducts = async () => {
+      try {
+        dispatch(setLoading(true));
+        const result = await fetchProductAll();
+        console.log("Fetched products:", result);
+
+        dispatch(setReduxProducts(result));
+
+
+        setTableData(result);
+
+
+        const uniqueCategories = [
+          ...new Set(
+            result
+              .filter((product: any) => product.category?.name)
+              .map((product: any) => product.category.name)
+          ),
+        ];
+        // setCategories(uniqueCategories );
+        setCategories(uniqueCategories as string[]);
+
+
+
+      } catch (error: any) {
+        console.error("Error while processing products:", error);
+        toast.error(error?.message || "Failed to load products");
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+    getProducts();
+  }, [dispatch]);
+
+
+  const fetchProducts = async (page: number) => {
+    dispatch(setLoading(true));
     try {
-      dispatch(setLoading(true));
-      const result = await fetchProductAll();
-      console.log("Fetched products:", result);
-  
-      dispatch(setReduxProducts(result));
-      
-
-      setTableData(result);
-
-
-      const uniqueCategories = [
-        ...new Set(
-          result
-            .filter((product: any) => product.category?.name)
-            .map((product: any) => product.category.name)
-        ),
-      ];
-      // setCategories(uniqueCategories );
-      setCategories(uniqueCategories as string[]);
-
-     
-
-    } catch (error: any) {
-      console.error("Error while processing products:", error);
-      toast.error(error?.message || "Failed to load products");
+      const res = await fetchPaginatedProducts(page, itemsPerPage);
+      setTableData(res.products);
+      setTotalPages(res.totalPages);
+      setTotalItems(res.total); // ✅ Set it here
+    } catch (error) {
+      toast.error("Failed to fetch products");
     } finally {
       dispatch(setLoading(false));
     }
   };
-  getProducts();
-}, [dispatch]);
-
-
-const fetchProducts = async (page: number) => {
-  dispatch(setLoading(true));
-  try {
-    const res = await fetchPaginatedProducts(page, itemsPerPage);
-    setTableData(res.products);
-    setTotalPages(res.totalPages);
-    setTotalItems(res.total); // ✅ Set it here
-  } catch (error) {
-    toast.error("Failed to fetch products");
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage, itemsPerPage]);
@@ -173,14 +178,14 @@ const fetchProducts = async (page: number) => {
 
     // Apply status filter
     if (statusFilter !== "all") {
-      filtered = filtered.filter(product => 
+      filtered = filtered.filter(product =>
         statusFilter === "active" ? product.isActive : !product.isActive
       );
     }
 
     // Apply category filter
     if (categoryFilter !== "all") {
-      filtered = filtered.filter(product => 
+      filtered = filtered.filter(product =>
         product.category?.name === categoryFilter
       );
     }
@@ -259,21 +264,21 @@ const fetchProducts = async (page: number) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100">
+    <div className="bg-white rounded-xl text-white shadow-sm p-4 md:p-6 border border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white ">
       {/* Header with Search and Controls */}
-      <div className="flex flex-col gap-4 mb-6">
-        
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                  <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
-                 <Link href="/add-new-product"> <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                    <FaPlus size={14} />
-                    <span>Add Product</span>
-                  </button></Link>
-                </div>
+      <div className="flex flex-col gap-4 mb-6 ">
+
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center ">
+          <h1 className="text-2xl font-bold text-gray-800  ">Product Management</h1>
+          <Link href="/add-new-product"> <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700  rounded-lg transition-colors">
+            <FaPlus size={14} />
+            <span>Add Product</span>
+          </button></Link>
+        </div>
         <div className="flex flex-col md:flex-row gap-4 justify-between">
           <div className="relative flex-1 max-w-2xl">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <FaSearch className="text-gray-400" />
+              <FaSearch className="text-gray-400 dark:text-white" />
             </div>
             <input
               type="text"
@@ -283,7 +288,7 @@ const fetchProducts = async (page: number) => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
+
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -293,7 +298,7 @@ const fetchProducts = async (page: number) => {
               <span className="hidden sm:inline">Filters</span>
               {showFilters ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
             </button>
-            
+
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 hidden md:inline">Show:</span>
               <select
@@ -309,10 +314,10 @@ const fetchProducts = async (page: number) => {
             </div>
           </div>
         </div>
-        
+
         {/* Expandable Filters */}
         {showFilters && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg mt-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg mt-2 ">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
@@ -325,7 +330,7 @@ const fetchProducts = async (page: number) => {
                 <option value="inactive">Inactive</option>
               </select>
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
               <select
@@ -339,7 +344,7 @@ const fetchProducts = async (page: number) => {
                 ))}
               </select>
             </div>
-            
+
             <div className="flex items-end">
               <button
                 onClick={resetFilters}
@@ -353,14 +358,14 @@ const fetchProducts = async (page: number) => {
       </div>
 
       {/* Product Table Container with Horizontal Scroll */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:text-white">
         <div className="min-w-[1000px] lg:min-w-full"> {/* Ensure table has minimum width on mobile */}
           <Table className="min-w-full">
-            <TableHead className="bg-gray-50 sticky top-0 z-10">
+            <TableHead className="bg-gray-50 sticky top-0 z-10  dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white">
               <TableRow>
-                <TableHeadCell 
-                  className="cursor-pointer hover:bg-gray-100"
-                  // onClick={() => handleSort("id")}
+                <TableHeadCell
+                  className="cursor-pointe dark:text-white"
+                // onClick={() => handleSort("id")}
                 >
                   <div className="flex items-center gap-1">
                     ID
@@ -369,9 +374,9 @@ const fetchProducts = async (page: number) => {
                     )}
                   </div>
                 </TableHeadCell>
-                <TableHeadCell 
-                  className="cursor-pointer hover:bg-gray-100"
-                  // onClick={() => handleSort("name")}
+                <TableHeadCell
+                  className="cursor-pointer  dark:text-white"
+                // onClick={() => handleSort("name")}
                 >
                   <div className="flex items-center gap-1">
                     Name
@@ -380,9 +385,9 @@ const fetchProducts = async (page: number) => {
                     )}
                   </div>
                 </TableHeadCell>
-                <TableHeadCell 
-                  className="cursor-pointer hover:bg-gray-100"
-                  // onClick={() => handleSort("price")}
+                <TableHeadCell
+                  className="cursor-pointer dark:text-white"
+                // onClick={() => handleSort("price")}
                 >
                   <div className="flex items-center gap-1">
                     Price
@@ -391,19 +396,19 @@ const fetchProducts = async (page: number) => {
                     )}
                   </div>
                 </TableHeadCell>
-                <TableHeadCell className="hidden md:table-cell">Offer</TableHeadCell>
-                <TableHeadCell className="hidden lg:table-cell">Category</TableHeadCell>
-                <TableHeadCell className="hidden lg:table-cell">Image</TableHeadCell>
-                <TableHeadCell className="hidden md:table-cell">Status</TableHeadCell>
-                <TableHeadCell className="hidden lg:table-cell">Stock</TableHeadCell>
-                <TableHeadCell>Actions</TableHeadCell>
+                <TableHeadCell className="hidden md:table-cell dark:text-white">Offer</TableHeadCell>
+                <TableHeadCell className="hidden lg:table-cell dark:text-white">Category</TableHeadCell>
+                <TableHeadCell className="hidden lg:table-cell dark:text-white">Image</TableHeadCell>
+                <TableHeadCell className="hidden md:table-cell dark:text-white">Status</TableHeadCell>
+                <TableHeadCell className="hidden lg:table-cell dark:text-white">Stock</TableHeadCell>
+                <TableHeadCell className="dark:text-white">Actions</TableHeadCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
                 Array.from({ length: itemsPerPage }).map((_, index) => (
-                  <TableRow key={index} className="animate-pulse">
-                    <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
+                  <TableRow key={index} className="animate-pulse dark:text-white">
+                    <TableCell><div className="h-4 bg-gray-200 rounded dark:text-white"></div></TableCell>
                     <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
                     <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
                     <TableCell className="hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></TableCell>
@@ -416,27 +421,27 @@ const fetchProducts = async (page: number) => {
                 ))
               ) : filteredAndSortedData.length === 0 ? (
                 <TableRow>
-                  <TableCell  className="text-center py-8 text-gray-500">
+                  <TableCell className="text-center py-8 text-gray-500">
                     No products found. Try adjusting your search or filters.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredAndSortedData.map((item) => (
-                  <TableRow key={item.id} className="hover:bg-gray-50 even:bg-gray-50/30">
-                    <TableCell className="font-medium">{item.id}</TableCell>
+                  <TableRow key={item.id} className="hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-500 dark:text-white even:bg-gray-50/30">
+                    <TableCell className="font-medium dark:text-white">{item.id}</TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-medium text-gray-900">{item.name}</span>
-                        <span className="text-xs text-gray-500 truncate max-w-xs">
+                        <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
+                        <span className="text-xs text-gray-500 truncate max-w-xs dark:text-white">
                           {item.description.substring(0, 50)}...
                         </span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-gray-900">₹{item.price}</span>
+                        <span className="font-semibold text-gray-900 dark:text-white">₹{item.price}</span>
                         {item.originalPrice && item.originalPrice > item.price && (
-                          <span className="text-xs text-gray-500 line-through">
+                          <span className="text-xs text-gray-500 line-through dark:text-white">
                             ₹{item.originalPrice}
                           </span>
                         )}
@@ -444,20 +449,22 @@ const fetchProducts = async (page: number) => {
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       {item.offer ? (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
+                        <span className="px-2 py-1 bg-blue-100 dark:bg-gray-600 dark:text-white text-blue-800 text-xs font-medium rounded-full">
                           {item.offer}% OFF
                         </span>
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}
                     </TableCell>
+
+
                     <TableCell className="hidden lg:table-cell">
                       {item.category?.name ? (
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
                           {item.category.name}
                         </span>
                       ) : (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-gray-400 dark:text-white">—</span>
                       )}
                     </TableCell>
                     <TableCell className="hidden lg:table-cell">
@@ -474,9 +481,9 @@ const fetchProducts = async (page: number) => {
                         <span className="text-gray-400">—</span>
                       )}
                     </TableCell>
-                    
+
                     <TableCell className="hidden md:table-cell">
-                      <div 
+                      <div
                         onClick={() => handleToggleActive(item)}
                         className={`relative inline-flex items-center cursor-pointer w-12 h-6 rounded-full transition-colors ${item.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
                       >
@@ -489,7 +496,7 @@ const fetchProducts = async (page: number) => {
                       <input
                         type="number"
                         min="0"
-                        className="w-16 border rounded-md px-2 py-1 text-center text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-16 border rounded-md px-2 py-1 text-center text-sm dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
                         value={item.stock || 0}
                         onChange={(e) => handleStockChange(item, Number(e.target.value))}
                       />
@@ -526,21 +533,21 @@ const fetchProducts = async (page: number) => {
           </Table>
         </div>
       </div>
-    
-{/* <Pagination
+
+      {/* <Pagination
   currentPage={currentPage}
   totalPages={totalPages}
   onPageChange={setCurrentPage}
 />
  */}
 
- <Pagination
-  currentPage={currentPage}
-  totalPages={totalPages}
-  itemsPerPage={itemsPerPage}
-  totalItems={totalItems}
-  onPageChange={setCurrentPage}
-/>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        itemsPerPage={itemsPerPage}
+        totalItems={totalItems}
+        onPageChange={setCurrentPage}
+      />
 
 
 
@@ -550,7 +557,7 @@ const fetchProducts = async (page: number) => {
         onClose={() => setViewModalOpen(false)}
         productId={selectedProductId !== null ? selectedProductId.toString() : null}
       />
-      
+
       <EditProductModal
         isOpen={editModalOpen}
         onClose={() => {
@@ -558,7 +565,7 @@ const fetchProducts = async (page: number) => {
           fetchProducts(currentPage); // Refresh data after editing
         }}
       />
-      
+
       <DeleteProductModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}

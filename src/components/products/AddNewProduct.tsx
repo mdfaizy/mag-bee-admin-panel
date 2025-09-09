@@ -18,6 +18,7 @@ type CategoryOption = {
 type Variant = {
   sku: string;
   price: string;
+  sellingPrice: string;
   stock: string;
   attributes: { key: string; value: string }[];
 };
@@ -45,7 +46,7 @@ export default function AddNewProduct() {
     height: "",
     weight: "",
     weightUnit: "kg",
-    stock:"",
+    stock: "",
     shippingAvailable: false,
     skuCode: "",
     returnPolicy: "",
@@ -54,12 +55,13 @@ export default function AddNewProduct() {
       {
         sku: "",
         price: "",
+        sellingPrice: "",
         stock: "",
         attributes: [{ key: "", value: "" }],
       },
     ] as Variant[],
   });
- const calculateFinalPrice = () => {
+  const calculateFinalPrice = () => {
     const originalPrice = parseFloat(formData.originalPrice);
     const offer = parseFloat(formData.offer);
 
@@ -73,53 +75,53 @@ export default function AddNewProduct() {
     { value: "30-day return", label: "30-day return" },
     { value: "No return", label: "No return" },
   ];
- const handleRoleChange = (value: string) => {
+  const handleRoleChange = (value: string) => {
     setFormData((prev) => ({ ...prev, categoryId: value }));
   };
   useEffect(() => {
-  const fetchCategories = async () => {
-    const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+    const fetchCategories = async () => {
+      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
 
-    try {
-      const res = await fetch("http://localhost:8000/api/category", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      const data = await res.json();
+      try {
+        const res = await fetch("http://localhost:8000/api/category", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const data = await res.json();
 
-      // ✅ Convert API data to Select's format
-      const formatted = data.map((item: any) => ({
-        value: String(item.id),
-        label: item.name,
-      }));
+        // ✅ Convert API data to Select's format
+        const formatted = data.map((item: any) => ({
+          value: String(item.id),
+          label: item.name,
+        }));
 
-      setCategory(formatted);
-    } catch (error) {
-      console.error("Failed to fetch categories:", error);
-    }
-  };
-  fetchCategories();
-}, []);
+        setCategory(formatted);
+      } catch (error) {
+        console.error("Failed to fetch categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
 
-  
+
   const removeVariant = (index: number) => {
-  setFormData(prev => ({
-    ...prev,
-    variants: prev.variants.filter((_, i) => i !== index)
-  }));
-};
+    setFormData(prev => ({
+      ...prev,
+      variants: prev.variants.filter((_, i) => i !== index)
+    }));
+  };
 
-const removeAttribute = (variantIndex: number, attrIndex: number) => {
-  setFormData(prev => {
-    const updatedVariants = [...prev.variants];
-    updatedVariants[variantIndex].attributes = 
-      updatedVariants[variantIndex].attributes.filter((_, i) => i !== attrIndex);
-    return { ...prev, variants: updatedVariants };
-  });
-};
+  const removeAttribute = (variantIndex: number, attrIndex: number) => {
+    setFormData(prev => {
+      const updatedVariants = [...prev.variants];
+      updatedVariants[variantIndex].attributes =
+        updatedVariants[variantIndex].attributes.filter((_, i) => i !== attrIndex);
+      return { ...prev, variants: updatedVariants };
+    });
+  };
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -132,45 +134,33 @@ const removeAttribute = (variantIndex: number, attrIndex: number) => {
   ) => {
     const { name, value, type } = e.target;
     const checked = type === "checkbox" ? (e.target as HTMLInputElement).checked : undefined;
-// if (options?.variantIndex !== undefined) {
-//   setFormData((prev) => {
-//     const updatedVariants = [...prev.variants];
-    
-//     if (options.attrIndex !== undefined && options.attrField) {
-//       updatedVariants[options.variantIndex].attributes[options.attrIndex][options.attrField] = value;
-//     } else {
-//       updatedVariants[options.variantIndex][name as keyof Variant] = value;
-//     }
+   
+    if (options?.variantIndex !== undefined) {
+      const variantIndex = options.variantIndex;
+      const attrIndex = options.attrIndex;
+      const attrField = options.attrField;
 
-//     return { ...prev, variants: updatedVariants };
-//   });
-// }
-if (options?.variantIndex !== undefined) {
-  const variantIndex = options.variantIndex;
-  const attrIndex = options.attrIndex;
-  const attrField = options.attrField;
+      setFormData((prev) => {
+        const updatedVariants = [...prev.variants];
 
-  setFormData((prev) => {
-    const updatedVariants = [...prev.variants];
+        if (
+          attrIndex !== undefined &&
+          attrField &&
+          updatedVariants[variantIndex]?.attributes[attrIndex]
+        ) {
+          updatedVariants[variantIndex].attributes[attrIndex][attrField] = value;
+        } else {
+          // updatedVariants[variantIndex][name as keyof Variant] = value;
+          if (name !== "attributes") {
+            updatedVariants[variantIndex][name as Exclude<keyof Variant, "attributes">] = value;
+          }
+        }
 
-    if (
-      attrIndex !== undefined &&
-      attrField &&
-      updatedVariants[variantIndex]?.attributes[attrIndex]
-    ) {
-      updatedVariants[variantIndex].attributes[attrIndex][attrField] = value;
-    } else {
-      // updatedVariants[variantIndex][name as keyof Variant] = value;
-       if (name !== "attributes") {
-    updatedVariants[variantIndex][name as Exclude<keyof Variant, "attributes">] = value;
-  }
+        return { ...prev, variants: updatedVariants };
+      });
+
+      return; // 🛑 Prevents double-setting formData
     }
-
-    return { ...prev, variants: updatedVariants };
-  });
-
-  return; // 🛑 Prevents double-setting formData
-}
 
     setFormData((prev) => ({
       ...prev,
@@ -187,7 +177,7 @@ if (options?.variantIndex !== undefined) {
       ...prev,
       variants: [
         ...prev.variants,
-        { sku: "", price: "", stock: "", attributes: [{ key: "", value: "" }] },
+        { sku: "", price: "", sellingPrice: "", stock: "", attributes: [{ key: "", value: "" }] },
       ],
     }));
   };
@@ -201,44 +191,57 @@ if (options?.variantIndex !== undefined) {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!formData.originalPrice || isNaN(Number(formData.originalPrice))) {
-      alert("Original price is required.");
-      return;
-    }
+  if (!formData.originalPrice || isNaN(Number(formData.originalPrice))) {
+    alert("Original price is required.");
+    return;
+  }
 
-    const form = new FormData();
-    Object.entries({
-      ...formData,
-      price: formData.price,
-      originalPrice: formData.originalPrice,
-      offer: formData.offer,
-      shippingAvailable: String(formData.shippingAvailable),
-      keywords: JSON.stringify(formData.keywords),
-      variants: JSON.stringify(formData.variants),
-    }).forEach(([key, value]) => form.append(key, value));
+  const variants = formData.variants
+    .filter(v => v.sku || v.price || v.stock)
+    .map(v => ({
+      ...v,
+      price: Number(v.price) || 0,
+      stock: Number(v.stock) || 0,
+      attributes: v.attributes.filter(a => a.key || a.value),
+    }));
 
-    productImages.forEach((file) => {
-      form.append("imageUrl", file);
+  const payload = {
+    ...formData,
+    originalPrice: Number(formData.originalPrice),
+    price: Number(formData.price) || (variants.length ? 0 : Number(formData.originalPrice)),
+    offer: Number(formData.offer) || 0,
+    stock: Number(formData.stock) || (variants.length ? 0 : Number(formData.stock)),
+    variants: JSON.stringify(variants),
+    shippingAvailable: String(formData.shippingAvailable),
+    keywords: JSON.stringify(formData.keywords),
+  };
+
+  const form = new FormData();
+  Object.entries(payload).forEach(([key, value]) => {
+    form.append(key, value !== undefined && value !== null ? value.toString() : "");
+  });
+
+  productImages.forEach((file) => form.append("imageUrl", file));
+
+  try {
+    const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+    const res = await fetch("http://localhost:8000/api/product", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
     });
 
-    try {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-      const res = await fetch("http://localhost:8000/api/product", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
-      });
-      if (res.ok) {
-        alert("Product created successfully!");
-      } else {
-        alert("Submission failed.");
-      }
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    if (res.ok) {
+      alert("Product created successfully!");
+    } else {
+      alert("Submission failed.");
     }
-  };
+  } catch (error) {
+    console.error("Error submitting form:", error);
+  }
+};
 
   return (
     <div className="flex flex-col flex-1 lg:w-11/12 w-full mx-auto items-center">
@@ -270,7 +273,7 @@ if (options?.variantIndex !== undefined) {
                 </span>
               </div>
 
-              
+
 
               <div>
                 <Label>Description<span className="text-error-500">*</span></Label>
@@ -338,7 +341,7 @@ if (options?.variantIndex !== undefined) {
                   rows={2}
                 />
               </div>
-                 
+
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                 <div>
                   <Label>Original Price<span className="text-error-500">*</span></Label>
@@ -369,7 +372,7 @@ if (options?.variantIndex !== undefined) {
                     placeholder="Final Price"
                     type="number"
                     value={calculateFinalPrice().toFixed(2)}
-                     {...({ readOnly: true } as any)}
+                    {...({ readOnly: true } as any)}
                     className="bg-gray-100 cursor-not-allowed"
                   />
                 </div>
@@ -386,7 +389,7 @@ if (options?.variantIndex !== undefined) {
                       value={formData.weight}
                       onChange={handleChange}
                       className="w-full"
-                     min="0"
+                      min="0"
 
                     />
                     <select
@@ -400,7 +403,7 @@ if (options?.variantIndex !== undefined) {
                     </select>
                   </div>
                 </div>
-                 <div className="flex-1">
+                <div className="flex-1">
                   <Label>Stock<span className="text-error-500">*</span></Label>
                   <div className="flex items-center gap-2">
                     <Input
@@ -410,9 +413,9 @@ if (options?.variantIndex !== undefined) {
                       value={formData.stock}
                       onChange={handleChange}
                       className="w-full"
-                    
+
                     />
-                    
+
                   </div>
                 </div>
               </div>
@@ -502,103 +505,113 @@ if (options?.variantIndex !== undefined) {
             </div>
           </div>
           <div className="mt-8">
-  <h3 className="text-lg font-semibold mb-4">Product Variants</h3>
-  {formData.variants.map((variant, vIndex) => (
-    <div key={vIndex} className="border p-4 rounded mb-4 bg-gray-50 relative">
-      {/* Remove Variant Button (top-right corner) */}
-      {formData.variants.length > 1 && (
-        <button
-          type="button"
-          onClick={() => removeVariant(vIndex)}
-          className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-          title="Remove variant"
-        >
-          ×
-        </button>
-      )}
+            <h3 className="text-lg font-semibold mb-4">Product Variants</h3>
+            {formData.variants.map((variant, vIndex) => (
+              <div key={vIndex} className="border p-4 rounded mb-4 bg-gray-50 relative">
+                {/* Remove Variant Button (top-right corner) */}
+                {formData.variants.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeVariant(vIndex)}
+                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                    title="Remove variant"
+                  >
+                    ×
+                  </button>
+                )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div>
-          <Label>SKU<span className="text-error-500">*</span></Label>
-          <Input
-            name="sku"
-            value={variant.sku}
-            onChange={(e) => handleChange(e, { variantIndex: vIndex })}
-          />
-        </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <Label>SKU<span className="text-error-500">*</span></Label>
+                    <Input
+                      name="sku"
+                      value={variant.sku}
+                      onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+                    />
+                  </div>
 
-        <div>
-          <Label>Price<span className="text-error-500">*</span></Label>
-          <Input
-            name="price"
-            value={variant.price}
-            onChange={(e) => handleChange(e, { variantIndex: vIndex })}
-          />
-        </div>
+                  <div>
+                    <Label>Price<span className="text-error-500">*</span></Label>
+                    <Input
+                      name="price"
+                      type="number"
+                      value={variant.price}
+                      onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Selling Price<span className="text-error-500">*</span></Label>
+                    <Input
+                      name="sellingPrice"
+                      type="number"
+                      value={variant.sellingPrice}
+                      onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+                    />
+                  </div>
 
-        <div>
-          <Label>Stock<span className="text-error-500">*</span></Label>
-          <Input
-            name="stock"
-            value={variant.stock}
-            onChange={(e) => handleChange(e, { variantIndex: vIndex })}
-          />
-        </div>
-      </div>
+                  <div>
+                    <Label>Stock<span className="text-error-500">*</span></Label>
+                    <Input
+                      name="stock"
+                      value={variant.stock}
+                      onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+                    />
+                  </div>
+                </div>
 
-      <div>
-        <h4 className="font-medium mb-2">Attributes</h4>
-        {variant.attributes.map((attr, aIndex) => (
-          <div key={aIndex} className="flex gap-2 mb-2 items-center">
-            <Input
-              value={attr.key}
-              onChange={(e) => handleChange(e, {
-                variantIndex: vIndex,
-                attrIndex: aIndex,
-                attrField: "key",
-              })}
-              placeholder="Key"
-            />
-            <Input
-              value={attr.value}
-              onChange={(e) => handleChange(e, {
-                variantIndex: vIndex,
-                attrIndex: aIndex,
-                attrField: "value",
-              })}
-              placeholder="Value"
-            />
-            {/* Remove Attribute Button */}
-            {variant.attributes.length > 1 && (
-              <button
-                type="button"
-                onClick={() => removeAttribute(vIndex, aIndex)}
-                className="text-red-500 hover:text-red-700"
-                title="Remove attribute"
-              >
-                ×
-              </button>
-            )}
+                <div>
+                  <h4 className="font-medium mb-2">Attributes</h4>
+                  {variant.attributes.map((attr, aIndex) => (
+                    <div key={aIndex} className="flex gap-2 mb-2 items-center">
+                      <Input
+                        value={attr.key}
+                        onChange={(e) => handleChange(e, {
+                          variantIndex: vIndex,
+                          attrIndex: aIndex,
+                          attrField: "key",
+                        })}
+                        placeholder="Key"
+                      />
+                      <Input
+                        value={attr.value}
+                        onChange={(e) => handleChange(e, {
+                          variantIndex: vIndex,
+                          attrIndex: aIndex,
+                          attrField: "value",
+                        })}
+                        placeholder="Value"
+                      />
+                      {/* Remove Attribute Button */}
+                      {variant.attributes.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeAttribute(vIndex, aIndex)}
+                          className="text-red-500 hover:text-red-700"
+                          title="Remove attribute"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => addAttribute(vIndex)}
+                    className="text-blue-500 mt-2 text-sm hover:text-blue-700"
+                  >
+                    + Add Attribute
+                  </button>
+                </div>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addVariant}
+              className="text-green-600 font-medium hover:text-green-800"
+            >
+              + Add Variant
+            </button>
           </div>
-        ))}
-        <button
-          type="button"
-          onClick={() => addAttribute(vIndex)}
-          className="text-blue-500 mt-2 text-sm hover:text-blue-700"
-        >
-          + Add Attribute
-        </button>
-      </div>
-    </div>
-  ))}
-  <button
-    type="button"
-    onClick={addVariant}
-    className="text-green-600 font-medium hover:text-green-800"
-  >
-    + Add Variant
-  </button>
-</div>
 
           <div className="mt-8 text-center">
             <button

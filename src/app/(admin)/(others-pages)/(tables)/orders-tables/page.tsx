@@ -1,19 +1,18 @@
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
-import BasicTableOne from "@/components/tables/BasicTableOne";
+import OrdersTable from "@/components/tables/Orders";
 import { Metadata } from "next";
 import React from "react";
 export const metadata: Metadata = {
   title: "",
-  description:
-    "",
+  description:"",
   // other metadata
 };
-export default function BasicTables() {
+export default function OrdersTables() {
   return (
     <div>
       <PageBreadcrumb pageTitle="Basic Table" />
       <div className="space-y-6">
-          <BasicTableOne />
+          <OrdersTable />
       </div>
     </div>
   );

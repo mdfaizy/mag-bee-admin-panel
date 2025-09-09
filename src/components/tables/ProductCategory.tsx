@@ -44,7 +44,7 @@ const CategoryTable = () => {
 
   const itemsPerPage = 10;
   const startIndex = (currentPage - 1) * itemsPerPage;
-  
+
   // Filter and sort data
   const filteredAndSortedData = React.useMemo(() => {
     let filtered = tableData.filter(category =>
@@ -140,18 +140,18 @@ const CategoryTable = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 md:p-6 border border-gray-100">
+    <div className="bg-white rounded-xl shadow-sm p-4 text-gray-800 md:p-6 border dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white  ">
       {/* Header with Search and Controls */}
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4 md:mb-0">Category Management</h1>
+          <h1 className="text-2xl font-bold  mb-4 md:mb-0">Category Management</h1>
           <Link href='/category'>
-          <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-            <FaPlus size={14} />
-            <span>Add Category</span>
-          </button></Link>
+            <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+              <FaPlus size={14} />
+              <span>Add Category</span>
+            </button></Link>
         </div>
-        
+
         <div className="flex flex-col md:flex-row gap-4 justify-between">
           <div className="relative flex-1 max-w-2xl">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -165,7 +165,7 @@ const CategoryTable = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          
+
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
@@ -177,7 +177,7 @@ const CategoryTable = () => {
             </button>
           </div>
         </div>
-        
+
         {/* Expandable Filters */}
         {showFilters && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg mt-2">
@@ -186,7 +186,7 @@ const CategoryTable = () => {
               <select
                 className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={sortConfig.key}
-                onChange={(e) => setSortConfig({...sortConfig, key: e.target.value})}
+                onChange={(e) => setSortConfig({ ...sortConfig, key: e.target.value })}
               >
                 <option value="">Default</option>
                 <option value="name">Name</option>
@@ -194,7 +194,7 @@ const CategoryTable = () => {
                 <option value="updatedAt">Updated Date</option>
               </select>
             </div>
-            
+
             <div className="flex items-end">
               <button
                 onClick={() => {
@@ -215,9 +215,9 @@ const CategoryTable = () => {
         <Table className="min-w-full">
           <TableHead className="bg-gray-50">
             <TableRow>
-              <TableHeadCell 
+              <TableHeadCell
                 className="cursor-pointer hover:bg-gray-100"
-                // onClick={() => handleSort("id")}
+              // onClick={() => handleSort("id")}
               >
                 <div className="flex items-center gap-1">
                   ID
@@ -226,9 +226,9 @@ const CategoryTable = () => {
                   )}
                 </div>
               </TableHeadCell>
-              <TableHeadCell 
+              <TableHeadCell
                 className="cursor-pointer hover:bg-gray-100"
-                // onClick={() => handleSort("name")}
+              // onClick={() => handleSort("name")}
               >
                 <div className="flex items-center gap-1">
                   Name
@@ -261,24 +261,24 @@ const CategoryTable = () => {
               ))
             ) : visibleData.length === 0 ? (
               <TableRow>
-                <TableCell  className="text-center py-8 text-gray-500">
+                <TableCell className="text-center py-8 text-gray-500">
                   {searchTerm ? "No categories found matching your search" : "No categories available"}
                 </TableCell>
               </TableRow>
             ) : (
               visibleData.map((item) => (
-                <TableRow key={item.id} className="hover:bg-gray-50 even:bg-gray-50/30">
-                  <TableCell className="font-medium">{item.id}</TableCell>
+                <TableRow key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 even:bg-gray-50/30 border-1 ">
+                  <TableCell className="font-medium dark:text-white">{item.id}</TableCell>
                   <TableCell>
-                    <div className="font-medium text-gray-900">{item.name || "—"}</div>
+                    <div className="font-medium dark:text-white">{item.name || "—"}</div>
                   </TableCell>
-                  <TableCell className="hidden md:table-cell">
+                  <TableCell className="hidden md:table-cell dark:text-white">
                     <div className="max-w-xs truncate" title={item.description}>
                       {item.description || "—"}
                     </div>
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
+                  <TableCell className="hidden lg:table-cell ">
+                    <span className="px-2 py-1 bg-gray-100  text-xs font-medium rounded-full">
                       {item.slug || "—"}
                     </span>
                   </TableCell>
@@ -297,10 +297,10 @@ const CategoryTable = () => {
                     )}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    <span className="text-sm text-gray-600">{formatDate(item.createdAt)}</span>
+                    <span className="text-sm text-gray-600 dark:text-white">{formatDate(item.createdAt)}</span>
                   </TableCell>
                   <TableCell className="hidden xl:table-cell">
-                    <span className="text-sm text-gray-600">{formatDate(item.updatedAt)}</span>
+                    <span className="text-sm text-gray-600 dark:text-white">{formatDate(item.updatedAt)}</span>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
@@ -365,8 +365,8 @@ const CategoryTable = () => {
                 key={pageNum}
                 onClick={() => setCurrentPage(pageNum)}
                 className={`px-3 py-2 border rounded-md text-sm ${currentPage === pageNum
-                    ? "bg-blue-600 text-white border-blue-600"
-                    : "hover:bg-gray-50"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "hover:bg-gray-50"
                   } transition-colors`}
               >
                 {pageNum}
@@ -387,16 +387,16 @@ const CategoryTable = () => {
       </div>
 
       {/* Modals */}
-      <ViewCategoryModal 
-        isOpen={viewModalOpen} 
-  onClose={() => setViewModalOpen(false)}
+      <ViewCategoryModal
+        isOpen={viewModalOpen}
+        onClose={() => setViewModalOpen(false)}
       />
-      
+
       <EditCategoryModal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
       />
-      
+
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={deleteModalOpen}

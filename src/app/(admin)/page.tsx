@@ -7,7 +7,7 @@ import LineChartOne from '../../components/charts/line/LineChartOne'
 // import MonthlySalesChart from "@/components/ecommerce/MonthlySalesChart";
 // import StatisticsChart from "@/components/ecommerce/StatisticsChart";
 // import RecentOrders from "@/components/ecommerce/RecentOrders";
-import OrdersTable from "@/components/tables/BasicTableOne";
+import OrdersTable from "@/components/tables/Orders";
 export const metadata: Metadata = {
   title:
     "MAGBE | E-commerce | ",

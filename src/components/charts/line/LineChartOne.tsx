@@ -380,7 +380,7 @@ export default function DynamicLineChart() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h2 className="text-xl font-semibold text-gray-900">Sales Analytics</h2>
@@ -430,7 +430,7 @@ export default function DynamicLineChart() {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700">
       {/* Header */}
       <div className="px-6 pt-6 pb-4 border-b border-gray-100">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

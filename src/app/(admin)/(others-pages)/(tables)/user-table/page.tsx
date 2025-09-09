@@ -11,7 +11,7 @@ export const metadata: Metadata = {
  
 };
 
-export default function BasicTables() {
+export default function UserTables() {
   return (
     <div>
       <PageBreadcrumb pageTitle="User Role Table" />

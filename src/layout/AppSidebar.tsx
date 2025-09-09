@@ -79,7 +79,7 @@ const navItems: NavItem[] = [
   {
     name: "Tables",
     icon: <FaTable />,
-    subItems: [{ name: "Resent Order", path: "/basic-tables", pro: false },
+    subItems: [{ name: "Resent Order", path: "/orders-tables", pro: false },
        { name: "Employees For MagBee", path: "/user-table", pro: false },
        { name: "Customer List", path: "/customer", pro: false },
     ],

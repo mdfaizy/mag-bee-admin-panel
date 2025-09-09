@@ -33,7 +33,7 @@ interface User {
   role?: Role; // ✅ Add this
 }
 
-export default function BasicTableOne() {
+export default function UserTable() {
   const itemsPerPage = 5;
   const [currentPage, setCurrentPage] = useState(1);
   const [tableData, setTableData] = useState<User[]>([]);
@@ -115,32 +115,32 @@ const handleDeleteUser = async () => {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
       <div className="w-full overflow-x-auto">
-        <Table className="divide-y divide-gray-200 dark:divide-white/[0.05] text-sm">
-          <TableHead className="bg-gray-100 dark:bg-white/[0.05]">
-            <TableRow>
-              <TableHeadCell>Name</TableHeadCell>
-              <TableHeadCell>Email</TableHeadCell>
-              <TableHeadCell>Username</TableHeadCell>
-              <TableHeadCell>Phone</TableHeadCell>
-              <TableHeadCell>Role ID</TableHeadCell>
-              <TableHeadCell>Status</TableHeadCell>
-              <TableHeadCell>Created</TableHeadCell>
-              <TableHeadCell>Actions</TableHeadCell>
+        <Table className="divide-y divide-gray-200 dark:divide-white/[0.05] text-sm dark:text-white">
+          <TableHead className="bg-gray-100 dark:bg-white/[0.05] dark:text-white">
+            <TableRow className="">
+              <TableHeadCell className="dark:text-white">Name</TableHeadCell>
+              <TableHeadCell className="dark:text-white">Email</TableHeadCell>
+              <TableHeadCell className="dark:text-white">Username</TableHeadCell>
+              <TableHeadCell className="dark:text-white">Phone</TableHeadCell>
+              <TableHeadCell className="dark:text-white">Role ID</TableHeadCell>
+              <TableHeadCell className="dark:text-white">Status</TableHeadCell>
+              <TableHeadCell className="dark:text-white">Created</TableHeadCell>
+              <TableHeadCell className="dark:text-white">Actions</TableHeadCell>
             </TableRow>
           </TableHead>
-          <TableBody className="divide-y divide-gray-200 dark:divide-white/[0.05]">
+          <TableBody className="divide-y  divide-gray-200 dark:divide-white/[0.05]">
             {visibleData.map((user) => (
               <TableRow
                 key={user.id}
-                className="hover:bg-gray-50 dark:hover:bg-white/[0.03]"
+                className="hover:bg-gray-50 dark:hover:bg-white/[0.03] dark:text-white"
               >
-                <TableCell className="font-medium text-gray-900">
+                <TableCell className="font-medium text-gray-900 dark:text-white">
                   {user.name}
                 </TableCell>
-                <TableCell>{user.email}</TableCell>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.phone_number}</TableCell>
-               <TableCell>{user.role?.name || '—'}</TableCell>
+                <TableCell className="dark:text-white">{user.email}</TableCell>
+                <TableCell className="dark:text-white">{user.username}</TableCell>
+                <TableCell  className="dark:text-white">{user.phone_number}</TableCell>
+               <TableCell className="dark:text-white">{user.role?.name || '—'}</TableCell>
 
 
 
@@ -161,7 +161,7 @@ const handleDeleteUser = async () => {
   />
 </div>
                 </TableCell>
-<TableCell>
+<TableCell className="dark:text-white">
   {user.createdAt ? new Date(user.createdAt).toLocaleString() : '—'}
 </TableCell>
                <TableCell className="flex gap-3">
