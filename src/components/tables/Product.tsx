@@ -115,6 +115,10 @@ const ProductTable = () => {
   };
 
 
+
+
+
+
   useEffect(() => {
     const getProducts = async () => {
       try {
@@ -223,6 +227,7 @@ const ProductTable = () => {
     try {
       const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
       const productData = await fetchProductById(product.id, token);
+      console.log("Editing product:", productData);
       dispatch(setSelectedProduct(productData));
       setEditModalOpen(true);
     } catch (error) {
@@ -254,6 +259,11 @@ const ProductTable = () => {
       }
     }
   };
+
+ const calculateTotalVariantStock = (variants: Variant[]): number => {
+  return variants?.reduce((total, variant) => total + (variant.stock || 0), 0);
+};
+
 
   // Reset filters
   const resetFilters = () => {
@@ -492,7 +502,7 @@ const ProductTable = () => {
                         />
                       </div>
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">
+                    {/* <TableCell className="hidden lg:table-cell">
                       <input
                         type="number"
                         min="0"
@@ -500,7 +510,29 @@ const ProductTable = () => {
                         value={item.stock || 0}
                         onChange={(e) => handleStockChange(item, Number(e.target.value))}
                       />
-                    </TableCell>
+                    </TableCell> */}
+
+
+                    <TableCell className="hidden lg:table-cell">
+  {!item.hasVariants ? (
+    <input
+      type="number"
+      min="0"
+      className="w-16 border rounded-md px-2 py-1 text-center text-sm dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+      value={item.stock || 0}
+      onChange={(e) => handleStockChange(item, Number(e.target.value))}
+    />
+  ) : (
+    // If product has variants, show total stock or nothing
+    <span className="text-sm text-gray-600 dark:text-gray-300 w-32 border rounded-md px-4 py-1">
+      {calculateTotalVariantStock(item.variants)}
+    </span>
+  )}
+</TableCell>
+
+                   
+
+
                     <TableCell>
                       <div className="flex gap-2">
                         <button

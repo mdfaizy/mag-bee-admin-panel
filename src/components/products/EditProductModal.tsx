@@ -9,12 +9,19 @@ import Button from "../ui/button/Button";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { setSelectedProduct, setProducts } from "@/redux/productSlice";
+import Select from "../form/Select";
+import { HiChevronDown } from 'react-icons/hi';
+import { updateProductById } from "@/services/product/productService";
+import { fetchProductCategory } from "@/services/product-category/categoryService";
+
 
 interface Variant {
   id?: number;
   sku: string;
-  price: number; 
+  price: number;
+  sellingPrice?: number;
   stock: number;
+  offer?: number;
   attributes: { key: string; value: string }[];
 }
 
@@ -23,7 +30,13 @@ interface Props {
   onClose: () => void;
 }
 
+const safeNum = (v: any, fallback = 0) => {
+  const n = Number(v);
+  return isNaN(n) ? fallback : n;
+};
 
+const computeSellingPrice = (price: number, offer: number) =>
+  Math.round((price * (1 - (offer || 0) / 100) + Number.EPSILON) * 100) / 100;
 
 const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
@@ -32,18 +45,62 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState<any>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
+  const [images, setImages] = useState<string[]>([]); // URLs of images
+  const [newImages, setNewImages] = useState<File[]>([]); // New files to upload
+  const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
+
+  // const handleRoleChange = (value: string) => {
+  //   setFormData((prev) => ({ ...prev, categoryId: value }));
+  // };
+
+// 
+  useEffect(() => {
+    const fetchCategoriesData = async () => {
+      try {
+        const response = await fetchProductCategory();
+        console.log('response', response);
+
+        const formatted = response.map((cat: any) => ({
+          value: String(cat.id),
+          label: cat.name,
+        }));
+
+        setCategoryOptions(formatted);
+      } catch (err) {
+        console.error("Category fetch error", err);
+      }
+    };
+
+    fetchCategoriesData();
+  }, []);
 
   // Initialize form data and variants when selectedProduct changes
   useEffect(() => {
     if (selectedProduct) {
+      // normalize variants to safe numeric values and attributes
+      const initialVariants: Variant[] = (selectedProduct.variants || []).map((v: any) => {
+        const price = safeNum(v.price, 0);
+        const offer = safeNum(v.offer, 0);
+        const sellingPrice = safeNum(v.sellingPrice, computeSellingPrice(price, offer));
+        return {
+          id: v.id,
+          sku: v.sku ?? "",
+          price,
+          sellingPrice,
+          stock: safeNum(v.stock, 0),
+          offer,
+          attributes:
+            (v.attributes || []).map((a: any) => ({ key: a.key ?? "", value: a.value ?? "" })) ||
+            [{ key: "", value: "" }],
+        };
+      });
+
       setFormData({
         ...selectedProduct,
-        // categoryId: selectedProduct.category?.id ?? selectedProduct.categoryId ?? 0,
-          categoryId: selectedProduct.category?.id ?? 0,
-        originalPrice: selectedProduct.originalPrice ?? 0,
-        offer: selectedProduct.offer ?? 0,
-        stock: selectedProduct.stock ?? 0,
-        // shippingAvailable: selectedProduct.shippingAvailable ?? false,
+        categoryId: selectedProduct.category?.id ?? 0,
+        originalPrice: safeNum(selectedProduct.originalPrice, 0),
+        offer: safeNum(selectedProduct.offer, 0),
+        stock: safeNum(selectedProduct.stock, 0),
         shippingAvailable: selectedProduct.shippingAvailable ?? false,
         warrantyInfo: selectedProduct.warrantyInfo ?? "",
         skuCode: selectedProduct.skuCode ?? "",
@@ -52,7 +109,16 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
         manufactureDetails: selectedProduct.manufactureDetails ?? "",
       });
 
-      setVariants(selectedProduct.variants || []);
+      setVariants(initialVariants.length ? initialVariants : []);
+      // Extract image URLs from selectedProduct.images
+      // const imageUrls = selectedProduct.images 
+      //   ? selectedProduct.images.map((img: any) => typeof img === 'string' ? img : img.imageUrl)
+      //   : [];
+      // setImages(imageUrls);
+    } else {
+      setFormData(null);
+      setVariants([]);
+      setImages([]);
     }
   }, [selectedProduct]);
 
@@ -63,154 +129,228 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  // Handle change for product fields
-  // const handleChange = (
-  //   e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  // ) => {
-  //   if (!formData) return;
-  //   const { name, value, type, checked } = e.target;
-
-  //   let parsedValue: any = value;
-  //   if (type === "checkbox") {
-  //     parsedValue = checked;
-  //   } else if (
-  //     name === "price" ||
-  //     name === "originalPrice" ||
-  //     name === "offer" ||
-  //     name === "categoryId"
-  //   ) {
-  //     parsedValue = parseFloat(value);
-  //     if (isNaN(parsedValue)) parsedValue = 0;
-  //   }
-
-  //   setFormData({
-  //     ...formData,
-  //     [name]: parsedValue,
-  //   });
-  // };
-
-
-
   const handleChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-) => {
-  if (!formData) return;
-  const { name, value, type } = e.target;
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    if (!formData) return;
+    const { name, value, type } = e.target;
 
-  let parsedValue: any = value;
+    let parsedValue: any = value;
 
-  if (type === "checkbox" && e.target instanceof HTMLInputElement) {
-    parsedValue = e.target.checked;
-  } else if (
-    name === "price" ||
-    name === "originalPrice" ||
-    name === "offer" ||
-    name === "categoryId"
-  ) {
-    parsedValue = parseFloat(value);
-    if (isNaN(parsedValue)) parsedValue = 0;
-  }
+    if (type === "checkbox" && e.target instanceof HTMLInputElement) {
+      parsedValue = e.target.checked;
+    } else if (
+      name === "price" ||
+      name === "originalPrice" ||
+      name === "offer" ||
+      name === "categoryId" ||
+      name === "stock"
+    ) {
+      parsedValue = safeNum(value, 0);
+    }
 
-  setFormData({
-    ...formData,
-    [name]: parsedValue,
-  });
-};
+    setFormData({
+      ...formData,
+      [name]: parsedValue,
+    });
+  };
 
-
-  // Variant management functions
+  // Variant management functions (immutable updates)
   const addVariant = () => {
-    setVariants([
-      ...variants,
-      { sku: "", price: 0, stock: 0, attributes: [{ key: "", value: "" }] },
+    setVariants((prev) => [
+      ...prev,
+      {
+        sku: "",
+        price: 0,
+        sellingPrice: 0,
+        offer: 0,
+        stock: 0,
+        attributes: [{ key: "", value: "" }],
+      },
     ]);
   };
 
   const removeVariant = (index: number) => {
-    const newVariants = [...variants];
-    newVariants.splice(index, 1);
-    setVariants(newVariants);
+    setVariants((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleVariantChange = (index: number, field: string, value: string | number) => {
-    const newVariants = [...variants];
-    newVariants[index] = {
-      ...newVariants[index],
-      [field]: value,
-    };
-    setVariants(newVariants);
+    setVariants((prev) =>
+      prev.map((variant, i) => {
+        if (i !== index) return variant;
+        const updated: Variant = { ...variant };
+
+        if (field === "price" || field === "stock" || field === "offer" || field === "sellingPrice") {
+          const num = safeNum(value, 0);
+          (updated as any)[field] = num;
+        } else {
+          (updated as any)[field] = value;
+        }
+
+        // If price or offer changed, recalc sellingPrice
+        if (field === "price" || field === "offer") {
+          const priceNum = safeNum(updated.price, 0);
+          const offerNum = safeNum(updated.offer, 0);
+          updated.sellingPrice = computeSellingPrice(priceNum, offerNum);
+        }
+
+        return updated;
+      })
+    );
   };
 
   const addAttribute = (vIndex: number) => {
-    const newVariants = [...variants];
-    newVariants[vIndex].attributes.push({ key: "", value: "" });
-    setVariants(newVariants);
+    setVariants((prev) =>
+      prev.map((variant, i) =>
+        i !== vIndex ? variant : { ...variant, attributes: [...variant.attributes, { key: "", value: "" }] }
+      )
+    );
   };
 
   const removeAttribute = (vIndex: number, aIndex: number) => {
-    const newVariants = [...variants];
-    newVariants[vIndex].attributes.splice(aIndex, 1);
-    setVariants(newVariants);
+    setVariants((prev) =>
+      prev.map((variant, i) =>
+        i !== vIndex
+          ? variant
+          : { ...variant, attributes: variant.attributes.filter((_, ai) => ai !== aIndex) }
+      )
+    );
   };
 
+  const handleAddImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      setNewImages(prev => [...prev, ...filesArray]);
+    }
+  };
+
+  
   const handleAttributeChange = (vIndex: number, aIndex: number, field: string, value: string) => {
-    const newVariants = [...variants];
-    newVariants[vIndex].attributes[aIndex] = {
-      ...newVariants[vIndex].attributes[aIndex],
-      [field]: value,
-    };
-    setVariants(newVariants);
+    setVariants((prev) =>
+      prev.map((variant, vi) => {
+        if (vi !== vIndex) return variant;
+        const updatedAttributes = variant.attributes.map((attr, ai) =>
+          ai !== aIndex ? attr : { ...attr, [field]: value }
+        );
+        return { ...variant, attributes: updatedAttributes };
+      })
+    );
   };
 
-  // Handle form submit to update product
+  //   const handleSubmit = async () => {
+  //     if (!formData) return;
+  //     setLoading(true);
+
+  //     try {
+  //       const rawToken = localStorage.getItem("token");
+  //       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
+
+  //       // 1️⃣ Upload new images to Cloudinary
+  //       // const uploadedUrls = await Promise.all(
+  //       //   newImages.map((file) => uploadProductImage(file))
+  //       // );
+
+  //       // // 2️⃣ Combine existing images with newly uploaded URLs
+  //       // const updatedImages = [...images, ...uploadedUrls];
+
+  //       console.log("Uploading new images", newImages);
+
+  // const uploadedUrls = await Promise.all(
+  //   newImages.map((file) => {
+  //     console.log("Uploading file", file);
+  //     return uploadProductImage(file);
+  //   })
+  // );
+
+  // console.log("Uploaded image URLs:", uploadedUrls)
+  //       // 3️⃣ Prepare product payload
+  //       const sanitizedVariants = variants.map((v) => ({
+  //         id: v.id,
+  //         sku: v.sku ?? "",
+  //         price: safeNum(v.price, 0),
+  //         sellingPrice: safeNum(
+  //           v.sellingPrice ?? computeSellingPrice(v.price, v.offer ?? 0),
+  //           computeSellingPrice(v.price, v.offer ?? 0)
+  //         ),
+  //         offer: safeNum(v.offer ?? 0, 0),
+  //         stock: safeNum(v.stock, 0),
+  //         attributes: (v.attributes || []).map((a) => ({ key: a.key ?? "", value: a.value ?? "" })),
+  //       }));
+
+  //       const productData = {
+  //         ...formData,
+  //         variants: sanitizedVariants,
+  //         images: updatedImages,
+  //       };
+
+  //       // 4️⃣ Update product
+  //       const updatedProduct = await updateProductById(productData, token);
+
+  //       // 5️⃣ Update redux
+  //       const updatedList = products.map((p) => (p.id === formData.id ? updatedProduct : p));
+  //       dispatch(setProducts(updatedList));
+  //       dispatch(setSelectedProduct(null));
+
+  //       toast.success("✅ Product updated successfully!");
+  //       onClose();
+  //       setNewImages([]); // reset new images
+  //     } catch (err: any) {
+  //       console.error("Update error:", err.message || err);
+  //       toast.error(`❌ ${err.message || "Update failed"}`);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
   const handleSubmit = async () => {
     if (!formData) return;
-
     setLoading(true);
+
     try {
       const rawToken = localStorage.getItem("token");
       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
 
+
+      // Prepare sanitized variants
+      const sanitizedVariants = variants.map((v) => ({
+        id: v.id,
+        sku: v.sku ?? "",
+        price: safeNum(v.price, 0),
+        sellingPrice: safeNum(
+          v.sellingPrice ?? computeSellingPrice(v.price, v.offer ?? 0),
+          computeSellingPrice(v.price, v.offer ?? 0)
+        ),
+        offer: safeNum(v.offer ?? 0, 0),
+        stock: safeNum(v.stock, 0),
+        attributes: (v.attributes || []).map((a) => ({ key: a.key ?? "", value: a.value ?? "" })),
+      }));
+
+      // Prepare full product payload with updated images
       const productData = {
         ...formData,
-        variants: variants,
+        variants: sanitizedVariants,
+
       };
 
-      const res = await fetch(`http://localhost:8000/api/products/${formData.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(productData),
-      });
+      // Update product on backend
+      const updatedProduct = await updateProductById(productData, token);
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
-      }
+      // Update redux store with new product data
+      const updatedList = products.map((p) => (p.id === formData.id ? updatedProduct : p));
+      dispatch(setProducts(updatedList));
+      dispatch(setSelectedProduct(null));
 
-      const result = await res.json();
-
-      if (result.success && result.product) {
-        const updatedList = products.map((p) =>
-          p.id === formData.id ? result.product : p
-        );
-        dispatch(setProducts(updatedList));
-        dispatch(setSelectedProduct(null));
-
-        onClose();
-        toast.success("Product updated successfully!");
-      } else {
-        throw new Error(result.message || "Failed to update product");
-      }
+      toast.success("✅ Product updated successfully!");
+      onClose();
+      setNewImages([]); // reset new images
     } catch (err: any) {
-      console.error("Update error:", err);
-      toast.error(err.message || "Update failed");
+      console.error("Update error:", err.message || err);
+      toast.error(`❌ ${err.message || "Update failed"}`);
     } finally {
       setLoading(false);
     }
   };
+
 
   if (!formData) return null;
 
@@ -235,38 +375,26 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
             <div className="space-y-2">
               <Label className="text-gray-700 dark:text-gray-300">Original Price</Label>
-              <Input
-                type="number"
-                name="originalPrice"
-                value={formData.originalPrice}
-                onChange={handleChange}
-                min="0"
-                // step="0.01"
-              />
+              <Input type="number" name="originalPrice" value={formData.originalPrice} onChange={handleChange} min="0" />
             </div>
 
             <div className="space-y-2">
               <Label className="text-gray-700 dark:text-gray-300">Offer (%)</Label>
-              <Input
-                type="number"
-                name="offer"
-                value={formData.offer}
-                onChange={handleChange}
-                min="0"
-                max="100"
-                // step="0.01"
-              />
+              <Input type="number" name="offer" value={formData.offer} onChange={handleChange} min="0" max="100" />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">Category ID</Label>
-              <Input
-                type="number"
-                name="categoryId"
-                value={formData.categoryId}
-                onChange={handleChange}
-                min="1"
-              />
+            <div className="relative">
+              {/* <Select
+                options={categoryOptions}
+                placeholder="Select Category"
+                onChange={handleRoleChange}
+                className="appearance-none pr-10"
+              /> */}
+              {formData.categoryId}
+
+              {/* <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500">
+                <HiChevronDown className="w-4 h-4" />
+              </span> */}
             </div>
           </div>
 
@@ -314,11 +442,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
             {formData.manufactureDetails !== undefined && (
               <div className="space-y-2">
                 <Label>Manufacture Details</Label>
-                <Input
-                  name="manufactureDetails"
-                  value={formData.manufactureDetails}
-                  onChange={handleChange}
-                />
+                <Input name="manufactureDetails" value={formData.manufactureDetails} onChange={handleChange} />
               </div>
             )}
 
@@ -328,9 +452,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 id="shippingAvailable"
                 type="checkbox"
                 checked={formData.shippingAvailable}
-                onChange={(e) =>
-                  setFormData({ ...formData, shippingAvailable: e.target.checked })
-                }
+                onChange={(e) => setFormData({ ...formData, shippingAvailable: e.target.checked })}
                 className="w-5 h-5"
               />
               <Label htmlFor="shippingAvailable" className="cursor-pointer">
@@ -343,117 +465,120 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
           <div className="mt-8">
             <h3 className="text-lg font-semibold mb-4">Product Variants</h3>
             {variants.map((variant, vIndex) => (
-              <div
-                key={vIndex}
-                className="border p-4 rounded mb-4 bg-gray-50 relative dark:bg-gray-800"
-              >
+              <div key={variant.id ?? vIndex} className="border p-4 rounded mb-4 bg-gray-50 relative dark:bg-gray-800">
                 {variants.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeVariant(vIndex)}
-                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                    title="Remove variant"
-                  >
+                  <button type="button" onClick={() => removeVariant(vIndex)} className="absolute top-2 right-2 text-red-500 hover:text-red-700" title="Remove variant">
                     ×
                   </button>
                 )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
                   <div>
-                    <Label>
-                      SKU<span className="text-error-500">*</span>
-                    </Label>
-                    <Input
-                      value={variant.sku}
-                      onChange={(e) => handleVariantChange(vIndex, "sku", e.target.value)}
-                    />
+                    <Label>SKU<span className="text-error-500">*</span></Label>
+                    <Input value={variant.sku} onChange={(e) => handleVariantChange(vIndex, "sku", e.target.value)} />
                   </div>
 
                   <div>
-                    <Label>
-                      Price<span className="text-error-500">*</span>
-                    </Label>
-                    <Input
-                      type="number"
-                      value={variant.price}
-                      onChange={(e) =>
-                        handleVariantChange(vIndex, "price", parseFloat(e.target.value) || 0)
-                      }
-                      min="0"
-                      // step="0.01"
-                    />
+                    <Label>Price<span className="text-error-500">*</span></Label>
+                    <Input type="number" value={variant.price} onChange={(e) => handleVariantChange(vIndex, "price", e.target.value)} min="0" />
                   </div>
 
                   <div>
-                    <Label>
-                      Stock<span className="text-error-500">*</span>
-                    </Label>
-                    <Input
-                      type="number"
-                      value={variant.stock}
-                      onChange={(e) =>
-                        handleVariantChange(vIndex, "stock", parseInt(e.target.value) || 0)
-                      }
-                      min="0"
-                    />
+                    <Label>Offer %</Label>
+                    <Input type="number" value={variant.offer ?? 0} onChange={(e) => handleVariantChange(vIndex, "offer", e.target.value)} min="0" max="100" />
                   </div>
+
+                  <div>
+                    <Label>Stock<span className="text-error-500">*</span></Label>
+                    <Input type="number" value={variant.stock} onChange={(e) => handleVariantChange(vIndex, "stock", e.target.value)} min="0" />
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <Label>Selling Price (auto)</Label>
+                  <Input type="number" value={variant.sellingPrice ?? computeSellingPrice(variant.price, variant.offer ?? 0)} />
                 </div>
 
                 <div>
                   <h4 className="font-medium mb-2">Attributes</h4>
                   {variant.attributes.map((attr, aIndex) => (
                     <div key={aIndex} className="flex gap-2 mb-2 items-center">
-                      <Input
-                        value={attr.key}
-                        onChange={(e) => handleAttributeChange(vIndex, aIndex, "key", e.target.value)}
-                        placeholder="Key"
-                      />
-                      <Input
-                        value={attr.value}
-                        onChange={(e) =>
-                          handleAttributeChange(vIndex, aIndex, "value", e.target.value)
-                        }
-                        placeholder="Value"
-                      />
+                      <Input value={attr.key} onChange={(e) => handleAttributeChange(vIndex, aIndex, "key", e.target.value)} placeholder="Key" />
+                      <Input value={attr.value} onChange={(e) => handleAttributeChange(vIndex, aIndex, "value", e.target.value)} placeholder="Value" />
                       {variant.attributes.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeAttribute(vIndex, aIndex)}
-                          className="text-red-500 hover:text-red-700"
-                          title="Remove attribute"
-                        >
+                        <button type="button" onClick={() => removeAttribute(vIndex, aIndex)} className="text-red-500 hover:text-red-700" title="Remove attribute">
                           ×
                         </button>
                       )}
                     </div>
                   ))}
-                  <button
-                    type="button"
-                    onClick={() => addAttribute(vIndex)}
-                    className="text-blue-500 mt-2 text-sm hover:text-blue-700"
-                  >
-                    + Add Attribute
-                  </button>
+                  <button type="button" onClick={() => addAttribute(vIndex)} className="text-blue-500 mt-2 text-sm hover:text-blue-700">+ Add Attribute</button>
                 </div>
               </div>
             ))}
-            <button
-              type="button"
-              onClick={addVariant}
-              className="text-green-600 font-medium hover:text-green-800"
-            >
-              + Add Variant
-            </button>
+            <button type="button" onClick={addVariant} className="text-green-600 font-medium hover:text-green-800">+ Add Variant</button>
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="mb-4">
+            <h4 className="font-medium mb-2">Product Images</h4>
+
+            <div className="flex gap-2 flex-wrap mb-2">
+              {/* Existing images */}
+              {/* {images.map((img, i) => (
+                <div key={i} className="relative">
+                  <img
+                    src={img}
+                    alt={`img-${i}`}
+                    className="w-20 h-20 object-cover rounded"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(i)}
+                    className="absolute top-0 right-0 text-red-500 bg-white rounded-full p-1"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))} */}
+
+              {/* New images preview */}
+              {/* {newImages.map((file, i) => (
+                <div key={i} className="relative">
+                  <img 
+                    src={URL.createObjectURL(file)} 
+                    alt={`new-${i}`} 
+                    className="w-20 h-20 object-cover rounded" 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => handleRemoveNewImage(i)} 
+                    className="absolute top-0 right-0 text-red-500 bg-white rounded-full p-1"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))} */}
+            </div>
+
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleAddImage}
+              className="block w-full text-sm text-gray-500
+                file:mr-4 file:py-2 file:px-4
+                file:rounded-full file:border-0
+                file:text-sm file:font-semibold
+                file:bg-blue-50 file:text-blue-700
+                hover:file:bg-blue-100"
+            />
           </div>
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" type="button" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Saving..." : "Save Changes"}
-            </Button>
+            <Button variant="outline" type="button" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Changes"}</Button>
           </div>
         </form>
       </div>
@@ -462,4 +587,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 };
 
 export default EditProductModal;
+
+
+
 

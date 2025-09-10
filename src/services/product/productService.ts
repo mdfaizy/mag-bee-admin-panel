@@ -80,6 +80,7 @@ export const uploadProductImage = async (file: File): Promise<string> => {
   return data.secure_url;
 };
 
+
 export const updateProductById = async (product: any, token: string) => {
   const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {
     method: "PUT",
@@ -87,7 +88,7 @@ export const updateProductById = async (product: any, token: string) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(product),
+    body: JSON.stringify(product), // ab sirf JSON send hoga
   });
 
   const result = await res.json();
@@ -95,6 +96,22 @@ export const updateProductById = async (product: any, token: string) => {
 
   return result.updatedProduct;
 };
+
+// 
+//   const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {
+//     method: "PUT",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${token}`,
+//     },
+//     body: JSON.stringify(product),
+//   });
+
+//   const result = await res.json();
+//   if (!res.ok) throw new Error(result.message || "Failed to update product");
+
+//   return result.updatedProduct;
+// };
 
 
 export const deleteProductById = async (id: number, token: string): Promise<string> => {
