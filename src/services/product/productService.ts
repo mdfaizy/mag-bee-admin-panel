@@ -81,21 +81,43 @@ export const uploadProductImage = async (file: File): Promise<string> => {
 };
 
 
-export const updateProductById = async (product: any, token: string) => {
-  const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {
+// services/product/productService.ts
+export const updateProductById = async (
+  id: number,
+  formData: FormData,
+  token: string
+) => {
+  const res = await fetch(`http://localhost:8000/api/products/${id}`, {
     method: "PUT",
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`, // ❌ don't set Content-Type manually
     },
-    body: JSON.stringify(product), // ab sirf JSON send hoga
+    body: formData,
   });
 
   const result = await res.json();
   if (!res.ok) throw new Error(result.message || "Failed to update product");
 
-  return result.updatedProduct;
+  return result.product; // match your backend response { message, product }
 };
+
+
+
+// export const updateProductById = async (product: any, token: string) => {
+//   const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {
+//     method: "PUT",
+//     headers: {
+//       "Content-Type": "application/json",
+//       Authorization: `Bearer ${token}`,
+//     },
+//     body: JSON.stringify(product), // ab sirf JSON send hoga
+//   });
+
+//   const result = await res.json();
+//   if (!res.ok) throw new Error(result.message || "Failed to update product");
+
+//   return result.updatedProduct;
+// };
 
 // 
 //   const res = await fetch(`http://localhost:8000/api/products/${product.id}`, {

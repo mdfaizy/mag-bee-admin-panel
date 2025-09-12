@@ -53,6 +53,7 @@ const navItems: NavItem[] = [
     { name: "Product Category List", path: "/product-category-table", pro: false },
     { name: "Add Products", path: "/add-new-product", pro: false },
     { name: "Products List", path: "/product", pro: false },
+    {name: "Create Sub Category",path:'/create-sub-category',pro:false},
 
 
   ],
@@ -82,6 +83,7 @@ const navItems: NavItem[] = [
     subItems: [{ name: "Resent Order", path: "/orders-tables", pro: false },
        { name: "Employees For MagBee", path: "/user-table", pro: false },
        { name: "Customer List", path: "/customer", pro: false },
+         { name: "Product Varient", path: "/product-varient", pro: false },
     ],
   },
   //  {

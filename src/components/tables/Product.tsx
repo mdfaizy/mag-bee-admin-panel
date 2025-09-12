@@ -41,6 +41,7 @@ export interface Variant {
   sku: string;
   price: number;
   stock: number;
+  offer: string;
   attributes: VariantAttribute[];
 }
 export interface Product {
@@ -260,9 +261,9 @@ const ProductTable = () => {
     }
   };
 
- const calculateTotalVariantStock = (variants: Variant[]): number => {
-  return variants?.reduce((total, variant) => total + (variant.stock || 0), 0);
-};
+  const calculateTotalVariantStock = (variants: Variant[]): number => {
+    return variants?.reduce((total, variant) => total + (variant.stock || 0), 0);
+  };
 
 
   // Reset filters
@@ -447,18 +448,53 @@ const ProductTable = () => {
                         </span>
                       </div>
                     </TableCell>
+
                     <TableCell>
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-gray-900 dark:text-white">₹{item.price}</span>
-                        {item.originalPrice && item.originalPrice > item.price && (
-                          <span className="text-xs text-gray-500 line-through dark:text-white">
-                            ₹{item.originalPrice}
-                          </span>
-                        )}
-                      </div>
+                      {item.hasVariants && item.variants?.length > 0 ? (
+                        (() => {
+                          const variantSellingPrices = item.variants.map(v => parseFloat(v.sellingPrice || v.price || "0"));
+                          const variantOriginalPrices = item.variants.map(v => parseFloat(v.price || "0"));
+
+                          const minIndex = variantSellingPrices.indexOf(Math.min(...variantSellingPrices));
+
+                          const minSelling = variantSellingPrices[minIndex];
+                          const originalPriceAtMinSelling = variantOriginalPrices[minIndex];
+
+                          return (
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-gray-900 dark:text-white">
+                                ₹{minSelling}
+                              </span>
+                              {originalPriceAtMinSelling > minSelling && (
+                                <span className="text-xs text-gray-500 line-through dark:text-white">
+                                  ₹{originalPriceAtMinSelling}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-gray-900 dark:text-white">₹{item.price}</span>
+                          {item.originalPrice && item.originalPrice > item.price && (
+                            <span className="text-xs text-gray-500 line-through dark:text-white">
+                              ₹{item.originalPrice}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </TableCell>
+
+
+
                     <TableCell className="hidden md:table-cell">
-                      {item.offer ? (
+                      {item.hasVariants && item.variants?.length > 0 ? (
+                        <span className="px-2 py-1 bg-green-100 dark:bg-gray-600 dark:text-white text-green-800 text-xs font-medium rounded-full">
+                          {
+                            Math.max(...item.variants.map((v: any) => parseFloat(v.offer || "0")))
+                          }% OFF
+                        </span>
+                      ) : item.offer ? (
                         <span className="px-2 py-1 bg-blue-100 dark:bg-gray-600 dark:text-white text-blue-800 text-xs font-medium rounded-full">
                           {item.offer}% OFF
                         </span>
@@ -466,6 +502,7 @@ const ProductTable = () => {
                         <span className="text-gray-400">—</span>
                       )}
                     </TableCell>
+
 
 
                     <TableCell className="hidden lg:table-cell">
@@ -502,35 +539,25 @@ const ProductTable = () => {
                         />
                       </div>
                     </TableCell>
-                    {/* <TableCell className="hidden lg:table-cell">
-                      <input
-                        type="number"
-                        min="0"
-                        className="w-16 border rounded-md px-2 py-1 text-center text-sm dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        value={item.stock || 0}
-                        onChange={(e) => handleStockChange(item, Number(e.target.value))}
-                      />
-                    </TableCell> */}
-
 
                     <TableCell className="hidden lg:table-cell">
-  {!item.hasVariants ? (
-    <input
-      type="number"
-      min="0"
-      className="w-16 border rounded-md px-2 py-1 text-center text-sm dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-      value={item.stock || 0}
-      onChange={(e) => handleStockChange(item, Number(e.target.value))}
-    />
-  ) : (
-    // If product has variants, show total stock or nothing
-    <span className="text-sm text-gray-600 dark:text-gray-300 w-32 border rounded-md px-4 py-1">
-      {calculateTotalVariantStock(item.variants)}
-    </span>
-  )}
-</TableCell>
+                      {!item.hasVariants ? (
+                        <input
+                          type="number"
+                          min="0"
+                          className="w-16 border rounded-md px-2 py-1 text-center text-sm dark:text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          value={item.stock || 0}
+                          onChange={(e) => handleStockChange(item, Number(e.target.value))}
+                        />
+                      ) : (
+                        // If product has variants, show total stock or nothing
+                        <span className="text-sm text-gray-600 dark:text-gray-300 w-32 border rounded-md px-4 py-1">
+                          {calculateTotalVariantStock(item.variants)}
+                        </span>
+                      )}
+                    </TableCell>
 
-                   
+
 
 
                     <TableCell>
@@ -565,14 +592,6 @@ const ProductTable = () => {
           </Table>
         </div>
       </div>
-
-      {/* <Pagination
-  currentPage={currentPage}
-  totalPages={totalPages}
-  onPageChange={setCurrentPage}
-/>
- */}
-
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -580,9 +599,6 @@ const ProductTable = () => {
         totalItems={totalItems}
         onPageChange={setCurrentPage}
       />
-
-
-
       {/* Modals */}
       <ViewProductModal
         isOpen={viewModalOpen}

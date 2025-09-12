@@ -28,6 +28,10 @@ export const endPointCustomer={
     GET_ALL_CUSTOMER:`${BASE_URL}/customers`,
     DELETE_BYID_CUSTOMER:`${BASE_URL}/customer/id`,
     UPDATE_CUSTOMER:`${BASE_URL}/customer/id`,
+}
 
+export const endPointSubCategory={
+  CREATE_SUB_CATEGORY:`${BASE_URL}/subcategories`,
+  SUB_CATEGORY_GELL_ALL:`${BASE_URL}/subcategories`
 
 }

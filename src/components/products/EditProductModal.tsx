@@ -10,10 +10,23 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { setSelectedProduct, setProducts } from "@/redux/productSlice";
 import Select from "../form/Select";
-import { HiChevronDown } from 'react-icons/hi';
+import { HiChevronDown, HiX } from 'react-icons/hi';
 import { updateProductById } from "@/services/product/productService";
 import { fetchProductCategory } from "@/services/product-category/categoryService";
+interface ProductImage {
+  id?: number;
+  imageUrl: string;
+  imagePublicId?: string;
+}
 
+interface  Product {
+  images?: (string | ProductImage)[];
+  variants?: Variant[];
+  category?: {
+    id: number;
+    name: string;
+  };
+}
 
 interface Variant {
   id?: number;
@@ -45,21 +58,18 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState<any>(null);
   const [variants, setVariants] = useState<Variant[]>([]);
   const [loading, setLoading] = useState(false);
-  const [images, setImages] = useState<string[]>([]); // URLs of images
-  const [newImages, setNewImages] = useState<File[]>([]); // New files to upload
+  const [images, setImages] = useState<string[]>([]);
+  const [newImages, setNewImages] = useState<File[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
+  const [removedImageIds, setRemovedImageIds] = useState<number[]>([]);
+  const [categoryLoading, setCategoryLoading] = useState(true);
 
-  // const handleRoleChange = (value: string) => {
-  //   setFormData((prev) => ({ ...prev, categoryId: value }));
-  // };
-
-// 
+  // Fetch categories
   useEffect(() => {
     const fetchCategoriesData = async () => {
       try {
+        setCategoryLoading(true);
         const response = await fetchProductCategory();
-        console.log('response', response);
-
         const formatted = response.map((cat: any) => ({
           value: String(cat.id),
           label: cat.name,
@@ -68,6 +78,9 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
         setCategoryOptions(formatted);
       } catch (err) {
         console.error("Category fetch error", err);
+        toast.error("Failed to load categories");
+      } finally {
+        setCategoryLoading(false);
       }
     };
 
@@ -77,7 +90,6 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
   // Initialize form data and variants when selectedProduct changes
   useEffect(() => {
     if (selectedProduct) {
-      // normalize variants to safe numeric values and attributes
       const initialVariants: Variant[] = (selectedProduct.variants || []).map((v: any) => {
         const price = safeNum(v.price, 0);
         const offer = safeNum(v.offer, 0);
@@ -97,7 +109,8 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
       setFormData({
         ...selectedProduct,
-        categoryId: selectedProduct.category?.id ?? 0,
+        // categoryId: selectedProduct.category?.id ? String(selectedProduct.category.id) : "",
+        categoryId: selectedProduct.category?.id ? String(selectedProduct.category.id) : "",
         originalPrice: safeNum(selectedProduct.originalPrice, 0),
         offer: safeNum(selectedProduct.offer, 0),
         stock: safeNum(selectedProduct.stock, 0),
@@ -110,17 +123,36 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       });
 
       setVariants(initialVariants.length ? initialVariants : []);
+
       // Extract image URLs from selectedProduct.images
-      // const imageUrls = selectedProduct.images 
-      //   ? selectedProduct.images.map((img: any) => typeof img === 'string' ? img : img.imageUrl)
+      // const imageUrls = selectedProduct.images
+      //   ? selectedProduct.images.map((img: any) => (typeof img === "string" ? img : img.imageUrl))
       //   : [];
-      // setImages(imageUrls);
+
+        const typedProduct = selectedProduct as unknown as Product;
+
+
+    const imageUrls = typedProduct.images
+      ? typedProduct.images.map((img) =>
+          typeof img === "string" ? img : img.imageUrl
+        )
+      : [];
+
+    setImages(imageUrls);
+     
+
+
+    // setImages(imageUrls);
+
+      setRemovedImageIds([]);
     } else {
       setFormData(null);
       setVariants([]);
       setImages([]);
+      setRemovedImageIds([]);
     }
   }, [selectedProduct]);
+
 
   // Scroll to top when modal opens
   useEffect(() => {
@@ -128,6 +160,19 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   }, [isOpen]);
+
+  const handleCategoryChange = (value: string) => {
+    setFormData((prev: any) => ({ ...prev, categoryId: value }));
+  };
+
+  // 🔁 Sync hasVariants with current variants
+  useEffect(() => {
+    setFormData((prev: any) => ({
+      ...prev,
+      hasVariants: variants.length > 0,
+    }));
+  }, [variants]);
+
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -143,7 +188,6 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       name === "price" ||
       name === "originalPrice" ||
       name === "offer" ||
-      name === "categoryId" ||
       name === "stock"
     ) {
       parsedValue = safeNum(value, 0);
@@ -155,7 +199,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     });
   };
 
-  // Variant management functions (immutable updates)
+  // Variant management functions
   const addVariant = () => {
     setVariants((prev) => [
       ...prev,
@@ -168,11 +212,25 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
         attributes: [{ key: "", value: "" }],
       },
     ]);
+    setFormData((prev: any) => ({
+      ...prev,
+      hasVariants: true, // 👈 Set to true
+    }));
   };
 
   const removeVariant = (index: number) => {
-    setVariants((prev) => prev.filter((_, i) => i !== index));
+    const updatedVariants = variants.filter((_, i) => i !== index);
+    setVariants(updatedVariants);
+
+    setFormData((prev: any) => ({
+      ...prev,
+      hasVariants: updatedVariants.length > 0,
+    }));
+
+    console.log("Variants after removal:", updatedVariants.length); // ✅ Moved inside
   };
+
+
 
   const handleVariantChange = (index: number, field: string, value: string | number) => {
     setVariants((prev) =>
@@ -212,19 +270,35 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       prev.map((variant, i) =>
         i !== vIndex
           ? variant
-          : { ...variant, attributes: variant.attributes.filter((_, ai) => ai !== aIndex) }
+          : {
+            ...variant,
+            attributes: variant.attributes.length > 1
+              ? variant.attributes.filter((_, ai) => ai !== aIndex)
+              : [{ key: "", value: "" }]
+          }
       )
     );
   };
 
-  const handleAddImage = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const filesArray = Array.from(e.target.files);
-      setNewImages(prev => [...prev, ...filesArray]);
+  const handleRemoveImage = (index: number) => {
+    const imgToRemove = images[index];
+    if (!imgToRemove) return;
+
+    // Track removed image DB id
+    if (selectedProduct?.images?.[index]?.id) {
+      setRemovedImageIds(prev => [...prev, selectedProduct.images[index].id]);
     }
+    
+
+
+    // Remove from UI
+    setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  
+  const handleRemoveNewImage = (index: number) => {
+    setNewImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleAttributeChange = (vIndex: number, aIndex: number, field: string, value: string) => {
     setVariants((prev) =>
       prev.map((variant, vi) => {
@@ -237,81 +311,58 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     );
   };
 
-  //   const handleSubmit = async () => {
-  //     if (!formData) return;
-  //     setLoading(true);
+  const calculateFinalPrice = () => {
+    const originalPrice = parseFloat(formData.originalPrice);
+    const offer = parseFloat(formData.offer);
 
-  //     try {
-  //       const rawToken = localStorage.getItem("token");
-  //       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
+    if (!isNaN(originalPrice) && !isNaN(offer)) {
+      return originalPrice - (originalPrice * offer) / 100;
+    }
+    return 0; // Return 0 if input values are invalid
+  };
+  const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
 
-  //       // 1️⃣ Upload new images to Cloudinary
-  //       // const uploadedUrls = await Promise.all(
-  //       //   newImages.map((file) => uploadProductImage(file))
-  //       // );
+    const filesArray = Array.from(e.target.files);
+    if (filesArray.length + newImages.length + images.length > 10) {
+      toast.error("Maximum 10 images allowed");
+      return;
+    }
 
-  //       // // 2️⃣ Combine existing images with newly uploaded URLs
-  //       // const updatedImages = [...images, ...uploadedUrls];
 
-  //       console.log("Uploading new images", newImages);
 
-  // const uploadedUrls = await Promise.all(
-  //   newImages.map((file) => {
-  //     console.log("Uploading file", file);
-  //     return uploadProductImage(file);
-  //   })
-  // );
+    // Validate file types and size
+    const validFiles = filesArray.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`File ${file.name} is not an image`);
+        return false;
+      }
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast.error(`Image ${file.name} is too large (max 5MB)`);
+        return false;
+      }
+      return true;
+    });
 
-  // console.log("Uploaded image URLs:", uploadedUrls)
-  //       // 3️⃣ Prepare product payload
-  //       const sanitizedVariants = variants.map((v) => ({
-  //         id: v.id,
-  //         sku: v.sku ?? "",
-  //         price: safeNum(v.price, 0),
-  //         sellingPrice: safeNum(
-  //           v.sellingPrice ?? computeSellingPrice(v.price, v.offer ?? 0),
-  //           computeSellingPrice(v.price, v.offer ?? 0)
-  //         ),
-  //         offer: safeNum(v.offer ?? 0, 0),
-  //         stock: safeNum(v.stock, 0),
-  //         attributes: (v.attributes || []).map((a) => ({ key: a.key ?? "", value: a.value ?? "" })),
-  //       }));
+    setNewImages(prev => [...prev, ...validFiles]);
+  };
 
-  //       const productData = {
-  //         ...formData,
-  //         variants: sanitizedVariants,
-  //         images: updatedImages,
-  //       };
-
-  //       // 4️⃣ Update product
-  //       const updatedProduct = await updateProductById(productData, token);
-
-  //       // 5️⃣ Update redux
-  //       const updatedList = products.map((p) => (p.id === formData.id ? updatedProduct : p));
-  //       dispatch(setProducts(updatedList));
-  //       dispatch(setSelectedProduct(null));
-
-  //       toast.success("✅ Product updated successfully!");
-  //       onClose();
-  //       setNewImages([]); // reset new images
-  //     } catch (err: any) {
-  //       console.error("Update error:", err.message || err);
-  //       toast.error(`❌ ${err.message || "Update failed"}`);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  const handleSubmit = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!formData) return;
+
+    // Basic validation
+    if (!formData.name || !formData.categoryId) {
+      toast.error("Please fill in  fields");
+      return;
+    }
+
     setLoading(true);
 
     try {
       const rawToken = localStorage.getItem("token");
       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
 
-
-      // Prepare sanitized variants
       const sanitizedVariants = variants.map((v) => ({
         id: v.id,
         sku: v.sku ?? "",
@@ -324,25 +375,51 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
         stock: safeNum(v.stock, 0),
         attributes: (v.attributes || []).map((a) => ({ key: a.key ?? "", value: a.value ?? "" })),
       }));
+      const hasVariants = variants.length > 0;
+      const productData = new FormData();
+      productData.append("name", formData.name || "");
+      productData.append("originalPrice", String(formData.originalPrice ?? 0));
+      productData.append("offer", String(formData.offer ?? 0));
+      productData.append("description", formData.description || "");
+      productData.append("slug", formData.slug || "");
+      productData.append("categoryId", String(formData.categoryId ?? 0));
+      productData.append("material", formData.material || "");
+      productData.append("stock", String(formData.stock ?? 0));
+      productData.append("length", String(formData.length ?? 0));
+      productData.append("height", String(formData.height ?? 0));
+      productData.append("width", String(formData.width ?? 0));
+      productData.append("weight", String(formData.weight ?? 0));
+      productData.append("weightUnit", formData.weightUnit || "");
+      productData.append("shippingAvailable", String(formData.shippingAvailable ?? false));
+      productData.append("skuCode", formData.skuCode || "");
+      productData.append("returnPolicy", formData.returnPolicy || "");
+      productData.append("warrantyInfo", formData.warrantyInfo || "");
+      productData.append("manufactureDetails", formData.manufactureDetails || "");
+      productData.append("variants", JSON.stringify(sanitizedVariants));
 
-      // Prepare full product payload with updated images
-      const productData = {
-        ...formData,
-        variants: sanitizedVariants,
+      if (removedImageIds.length > 0) {
+        productData.append("removeImagePublicIds", JSON.stringify(removedImageIds));
+      }
+      productData.append("hasVariants", String(hasVariants));
+      // productData.append("stock", String(formData.stock ?? 0));
+      // Attach new images
+      newImages.forEach((file) => {
+        productData.append("images", file);
+      });
 
-      };
+      const updatedProduct = await updateProductById(formData.id, productData, token);
 
-      // Update product on backend
-      const updatedProduct = await updateProductById(productData, token);
-
-      // Update redux store with new product data
-      const updatedList = products.map((p) => (p.id === formData.id ? updatedProduct : p));
+      // Update Redux
+      const updatedList = products.map((p) =>
+        p.id === formData.id ? updatedProduct : p
+      );
       dispatch(setProducts(updatedList));
       dispatch(setSelectedProduct(null));
 
       toast.success("✅ Product updated successfully!");
       onClose();
-      setNewImages([]); // reset new images
+      setNewImages([]);
+      setRemovedImageIds([]);
     } catch (err: any) {
       console.error("Update error:", err.message || err);
       toast.error(`❌ ${err.message || "Update failed"}`);
@@ -351,52 +428,109 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   };
 
-
   if (!formData) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-4xl">
       <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl max-h-[90vh] overflow-auto">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Edit Product</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Edit Product</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+          >
+            <HiX className="w-6 h-6" />
+          </button>
+        </div>
 
-        <form
-          className="space-y-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSubmit();
-          }}
-        >
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Product Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label className="text-gray-700 dark:text-gray-300">Name</Label>
-              <Input name="name" value={formData.name} onChange={handleChange} />
+              <Input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                placeholder="Product name"
+
+              />
             </div>
 
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+              {!formData.hasVariants && (
+                <>
+                  <div>
+                    <Label>
+                      Original Price<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      name="originalPrice"
+                      placeholder="Original Price"
+                      type="number"
+                      value={formData.originalPrice}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>
+                      Offer %<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      name="offer"
+                      placeholder="Offer %"
+                      type="number"
+                      value={formData.offer}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <div>
+                    <Label>
+                      Final Price<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      name="price"
+                      placeholder="Final Price"
+                      type="number"
+                      value={calculateFinalPrice().toFixed(2)}
+                      {...({ readOnly: true } as any)}
+                      className="bg-gray-100 cursor-not-allowed"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
             <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">Original Price</Label>
-              <Input type="number" name="originalPrice" value={formData.originalPrice} onChange={handleChange} min="0" />
+              <Label className="text-gray-700 dark:text-gray-300">Category ID</Label>
+              <Input
+                type="number"
+                name="categoryId"
+                value={formData.categoryId}
+                onChange={handleChange}
+                min="1"
+              />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">Offer (%)</Label>
-              <Input type="number" name="offer" value={formData.offer} onChange={handleChange} min="0" max="100" />
-            </div>
-
-            <div className="relative">
-              {/* <Select
-                options={categoryOptions}
-                placeholder="Select Category"
-                onChange={handleRoleChange}
-                className="appearance-none pr-10"
-              /> */}
-              {formData.categoryId}
-
-              {/* <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500">
-                <HiChevronDown className="w-4 h-4" />
-              </span> */}
-            </div>
           </div>
+          {!formData.hasVariants && (
+            <div className="flex-1">
+              <Label>
+                Stock <span className="text-error-500">*</span>
+              </Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  name="stock"
+                  placeholder="Enter Stock"
+                  value={formData.stock}
+                  onChange={handleChange}
+                  className="w-full"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label className="text-gray-700 dark:text-gray-300">Description</Label>
@@ -404,47 +538,63 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
               name="description"
               value={formData.description}
               onChange={handleChange}
-              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-              rows={3}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+              rows={4}
+              placeholder="Product description..."
             />
           </div>
 
           {/* Optional product-level fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {formData.skuCode !== undefined && (
-              <div className="space-y-2">
-                <Label>SKU Code</Label>
-                <Input name="skuCode" value={formData.skuCode} onChange={handleChange} />
-              </div>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label>SKU Code</Label>
+              <Input
+                name="skuCode"
+                value={formData.skuCode}
+                onChange={handleChange}
+                placeholder="SKU code"
+              />
+            </div>
 
-            {formData.material !== undefined && (
-              <div className="space-y-2">
-                <Label>Material</Label>
-                <Input name="material" value={formData.material} onChange={handleChange} />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Material</Label>
+              <Input
+                name="material"
+                value={formData.material}
+                onChange={handleChange}
+                placeholder="Product material"
+              />
+            </div>
 
-            {formData.returnPolicy !== undefined && (
-              <div className="space-y-2">
-                <Label>Return Policy</Label>
-                <Input name="returnPolicy" value={formData.returnPolicy} onChange={handleChange} />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Return Policy</Label>
+              <Input
+                name="returnPolicy"
+                value={formData.returnPolicy}
+                onChange={handleChange}
+                placeholder="Return policy"
+              />
+            </div>
 
-            {formData.warrantyInfo !== undefined && (
-              <div className="space-y-2">
-                <Label>Warranty Info</Label>
-                <Input name="warrantyInfo" value={formData.warrantyInfo} onChange={handleChange} />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Warranty Info</Label>
+              <Input
+                name="warrantyInfo"
+                value={formData.warrantyInfo}
+                onChange={handleChange}
+                placeholder="Warranty information"
+              />
+            </div>
 
-            {formData.manufactureDetails !== undefined && (
-              <div className="space-y-2">
-                <Label>Manufacture Details</Label>
-                <Input name="manufactureDetails" value={formData.manufactureDetails} onChange={handleChange} />
-              </div>
-            )}
+            <div className="space-y-2">
+              <Label>Manufacture Details</Label>
+              <Input
+                name="manufactureDetails"
+                value={formData.manufactureDetails}
+                onChange={handleChange}
+                placeholder="Manufacture details"
+              />
+            </div>
 
             {/* Shipping Available Checkbox */}
             <div className="flex items-center space-x-2 pt-4">
@@ -453,20 +603,19 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
                 type="checkbox"
                 checked={formData.shippingAvailable}
                 onChange={(e) => setFormData({ ...formData, shippingAvailable: e.target.checked })}
-                className="w-5 h-5"
+                className="w-5 h-5 rounded focus:ring-blue-500"
               />
               <Label htmlFor="shippingAvailable" className="cursor-pointer">
                 Shipping Available
               </Label>
             </div>
           </div>
-
           {/* Variants Section */}
           <div className="mt-8">
             <h3 className="text-lg font-semibold mb-4">Product Variants</h3>
             {variants.map((variant, vIndex) => (
               <div key={variant.id ?? vIndex} className="border p-4 rounded mb-4 bg-gray-50 relative dark:bg-gray-800">
-                {variants.length > 1 && (
+                {variants.length > 0 && (
                   <button type="button" onClick={() => removeVariant(vIndex)} className="absolute top-2 right-2 text-red-500 hover:text-red-700" title="Remove variant">
                     ×
                   </button>
@@ -485,7 +634,13 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
                   <div>
                     <Label>Offer %</Label>
-                    <Input type="number" value={variant.offer ?? 0} onChange={(e) => handleVariantChange(vIndex, "offer", e.target.value)} min="0" max="100" />
+                    <Input
+                      type="number"
+                      value={variant.offer ?? 0}
+                      onChange={(e) => handleVariantChange(vIndex, "offer", e.target.value)}
+                      min="0"
+                      max="100"
+                    />
                   </div>
 
                   <div>
@@ -520,65 +675,90 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
           </div>
 
           {/* Image Upload Section */}
-          <div className="mb-4">
-            <h4 className="font-medium mb-2">Product Images</h4>
+          <div className="mb-6">
+            <h4 className="font-medium mb-3 text-gray-800 dark:text-gray-200">Product Images</h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Upload up to 10 images. First image will be used as the main product image.
+            </p>
 
-            <div className="flex gap-2 flex-wrap mb-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
               {/* Existing images */}
-              {/* {images.map((img, i) => (
-                <div key={i} className="relative">
-                  <img
-                    src={img}
-                    alt={`img-${i}`}
-                    className="w-20 h-20 object-cover rounded"
-                  />
+              {images.map((img, i) => (
+                <div key={i} className="relative group">
+                  <div className="aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                    <img
+                      src={img}
+                      alt={`Product image ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(i)}
-                    className="absolute top-0 right-0 text-red-500 bg-white rounded-full p-1"
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    ×
+                    <HiX className="w-4 h-4" />
                   </button>
+                  {i === 0 && (
+                    <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                      Main
+                    </span>
+                  )}
                 </div>
-              ))} */}
+              ))}
 
               {/* New images preview */}
-              {/* {newImages.map((file, i) => (
-                <div key={i} className="relative">
-                  <img 
-                    src={URL.createObjectURL(file)} 
-                    alt={`new-${i}`} 
-                    className="w-20 h-20 object-cover rounded" 
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemoveNewImage(i)} 
-                    className="absolute top-0 right-0 text-red-500 bg-white rounded-full p-1"
+              {newImages.map((file, i) => (
+                <div key={i} className="relative group">
+                  <div className="aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`New image ${i + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveNewImage(i)}
+                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                   >
-                    ×
+                    <HiX className="w-4 h-4" />
                   </button>
                 </div>
-              ))} */}
-            </div>
+              ))}
 
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleAddImage}
-              className="block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-full file:border-0
-                file:text-sm file:font-semibold
-                file:bg-blue-50 file:text-blue-700
-                hover:file:bg-blue-100"
-            />
+              {/* Add image button */}
+              {(images.length + newImages.length) < 10 && (
+                <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
+                  <span className="text-2xl text-gray-400 mb-2">+</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400">Add Image</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    onChange={handleAddImages}
+                    className="hidden"
+                  />
+                </label>
+              )}
+            </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" type="button" onClick={onClose}>Cancel</Button>
-            <Button type="submit" disabled={loading}>{loading ? "Saving..." : "Save Changes"}</Button>
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <Button variant="outline" type="button" onClick={onClose} disabled={loading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? (
+                <>
+                  {/* <Spinner size="sm" className="mr-2" /> */}
+                  Saving...
+                </>
+              ) : (
+                "Save Changes"
+              )}
+            </Button>
           </div>
         </form>
       </div>
@@ -587,7 +767,3 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 };
 
 export default EditProductModal;
-
-
-
-
