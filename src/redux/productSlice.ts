@@ -1,18 +1,6 @@
-// redux/features/productSlice.ts
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-// interface Attribute {
-//   id?: string;
-//   key: string;
-//   value: string;
-// }
 
-// interface Variant {
-//   id?: string;
-//   sku: string;
-//   price: number;
-//   stock: number;
-//   attributes: Attribute[];
-// }
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
 interface VariantAttribute {
   id?: number;
   key: string;
@@ -35,10 +23,18 @@ interface Product {
   offer: number; // percentage value
   finalPrice: number;
   category: {
-    id: string;
+     id: number;
     name: string;
   };
-  url: string;
+    subCategory?: {    
+    name: string;
+  };
+  // url: string;
+  images?: {
+    id: number;       // DB id
+    url: string;      // image URL
+    [key: string]: any; // agar extra fields aa rahi hain
+  }[];
    shippingAvailable?: boolean; 
   warrantyInfo?: string;
   skuCode?: string;
@@ -50,6 +46,7 @@ interface Product {
   createdAt?: string;
   updatedAt?: string;
 }
+
 
 interface ProductState {
   products: Product[];

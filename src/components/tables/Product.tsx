@@ -10,9 +10,7 @@ import {
   // setProducts,
   setLoading
 } from "@/redux/productSlice";
-import {
-  fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus,
-  updateProductStock
+import {fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus,updateProductStock
 } from "@/services/product/productService";
 import { toast } from "react-toastify";
 import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";

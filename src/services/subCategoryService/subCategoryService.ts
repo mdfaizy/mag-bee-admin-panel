@@ -50,5 +50,20 @@ export const fetchSubCategoryAll = async () => {
   } catch (err: any) {
     console.error("API error:", err.response?.data || err.message);
     throw err;
+  
   }
+};
+
+
+
+
+// export const fetchSubCategories = async () => {
+//   const res = await apiConnector("GET", "/subcategories");
+//   return res.data;
+// };
+
+export const deleteSubCategory = (id: number) => async (dispatch: any) => {
+  await apiConnector("DELETE", `/subcategories/${id}`);
+  const updated = await fetchSubCategories();
+  dispatch({ type: "subCategory/setSubCategories", payload: updated });
 };

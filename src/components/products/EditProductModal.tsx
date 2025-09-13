@@ -4,29 +4,47 @@ import { toast } from "react-toastify";
 import React, { useEffect, useState } from "react";
 import { Modal } from "../ui/modal";
 import Input from "../form/input/InputField";
+import { HiChevronDown, HiX, HiPlus, HiPhotograph } from 'react-icons/hi';
 import Label from "../form/Label";
 import Button from "../ui/button/Button";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { setSelectedProduct, setProducts } from "@/redux/productSlice";
 import Select from "../form/Select";
-import { HiChevronDown, HiX } from 'react-icons/hi';
+// import { HiChevronDown, HiX } from 'react-icons/hi';
 import { updateProductById } from "@/services/product/productService";
 import { fetchProductCategory } from "@/services/product-category/categoryService";
-interface ProductImage {
-  id?: number;
-  imageUrl: string;
-  imagePublicId?: string;
-}
+import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
 
-interface  Product {
-  images?: (string | ProductImage)[];
-  variants?: Variant[];
+interface ProductImage {
+  id: number;
+  imageUrl: string;
+  [key: string]: any; // fallback if backend sends extra props
+}
+interface Product {
+  id: number;
+  name: string;
+  description?: string;
+  slug?: string;
   category?: {
     id: number;
     name: string;
   };
+  subCategory?: {        
+    id: number;
+    name: string;
+  };
+  originalPrice?: number;
+  offer?: number;
+  stock?: number;
+   images?: ProductImage[];
+
+  variants?: any[];
+  // ... बाकी fields
 }
+
+
+
 
 interface Variant {
   id?: number;
@@ -61,6 +79,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const [images, setImages] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [categoryOptions, setCategoryOptions] = useState<{ value: string; label: string }[]>([]);
+  const [subCategoryOptions, setSubCategoryOptions] = useState<{ value: string; label: string }[]>([]);
   const [removedImageIds, setRemovedImageIds] = useState<number[]>([]);
   const [categoryLoading, setCategoryLoading] = useState(true);
 
@@ -87,6 +106,33 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     fetchCategoriesData();
   }, []);
 
+  useEffect(() => {
+    const fetchSubCategoryAllData = async () => {
+      try {
+        const response = await fetchSubCategoryAll();
+        const formatted = response.map((cat: any) => ({
+          value: String(cat.id),
+          label: cat.name,
+        }));
+        setSubCategoryOptions(formatted);
+      } catch (err) {
+        console.error("SubCategory fetch error", err);
+        toast.error("Failed to load subcategories");
+      }
+    };
+
+    fetchSubCategoryAllData();
+  }, []);
+
+
+  const handleSubCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setFormData((prev: any) => ({
+      ...prev,
+      subCategoryId: value,
+    }));
+  };
+
   // Initialize form data and variants when selectedProduct changes
   useEffect(() => {
     if (selectedProduct) {
@@ -110,7 +156,9 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       setFormData({
         ...selectedProduct,
         // categoryId: selectedProduct.category?.id ? String(selectedProduct.category.id) : "",
-        categoryId: selectedProduct.category?.id ? String(selectedProduct.category.id) : "",
+        categoryId: selectedProduct.category?.id?.toString() || "",
+        // subCategoryId: selectedProduct.subCategory?.id?.toString() || "",
+        subCategoryId: selectedProduct.subCategory?.name || "",
         originalPrice: safeNum(selectedProduct.originalPrice, 0),
         offer: safeNum(selectedProduct.offer, 0),
         stock: safeNum(selectedProduct.stock, 0),
@@ -129,20 +177,18 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       //   ? selectedProduct.images.map((img: any) => (typeof img === "string" ? img : img.imageUrl))
       //   : [];
 
-        const typedProduct = selectedProduct as unknown as Product;
+      const typedProduct = selectedProduct as unknown as Product;
 
 
-    const imageUrls = typedProduct.images
-      ? typedProduct.images.map((img) =>
+      const imageUrls = typedProduct.images
+        ? typedProduct.images.map((img) =>
           typeof img === "string" ? img : img.imageUrl
         )
-      : [];
+        : [];
 
-    setImages(imageUrls);
-     
+      setImages(imageUrls);
 
-
-    // setImages(imageUrls);
+      // setImages(imageUrls);
 
       setRemovedImageIds([]);
     } else {
@@ -161,7 +207,11 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  const handleCategoryChange = (value: string) => {
+  // const handleCategoryChange = (value: string) => {
+  //   setFormData((prev: any) => ({ ...prev, categoryId: value }));
+  // };
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
     setFormData((prev: any) => ({ ...prev, categoryId: value }));
   };
 
@@ -257,6 +307,9 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     );
   };
 
+
+
+
   const addAttribute = (vIndex: number) => {
     setVariants((prev) =>
       prev.map((variant, i) =>
@@ -280,20 +333,32 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     );
   };
 
-  const handleRemoveImage = (index: number) => {
-    const imgToRemove = images[index];
-    if (!imgToRemove) return;
+  // const handleRemoveImage = (index: number) => {
+  //   const imgToRemove = images[index];
+  //   if (!imgToRemove) return;
 
-    // Track removed image DB id
-    if (selectedProduct?.images?.[index]?.id) {
-      setRemovedImageIds(prev => [...prev, selectedProduct.images[index].id]);
-    }
-    
+  //   // Track removed image DB id
+  //   if (selectedProduct?.images?.[index]?.id) {
+  //     setRemovedImageIds(prev => [...prev, selectedProduct.images[index].id]);
+  //   }
+  //   // Remove from UI
+  //   setImages(prev => prev.filter((_, i) => i !== index));
+  // };
+
+const handleRemoveImage = (index: number) => {
+  const imgToRemove = images[index];
+  if (!imgToRemove || !selectedProduct?.images) return; // ✅ check first
+
+  const imgObj = selectedProduct.images[index];
+  if (imgObj && "id" in imgObj) {
+    setRemovedImageIds(prev => [...prev, (imgObj as { id: number }).id]);
+  }
+
+  setImages(prev => prev.filter((_, i) => i !== index));
+};
 
 
-    // Remove from UI
-    setImages(prev => prev.filter((_, i) => i !== index));
-  };
+
 
   const handleRemoveNewImage = (index: number) => {
     setNewImages((prev) => prev.filter((_, i) => i !== index));
@@ -430,8 +495,10 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
   if (!formData) return null;
 
+
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-4xl">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-6xl">
       <div className="p-6 bg-white dark:bg-gray-900 rounded-lg shadow-xl max-h-[90vh] overflow-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Edit Product</h2>
@@ -444,308 +511,428 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Product Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">Name</Label>
-              <Input
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Product name"
+          {/* Two-column layout for form */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column - Basic Information */}
+            <div className="space-y-6">
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Basic Information</h3>
 
-              />
-            </div>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">Product Name</Label>
+                    <Input
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Enter product name"
+                      className="w-full"
+                    />
+                  </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>Category</Label>
+                      <select
+                        name="categoryId"
+                        value={formData?.categoryId || ""}
+                        onChange={handleChange}
+                        className="w-full border rounded-lg p-3 text-black dark:text-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Select Category</option>
+                        {categoryOptions.map((cat) => (
+                          <option key={cat.value} value={cat.value}>
+                            {cat.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label>SubCategory</Label>
+                      <select
+                        name="subCategoryId"
+                        value={formData?.subCategoryId || ""}
+                        onChange={handleSubCategoryChange}
+                        className="w-full border rounded-lg p-3 text-black dark:text-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      >
+                        <option value="">Select SubCategory</option>
+                        {subCategoryOptions.map((sub) => (
+                          <option key={sub.value} value={sub.value}>
+                            {sub.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                  </div>
+
+                  <div>
+                    <Label className="text-gray-700 dark:text-gray-300">Description</Label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      rows={4}
+                      placeholder="Product description..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Pricing Section */}
               {!formData.hasVariants && (
-                <>
-                  <div>
-                    <Label>
-                      Original Price<span className="text-error-500">*</span>
-                    </Label>
-                    <Input
-                      name="originalPrice"
-                      placeholder="Original Price"
-                      type="number"
-                      value={formData.originalPrice}
-                      onChange={handleChange}
-                    />
+                <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Pricing & Stock</h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Original Price</Label>
+                      <Input
+                        name="originalPrice"
+                        placeholder="0.00"
+                        type="number"
+                        value={formData.originalPrice}
+                        onChange={handleChange}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Offer %</Label>
+                      <Input
+                        name="offer"
+                        placeholder="0%"
+                        type="number"
+                        value={formData.offer}
+                        onChange={handleChange}
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Final Price</Label>
+                      <Input
+                        name="price"
+                        placeholder="0.00"
+                        type="number"
+                        value={calculateFinalPrice().toFixed(2)}
+                        {...({ readOnly: true } as any)}
+                        className="w-full bg-gray-100 dark:bg-gray-600 cursor-not-allowed"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <Label>
-                      Offer %<span className="text-error-500">*</span>
-                    </Label>
+                  <div className="mt-4">
+                    <Label>Stock Quantity</Label>
                     <Input
-                      name="offer"
-                      placeholder="Offer %"
                       type="number"
-                      value={formData.offer}
+                      name="stock"
+                      placeholder="Enter stock quantity"
+                      value={formData.stock}
                       onChange={handleChange}
+                      className="w-full"
                     />
                   </div>
-
-                  <div>
-                    <Label>
-                      Final Price<span className="text-error-500">*</span>
-                    </Label>
-                    <Input
-                      name="price"
-                      placeholder="Final Price"
-                      type="number"
-                      value={calculateFinalPrice().toFixed(2)}
-                      {...({ readOnly: true } as any)}
-                      className="bg-gray-100 cursor-not-allowed"
-                    />
-                  </div>
-                </>
+                </div>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label className="text-gray-700 dark:text-gray-300">Category ID</Label>
-              <Input
-                type="number"
-                name="categoryId"
-                value={formData.categoryId}
-                onChange={handleChange}
-                min="1"
-              />
-            </div>
 
-          </div>
-          {!formData.hasVariants && (
-            <div className="flex-1">
-              <Label>
-                Stock <span className="text-error-500">*</span>
-              </Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  name="stock"
-                  placeholder="Enter Stock"
-                  value={formData.stock}
-                  onChange={handleChange}
-                  className="w-full"
-                />
+              {/* Product Details */}
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Product Details</h3>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label>SKU Code</Label>
+                      <Input
+                        name="skuCode"
+                        value={formData.skuCode}
+                        onChange={handleChange}
+                        placeholder="SKU code"
+                        className="w-full"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Material</Label>
+                      <Input
+                        name="material"
+                        value={formData.material}
+                        onChange={handleChange}
+                        placeholder="Product material"
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Return Policy</Label>
+                    <Input
+                      name="returnPolicy"
+                      value={formData.returnPolicy}
+                      onChange={handleChange}
+                      placeholder="Return policy"
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Warranty Info</Label>
+                    <Input
+                      name="warrantyInfo"
+                      value={formData.warrantyInfo}
+                      onChange={handleChange}
+                      placeholder="Warranty information"
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <Label>Manufacture Details</Label>
+                    <Input
+                      name="manufactureDetails"
+                      value={formData.manufactureDetails}
+                      onChange={handleChange}
+                      placeholder="Manufacture details"
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-2">
+                    <input
+                      id="shippingAvailable"
+                      type="checkbox"
+                      checked={formData.shippingAvailable}
+                      onChange={(e) => setFormData({ ...formData, shippingAvailable: e.target.checked })}
+                      className="w-5 h-5 rounded focus:ring-blue-500"
+                    />
+                    <Label htmlFor="shippingAvailable" className="cursor-pointer">
+                      Shipping Available
+                    </Label>
+                  </div>
+                </div>
               </div>
             </div>
-          )}
 
-          <div className="space-y-2">
-            <Label className="text-gray-700 dark:text-gray-300">Description</Label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
-              rows={4}
-              placeholder="Product description..."
-            />
-          </div>
+            {/* Right Column - Media & Variants */}
+            <div className="space-y-6">
+              {/* Image Upload Section */}
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <h3 className="text-lg font-semibold mb-4 text-gray-800 dark:text-white">Product Images</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                  Upload up to 10 images. First image will be the main product image.
+                </p>
 
-          {/* Optional product-level fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label>SKU Code</Label>
-              <Input
-                name="skuCode"
-                value={formData.skuCode}
-                onChange={handleChange}
-                placeholder="SKU code"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Material</Label>
-              <Input
-                name="material"
-                value={formData.material}
-                onChange={handleChange}
-                placeholder="Product material"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Return Policy</Label>
-              <Input
-                name="returnPolicy"
-                value={formData.returnPolicy}
-                onChange={handleChange}
-                placeholder="Return policy"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Warranty Info</Label>
-              <Input
-                name="warrantyInfo"
-                value={formData.warrantyInfo}
-                onChange={handleChange}
-                placeholder="Warranty information"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Manufacture Details</Label>
-              <Input
-                name="manufactureDetails"
-                value={formData.manufactureDetails}
-                onChange={handleChange}
-                placeholder="Manufacture details"
-              />
-            </div>
-
-            {/* Shipping Available Checkbox */}
-            <div className="flex items-center space-x-2 pt-4">
-              <input
-                id="shippingAvailable"
-                type="checkbox"
-                checked={formData.shippingAvailable}
-                onChange={(e) => setFormData({ ...formData, shippingAvailable: e.target.checked })}
-                className="w-5 h-5 rounded focus:ring-blue-500"
-              />
-              <Label htmlFor="shippingAvailable" className="cursor-pointer">
-                Shipping Available
-              </Label>
-            </div>
-          </div>
-          {/* Variants Section */}
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-4">Product Variants</h3>
-            {variants.map((variant, vIndex) => (
-              <div key={variant.id ?? vIndex} className="border p-4 rounded mb-4 bg-gray-50 relative dark:bg-gray-800">
-                {variants.length > 0 && (
-                  <button type="button" onClick={() => removeVariant(vIndex)} className="absolute top-2 right-2 text-red-500 hover:text-red-700" title="Remove variant">
-                    ×
-                  </button>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-                  <div>
-                    <Label>SKU<span className="text-error-500">*</span></Label>
-                    <Input value={variant.sku} onChange={(e) => handleVariantChange(vIndex, "sku", e.target.value)} />
-                  </div>
-
-                  <div>
-                    <Label>Price<span className="text-error-500">*</span></Label>
-                    <Input type="number" value={variant.price} onChange={(e) => handleVariantChange(vIndex, "price", e.target.value)} min="0" />
-                  </div>
-
-                  <div>
-                    <Label>Offer %</Label>
-                    <Input
-                      type="number"
-                      value={variant.offer ?? 0}
-                      onChange={(e) => handleVariantChange(vIndex, "offer", e.target.value)}
-                      min="0"
-                      max="100"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Stock<span className="text-error-500">*</span></Label>
-                    <Input type="number" value={variant.stock} onChange={(e) => handleVariantChange(vIndex, "stock", e.target.value)} min="0" />
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <Label>Selling Price (auto)</Label>
-                  <Input type="number" value={variant.sellingPrice ?? computeSellingPrice(variant.price, variant.offer ?? 0)} />
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Attributes</h4>
-                  {variant.attributes.map((attr, aIndex) => (
-                    <div key={aIndex} className="flex gap-2 mb-2 items-center">
-                      <Input value={attr.key} onChange={(e) => handleAttributeChange(vIndex, aIndex, "key", e.target.value)} placeholder="Key" />
-                      <Input value={attr.value} onChange={(e) => handleAttributeChange(vIndex, aIndex, "value", e.target.value)} placeholder="Value" />
-                      {variant.attributes.length > 1 && (
-                        <button type="button" onClick={() => removeAttribute(vIndex, aIndex)} className="text-red-500 hover:text-red-700" title="Remove attribute">
-                          ×
-                        </button>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+                  {images.map((img, i) => (
+                    <div key={i} className="relative group">
+                      <div className="aspect-square overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                        <img
+                          src={img}
+                          alt={`Product image ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveImage(i)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <HiX className="w-3 h-3" />
+                      </button>
+                      {i === 0 && (
+                        <span className="absolute top-1 left-1 bg-blue-500 text-white text-xs px-1 py-0.5 rounded">
+                          Main
+                        </span>
                       )}
                     </div>
                   ))}
-                  <button type="button" onClick={() => addAttribute(vIndex)} className="text-blue-500 mt-2 text-sm hover:text-blue-700">+ Add Attribute</button>
-                </div>
-              </div>
-            ))}
-            <button type="button" onClick={addVariant} className="text-green-600 font-medium hover:text-green-800">+ Add Variant</button>
-          </div>
 
-          {/* Image Upload Section */}
-          <div className="mb-6">
-            <h4 className="font-medium mb-3 text-gray-800 dark:text-gray-200">Product Images</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Upload up to 10 images. First image will be used as the main product image.
-            </p>
+                  {newImages.map((file, i) => (
+                    <div key={i} className="relative group">
+                      <div className="aspect-square overflow-hidden rounded-lg border-2 border-gray-200 dark:border-gray-700">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`New image ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveNewImage(i)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <HiX className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4">
-              {/* Existing images */}
-              {images.map((img, i) => (
-                <div key={i} className="relative group">
-                  <div className="aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                    <img
-                      src={img}
-                      alt={`Product image ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(i)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <HiX className="w-4 h-4" />
-                  </button>
-                  {i === 0 && (
-                    <span className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
-                      Main
-                    </span>
+                  {(images.length + newImages.length) < 10 && (
+                    <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors p-4">
+                      <HiPhotograph className="text-2xl text-gray-400 mb-2" />
+                      <span className="text-sm text-gray-500 dark:text-gray-400 text-center">Add Image</span>
+                      <input
+                        type="file"
+                        multiple
+                        accept="image/*"
+                        onChange={handleAddImages}
+                        className="hidden"
+                      />
+                    </label>
                   )}
                 </div>
-              ))}
+              </div>
 
-              {/* New images preview */}
-              {newImages.map((file, i) => (
-                <div key={i} className="relative group">
-                  <div className="aspect-square overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`New image ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <button
+              {/* Variants Section */}
+              <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Product Variants</h3>
+                  <Button
                     type="button"
-                    onClick={() => handleRemoveNewImage(i)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={addVariant}
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1"
                   >
-                    <HiX className="w-4 h-4" />
-                  </button>
+                    <HiPlus className="w-4 h-4" /> Add Variant
+                  </Button>
                 </div>
-              ))}
 
-              {/* Add image button */}
-              {(images.length + newImages.length) < 10 && (
-                <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
-                  <span className="text-2xl text-gray-400 mb-2">+</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">Add Image</span>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*"
-                    onChange={handleAddImages}
-                    className="hidden"
-                  />
-                </label>
-              )}
+                {variants.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <HiPhotograph className="mx-auto h-12 w-12 opacity-50" />
+                    <p className="mt-2 text-sm">No variants added yet.</p>
+                    <p className="text-xs">Click "Add Variant" to create your first product variant.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                    {variants.map((variant, vIndex) => (
+                      <div key={vIndex} className="border p-4 rounded-lg bg-white dark:bg-gray-750 relative">
+                        <button
+                          type="button"
+                          onClick={() => removeVariant(vIndex)}
+                          className="absolute top-3 right-3 text-red-500 hover:text-red-700"
+                          title="Remove variant"
+                        >
+                          <HiX className="w-5 h-5" />
+                        </button>
+
+                        <h4 className="font-medium mb-3 text-gray-700 dark:text-gray-300">Variant {vIndex + 1}</h4>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                          <div>
+                            <Label>SKU</Label>
+                            <Input
+                              value={variant.sku}
+                              onChange={(e) => handleVariantChange(vIndex, "sku", e.target.value)}
+                              placeholder="Variant SKU"
+                              className="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <Label>Stock</Label>
+                            <Input
+                              type="number"
+                              value={variant.stock}
+                              onChange={(e) => handleVariantChange(vIndex, "stock", e.target.value)}
+                              min="0"
+                              className="w-full"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                          <div>
+                            <Label>Price</Label>
+                            <Input
+                              type="number"
+                              value={variant.price}
+                              onChange={(e) => handleVariantChange(vIndex, "price", e.target.value)}
+                              min="0"
+
+                              className="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <Label>Offer %</Label>
+                            <Input
+                              type="number"
+                              value={variant.offer ?? 0}
+                              onChange={(e) => handleVariantChange(vIndex, "offer", e.target.value)}
+                              min="0"
+                              max="100"
+                              className="w-full"
+                            />
+                          </div>
+
+                          <div>
+                            <Label>Final Price</Label>
+                            <Input
+                              type="number"
+                              value={variant.sellingPrice ?? computeSellingPrice(variant.price, variant.offer ?? 0)}
+                              {...({ readOnly: true } as any)}
+                              className="w-full bg-gray-100 dark:bg-gray-600 cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="mt-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <Label>Attributes</Label>
+                            <Button
+                              type="button"
+                              onClick={() => addAttribute(vIndex)}
+
+                              size="sm"
+                              className="text-xs flex items-center gap-1"
+                            >
+                              <HiPlus className="w-3 h-3" /> Add Attribute
+                            </Button>
+                          </div>
+
+                          <div className="space-y-2">
+                            {variant.attributes.map((attr, aIndex) => (
+                              <div key={aIndex} className="flex gap-2 items-center">
+                                <Input
+                                  value={attr.key}
+                                  onChange={(e) => handleAttributeChange(vIndex, aIndex, "key", e.target.value)}
+                                  placeholder="Attribute name"
+                                  className="flex-1"
+                                />
+                                <Input
+                                  value={attr.value}
+                                  onChange={(e) => handleAttributeChange(vIndex, aIndex, "value", e.target.value)}
+                                  placeholder="Value"
+                                  className="flex-1"
+                                />
+                                {variant.attributes.length > 1 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeAttribute(vIndex, aIndex)}
+                                    className="text-red-500 hover:text-red-700 p-1"
+                                    title="Remove attribute"
+                                  >
+                                    <HiX className="w-4 h-4" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 mt-6">
             <Button variant="outline" type="button" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
@@ -765,5 +952,4 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     </Modal>
   );
 };
-
 export default EditProductModal;
