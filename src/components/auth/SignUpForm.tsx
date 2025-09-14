@@ -18,17 +18,15 @@ import Link from "next/link";
 import { signup } from "@/services/authService";
 import Select from "../form/Select";
 import type { AppDispatch } from "@/redux/store";
-
-
-
-interface RoleOption {
-  value: string;
-  label: string;
-}
-interface Role {
-  id: number;
-  name: string;
-}
+import { RoleOption,Role } from "../types/auth";
+// interface RoleOption {
+//   value: string;
+//   label: string;
+// }
+// interface Role {
+//   id: number;
+//   name: string;
+// }
 export default function SignUpForm() {
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();

@@ -62,8 +62,8 @@ export const fetchSubCategoryAll = async () => {
 //   return res.data;
 // };
 
-export const deleteSubCategory = (id: number) => async (dispatch: any) => {
-  await apiConnector("DELETE", `/subcategories/${id}`);
-  const updated = await fetchSubCategories();
-  dispatch({ type: "subCategory/setSubCategories", payload: updated });
-};
+// export const deleteSubCategory = (id: number) => async (dispatch: any) => {
+//   await apiConnector("DELETE", `/subcategories/${id}`);
+//   const updated = await fetchSubCategories();
+//   dispatch({ type: "subCategory/setSubCategories", payload: updated });
+// };

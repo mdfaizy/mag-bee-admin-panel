@@ -10,7 +10,8 @@ import {
   // setProducts,
   setLoading
 } from "@/redux/productSlice";
-import {fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus,updateProductStock
+import {
+  fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus, updateProductStock
 } from "@/services/product/productService";
 import { toast } from "react-toastify";
 import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";
@@ -28,7 +29,6 @@ import EditProductModal from "../products/EditProductModal";
 import DeleteProductModal from "../products/DeleteProductModal";
 import Pagination from "./Pagination";
 import { getPriceDetails } from "@/utils/getPriceDB";
-
 interface VariantAttribute {
   id?: number;
   key: string;
@@ -40,6 +40,7 @@ export interface Variant {
   price: number;
   stock: number;
   offer: string;
+  sellingPrice?: string;
   attributes: VariantAttribute[];
 }
 export interface Product {
@@ -66,7 +67,6 @@ export interface Product {
   createdAt?: string;
   updatedAt?: string;
 }
-
 const ProductTable = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state: RootState) => state.product);
@@ -86,9 +86,7 @@ const ProductTable = () => {
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
   const [categories, setCategories] = useState<string[]>([]);
   const [totalItems, setTotalItems] = useState(0);
-  // const { displayPrice, displayOriginalPrice, offer } = getPriceDetails(
-  //     products
-  //   );
+  const [showVariants, setShowVariants] = useState(false);
   const handleToggleActive = async (product: any) => {
     try {
       const data = await toggleProductStatus(product.id);
@@ -100,7 +98,9 @@ const ProductTable = () => {
       toast.error("Error updating status");
     }
   };
-
+  //  const toggleVariants = () => {
+  //     setShowVariants((prev) => !prev);
+  //   };
   const handleStockChange = async (product: any, newStock: number) => {
     try {
       await updateProductStock(product.id, newStock);
@@ -112,11 +112,6 @@ const ProductTable = () => {
       toast.error("Error updating stock");
     }
   };
-
-
-
-
-
 
   useEffect(() => {
     const getProducts = async () => {
@@ -246,7 +241,8 @@ const ProductTable = () => {
         await deleteProductById(selectedProductId, token);
         const updatedList = await fetchProductAll();
         // dispatch(setProducts(updatedList));
-        dispatch(setProducts(updatedList) as any);
+        // dispatch(setProducts(updatedList) as any);
+        dispatch(setReduxProducts(updatedList));
 
         setTableData(updatedList);
         toast.success("Product deleted successfully!");
@@ -258,12 +254,9 @@ const ProductTable = () => {
       }
     }
   };
-
   const calculateTotalVariantStock = (variants: Variant[]): number => {
     return variants?.reduce((total, variant) => total + (variant.stock || 0), 0);
   };
-
-
   // Reset filters
   const resetFilters = () => {
     setStatusFilter("all");
@@ -448,10 +441,14 @@ const ProductTable = () => {
                     </TableCell>
 
                     <TableCell>
+
+
                       {item.hasVariants && item.variants?.length > 0 ? (
                         (() => {
-                          const variantSellingPrices = item.variants.map(v => parseFloat(v.sellingPrice || v.price || "0"));
-                          const variantOriginalPrices = item.variants.map(v => parseFloat(v.price || "0"));
+                          const variantSellingPrices = item.variants.map((v: Variant) =>
+                            v.sellingPrice ? parseFloat(v.sellingPrice) : v.price
+                          );
+                          const variantOriginalPrices = item.variants.map((v: Variant) => v.price);
 
                           const minIndex = variantSellingPrices.indexOf(Math.min(...variantSellingPrices));
 
@@ -481,7 +478,51 @@ const ProductTable = () => {
                           )}
                         </div>
                       )}
+
+
                     </TableCell>
+
+
+                    {/* <TableCell>
+  {showVariants && item.hasVariants && item.variants?.length > 0 ? (
+    (() => {
+      const variantSellingPrices = item.variants.map((v: Variant) =>
+        v.sellingPrice ? Number(v.sellingPrice) : Number(v.price)
+      );
+      const variantOriginalPrices = item.variants.map((v: Variant) => Number(v.price));
+
+      const minIndex = variantSellingPrices.indexOf(Math.min(...variantSellingPrices));
+      const minSelling = variantSellingPrices[minIndex];
+      const originalAtMinSelling = variantOriginalPrices[minIndex];
+
+      return (
+        <div className="flex flex-col">
+          <span className="font-semibold text-gray-900 dark:text-white">
+            ₹{minSelling}
+          </span>
+          {originalAtMinSelling > minSelling && (
+            <span className="text-xs text-gray-500 line-through dark:text-white">
+              ₹{originalAtMinSelling}
+            </span>
+          )}
+        </div>
+      );
+    })()
+  ) : (
+    <div className="flex flex-col">
+      <span className="font-semibold text-gray-900 dark:text-white">
+        ₹{Number(item.price)}
+      </span>
+      {item.originalPrice && Number(item.originalPrice) > Number(item.price) && (
+        <span className="text-xs text-gray-500 line-through dark:text-white">
+          ₹{item.originalPrice}
+        </span>
+      )}
+    </div>
+  )}
+</TableCell> */}
+
+
 
 
 

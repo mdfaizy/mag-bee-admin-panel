@@ -1,22 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Category } from '../utils/type'
-// interface Category {
-//   id: string;
-//   name: string;
-//   description: string;
-//   imageUrl: string;
-//   slug:string,
-//   createdAt?: string;
-//   updatedAt?: string;
-// }
-
+import { Category } from '@/components/types/category';
 interface ProductCategoryState {
   categories: Category[];
   selectedCategory: Category | null;
   loading: boolean;
   error: string | null;
 }
-
 const initialState: ProductCategoryState = {
   categories: [],
   selectedCategory: null,

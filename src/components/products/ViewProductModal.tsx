@@ -6,46 +6,46 @@ import { FiX } from "react-icons/fi";
 import { fetchProductById } from "@/services/product/productService";
 import { toast } from "react-toastify";
 import Image from "next/image";
+import { Product,Variant} from "@/components/types/product";
+// interface Product {
+//   id: string | number;
+//   name: string;
+//   originalPrice: number;
+//   offer: number;
+//   finalPrice: number;
+//   price: number;
+//   description?: string;
+//   url?: string;
+//   stock?: number;
+//   isActive?: boolean;
+// // productId?:number;
+//   category?: {
+//     id: number;
+//     name: string;
+//   };
 
-interface Product {
-  id: string | number;
-  name: string;
-  originalPrice: number;
-  offer: number;
-  finalPrice: number;
-  price: number;
-  description?: string;
-  url?: string;
-  stock?: number;
-  isActive?: boolean;
-// productId?:number;
-  category?: {
-    id: number;
-    name: string;
-  };
+//   images?: {
+//     id: number;
+//     imageUrl: string;
+//   }[];
 
-  images?: {
-    id: number;
-    imageUrl: string;
-  }[];
+//   variants?: {
+//     id: number;
+//     sku: string;
+//     price: number;
+//     stock: number;
+//     attributes: {
+//       key: string;
+//       value: string;
+//     }[];
+//   }[];
 
-  variants?: {
-    id: number;
-    sku: string;
-    price: number;
-    stock: number;
-    attributes: {
-      key: string;
-      value: string;
-    }[];
-  }[];
-
-  shippingAvailable?: boolean;
-  warrantyInfo?: string;
-  material?: string;
-  returnPolicy?: string;
-  manufactureDetails?: string;
-}
+//   shippingAvailable?: boolean;
+//   warrantyInfo?: string;
+//   material?: string;
+//   returnPolicy?: string;
+//   manufactureDetails?: string;
+// }
 
 interface Props {
   isOpen: boolean;
@@ -193,7 +193,7 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
                     <div className="flex justify-between pt-2 border-t border-blue-100">
                       <span className="text-gray-800 font-semibold">Final Price:</span>
                       <span className="text-xl font-bold text-blue-700">
-                        ₹{selectedProduct.finalPrice ?? selectedProduct.price}
+                        ₹{selectedProduct.price ?? selectedProduct.price}
                       </span>
                     </div>
                   </div>
@@ -273,11 +273,21 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
                   <div key={variant.id} className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start">
+                        <h1 className="text-gray-900">SUK</h1>
                         <h4 className="font-medium text-gray-900">{variant.sku}</h4>
                         <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                          ₹{variant.price}
+                          {/* ₹{variant.price} */}
+                          {/* {variant.sellingPrice} */}
                         </span>
                       </div>
+                    <div className="flex justify-between items-start">
+  <h2>Original Price</h2>
+  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+    ₹{Math.round(Number(variant.price))}<br></br>
+    {variant.sellingPrice && `  ₹${Math.round(Number(variant.sellingPrice))}`}
+  </span>
+</div>
+
                       
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Stock:</span>
@@ -305,7 +315,6 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
               </div>
             </div>
           )}
-
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-gray-200 flex justify-end">
             <Button

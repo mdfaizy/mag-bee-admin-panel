@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import {
   fetchSubCategoryAll,
-  deleteSubCategory,
+  
 } from "../../services/subCategoryService/subCategoryService"; // <-- service file
 import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
@@ -112,7 +112,7 @@ const handleView = (id: number) => {
   const confirmDelete = async () => {
     if (selectedDeleteId) {
       try {
-        await dispatch<any>(deleteSubCategory(selectedDeleteId));
+        // await dispatch<any>(deleteSubCategory(selectedDeleteId));
         toast.success("SubCategory deleted successfully");
         setDeleteModalOpen(false);
         setSelectedDeleteId(null);

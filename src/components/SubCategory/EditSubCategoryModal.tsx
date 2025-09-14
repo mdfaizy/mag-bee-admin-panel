@@ -12,7 +12,7 @@ import Label from "../form/Label";
 import Button from "../ui/button/Button";
 import { fetchProductCategory } from "@/services/product-category/categoryService";
 import { setCategories } from "@/redux/productCategory";
-
+import { SubCategory } from "../types/category";
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -58,7 +58,7 @@ const EditSubCategoryModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
 // 🔹 Fetch categories when modal opens
 useEffect(() => {
-  const loadCategories = async ( token: string) => {
+  const loadCategories = async () => {
     try {
       const result = await fetchProductCategory();
       // ✅ Agar API direct array return kare to bhi handle

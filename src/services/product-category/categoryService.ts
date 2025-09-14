@@ -59,11 +59,6 @@ export const fetchProductCategory = async () => {
   return res.data;
 };
 
-
-
-
-
-
 export const deleteCategory = (id: number) => {
   return async (dispatch: AppDispatch) => {
     const toastId = toast.loading("Deleting category...", { position: "top-center" ,style: { zIndex: 100 }});
@@ -93,7 +88,3 @@ export const deleteCategory = (id: number) => {
     }
   };
 };
-
-
-
-

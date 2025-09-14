@@ -10,17 +10,19 @@ import { HiChevronDown, HiPlus, HiUpload, HiX } from 'react-icons/hi';
 import { createCategory } from "@/services/product-category/categoryService";
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
 import RichTextEditor from "../form/input/TextEditor";
+// import { Product } from "@/components/types/Product";
+import { SubCategory, CategoryOption } from "@/components/types/category";
 
-type CategoryOption = {
-  value: string;
-  label: string;
-};
+// type CategoryOption = {
+//   value: string;
+//   label: string;
+// };
 
-type SubCategory = {
-  value: string;
-  label: string;
-  categoryId: string;
-}
+// type SubCategory = {
+//   value: string;
+//   label: string;
+//   categoryId: string;
+// }
 
 type Variant = {
   sku: string;
@@ -29,7 +31,6 @@ type Variant = {
   stock: string;
   attributes: { key: string; value: string }[];
 };
-
 export default function AddNewProduct() {
   const [category, setCategory] = useState<CategoryOption[]>([]);
   const [productImages, setProductImages] = useState<File[]>([]);
@@ -96,7 +97,6 @@ export default function AddNewProduct() {
           },
         });
         const data = await res.json();
-
         const formatted = data.map((item: any) => ({
           value: String(item.id),
           label: item.name,
@@ -242,14 +242,24 @@ export default function AddNewProduct() {
     const payload = {
       ...formData,
       isActive: isActive,
+    //  hasVariants: showVariants && variants.length > 0, 
+     hasVariants: showVariants && variants.length > 0,
       originalPrice: Number(formData.originalPrice),
       price: Number(formData.price) || (variants.length ? 0 : Number(formData.originalPrice)),
       offer: Number(formData.offer) || 0,
       stock: Number(formData.stock) || (variants.length ? 0 : Number(formData.stock)),
-      variants: JSON.stringify(variants),
+      // variants: JSON.stringify(variants),
+      // variants: variants.length > 0 ? JSON.stringify(variants) : undefined,
+      variants: showVariants && variants.length > 0 ? JSON.stringify(variants) : undefined,
       shippingAvailable: String(formData.shippingAvailable),
       keywords: JSON.stringify(formData.keywords),
     };
+console.log("showVariants:", showVariants);
+console.log("variants after filtering:", variants);
+console.log("hasVariants value:", showVariants && variants.length > 0);
+console.log("variants length:", variants.length);
+console.log("showVariants:", showVariants);
+console.log("hasVariants to send:", variants.length > 0);
 
     const form = new FormData();
     Object.entries(payload).forEach(([key, value]) => {
@@ -534,8 +544,6 @@ export default function AddNewProduct() {
                           onChange={handleChange}
                         />
                       </div>
-
-
                     )}
                     <div className="flex items-center gap-2">
                       <input

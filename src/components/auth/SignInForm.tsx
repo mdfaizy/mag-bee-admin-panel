@@ -13,13 +13,13 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { login } from "../../services/authService";
-
-interface SignInFormData {
-  identifier: string;
-  password: string;
-  isChecked: boolean;
-  showPassword: boolean;
-}
+import { SignInFormData } from "../types/auth";
+// interface SignInFormData {
+//   identifier: string;
+//   password: string;
+//   isChecked: boolean;
+//   showPassword: boolean;
+// }
 
 export default function SignInForm() {
   const router = useRouter();

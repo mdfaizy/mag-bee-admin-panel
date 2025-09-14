@@ -15,46 +15,46 @@ import Select from "../form/Select";
 import { updateProductById } from "@/services/product/productService";
 import { fetchProductCategory } from "@/services/product-category/categoryService";
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
+import { Product,Variant} from "@/components/types/product";
+// interface ProductImage {
+//   id: number;
+//   imageUrl: string;
+//   [key: string]: any; // fallback if backend sends extra props
+// }
+// interface Product {
+//   id: number;
+//   name: string;
+//   description?: string;
+//   slug?: string;
+//   category?: {
+//     id: number;
+//     name: string;
+//   };
+//   subCategory?: {        
+//     id: number;
+//     name: string;
+//   };
+//   originalPrice?: number;
+//   offer?: number;
+//   stock?: number;
+//    images?: ProductImage[];
 
-interface ProductImage {
-  id: number;
-  imageUrl: string;
-  [key: string]: any; // fallback if backend sends extra props
-}
-interface Product {
-  id: number;
-  name: string;
-  description?: string;
-  slug?: string;
-  category?: {
-    id: number;
-    name: string;
-  };
-  subCategory?: {        
-    id: number;
-    name: string;
-  };
-  originalPrice?: number;
-  offer?: number;
-  stock?: number;
-   images?: ProductImage[];
-
-  variants?: any[];
-  // ... बाकी fields
-}
-
-
+//   variants?: any[];
+//   // ... बाकी fields
+// }
 
 
-interface Variant {
-  id?: number;
-  sku: string;
-  price: number;
-  sellingPrice?: number;
-  stock: number;
-  offer?: number;
-  attributes: { key: string; value: string }[];
-}
+
+
+// interface Variant {
+//   id?: number;
+//   sku: string;
+//   price: number;
+//   sellingPrice?: number;
+//   stock: number;
+//   offer?: number;
+//   attributes: { key: string; value: string }[];
+// }
 
 interface Props {
   isOpen: boolean;

@@ -1,51 +1,50 @@
-
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Product } from '@/components/types/product';
+// interface VariantAttribute {
+//   id?: number;
+//   key: string;
+//   value: string;
+// }
 
-interface VariantAttribute {
-  id?: number;
-  key: string;
-  value: string;
-}
-
-interface Variant {
-  id?: number;
-  sku: string;
-  price: number;
-  stock: number;
-  attributes: VariantAttribute[];
-}
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  stock:number;
-  originalPrice: number;
-  offer: number; // percentage value
-  finalPrice: number;
-  category: {
-     id: number;
-    name: string;
-  };
-    subCategory?: {    
-    name: string;
-  };
-  // url: string;
-  images?: {
-    id: number;       // DB id
-    url: string;      // image URL
-    [key: string]: any; // agar extra fields aa rahi hain
-  }[];
-   shippingAvailable?: boolean; 
-  warrantyInfo?: string;
-  skuCode?: string;
-  material?: string;
-  returnPolicy?: string;
-  manufactureDetails?: string;
-  imageUrl: string;
-    variants?: Variant[];  
-  createdAt?: string;
-  updatedAt?: string;
-}
+// interface Variant {
+//   id?: number;
+//   sku: string;
+//   price: number;
+//   stock: number;
+//   attributes: VariantAttribute[];
+// }
+// interface Product {
+//   id: string;
+//   name: string;
+//   description: string;
+//   stock:number;
+//   originalPrice: number;
+//   offer: number; // percentage value
+//   finalPrice: number;
+//   category: {
+//      id: number;
+//     name: string;
+//   };
+//     subCategory?: {    
+//     name: string;
+//   };
+//   // url: string;
+//   images?: {
+//     id: number;       // DB id
+//     url: string;      // image URL
+//     [key: string]: any; // agar extra fields aa rahi hain
+//   }[];
+//    shippingAvailable?: boolean; 
+//   warrantyInfo?: string;
+//   skuCode?: string;
+//   material?: string;
+//   returnPolicy?: string;
+//   manufactureDetails?: string;
+//   imageUrl: string;
+//     variants?: Variant[];  
+//   createdAt?: string;
+//   updatedAt?: string;
+// }
 
 
 interface ProductState {
