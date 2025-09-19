@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchProductAll } from "../services/product/productService";
+import { BASE_URL } from "@/services/apis";
 
 export interface Product {
   id: number;
@@ -113,7 +114,7 @@ export const useProductTableLogic = () => {
       const rawToken = localStorage.getItem("token");
       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
 
-      const res = await fetch(`http://localhost:8000/api/products/products/${editData.id}`, {
+      const res = await fetch(`${BASE_URL}/products/products/${editData.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

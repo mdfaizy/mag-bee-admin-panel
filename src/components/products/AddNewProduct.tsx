@@ -12,17 +12,8 @@ import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategorySe
 import RichTextEditor from "../form/input/TextEditor";
 // import { Product } from "@/components/types/Product";
 import { SubCategory, CategoryOption } from "@/components/types/category";
+import { BASE_URL } from "@/services/apis";
 
-// type CategoryOption = {
-//   value: string;
-//   label: string;
-// };
-
-// type SubCategory = {
-//   value: string;
-//   label: string;
-//   categoryId: string;
-// }
 
 type Variant = {
   sku: string;
@@ -90,7 +81,7 @@ export default function AddNewProduct() {
       const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
 
       try {
-        const res = await fetch("http://localhost:8000/api/category", {
+        const res = await fetch(`${BASE_URL}/category`, {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
@@ -242,8 +233,8 @@ export default function AddNewProduct() {
     const payload = {
       ...formData,
       isActive: isActive,
-    //  hasVariants: showVariants && variants.length > 0, 
-     hasVariants: showVariants && variants.length > 0,
+      //  hasVariants: showVariants && variants.length > 0, 
+      hasVariants: showVariants && variants.length > 0,
       originalPrice: Number(formData.originalPrice),
       price: Number(formData.price) || (variants.length ? 0 : Number(formData.originalPrice)),
       offer: Number(formData.offer) || 0,
@@ -254,12 +245,12 @@ export default function AddNewProduct() {
       shippingAvailable: String(formData.shippingAvailable),
       keywords: JSON.stringify(formData.keywords),
     };
-console.log("showVariants:", showVariants);
-console.log("variants after filtering:", variants);
-console.log("hasVariants value:", showVariants && variants.length > 0);
-console.log("variants length:", variants.length);
-console.log("showVariants:", showVariants);
-console.log("hasVariants to send:", variants.length > 0);
+    console.log("showVariants:", showVariants);
+    console.log("variants after filtering:", variants);
+    console.log("hasVariants value:", showVariants && variants.length > 0);
+    console.log("variants length:", variants.length);
+    console.log("showVariants:", showVariants);
+    console.log("hasVariants to send:", variants.length > 0);
 
     const form = new FormData();
     Object.entries(payload).forEach(([key, value]) => {
@@ -270,7 +261,7 @@ console.log("hasVariants to send:", variants.length > 0);
 
     try {
       const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-      const res = await fetch("http://localhost:8000/api/product", {
+      const res = await fetch(`${BASE_URL}/product`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: form,

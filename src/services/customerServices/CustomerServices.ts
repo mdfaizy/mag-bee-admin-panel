@@ -1,20 +1,9 @@
 import { apiConnector } from "@/services/apiConnector";
-import { endPointCustomer } from "../apis";
+import { BASE_URL, endPointCustomer } from "../apis";
 import { Customer } from "@/components/types/customer";
 
 
 const { GET_ALL_CUSTOMER,DELETE_BYID_CUSTOMER,UPDATE_CUSTOMER} = endPointCustomer;
-
-// interface Customer {
-//  id: number;
-//   name: string;
-//   email: string;
-//   username: string;
-//   phoneNumber: string;
-//   // role_id: number;
-//   is_active: boolean;
-//   createdAt?: string;
-// }
 
 export const fetchCustomer = async (): Promise<Customer[]> => {
   const response = await apiConnector("GET", GET_ALL_CUSTOMER);
@@ -31,7 +20,7 @@ export async function toggleUserStatus(id: number) {
   try {
     const response = await apiConnector(
       "PATCH",
-      `http://localhost:8000/api/customers/${id}/toggle`,
+      `${BASE_URL}/customers/${id}/toggle`,
       undefined,
       {
         Authorization: `Bearer ${token}`,

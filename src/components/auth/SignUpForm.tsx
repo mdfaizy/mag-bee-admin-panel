@@ -18,15 +18,8 @@ import Link from "next/link";
 import { signup } from "@/services/authService";
 import Select from "../form/Select";
 import type { AppDispatch } from "@/redux/store";
-import { RoleOption,Role } from "../types/auth";
-// interface RoleOption {
-//   value: string;
-//   label: string;
-// }
-// interface Role {
-//   id: number;
-//   name: string;
-// }
+import { RoleOption, Role } from "../types/auth";
+import { BASE_URL } from "@/services/apis";
 export default function SignUpForm() {
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
@@ -64,41 +57,41 @@ export default function SignUpForm() {
   };
 
 
-const fetchRoles = async () => {
-  try {
-    const token = localStorage.getItem("token"); // Or sessionStorage.getItem("token")
+  const fetchRoles = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
-    if (!token) {
-      throw new Error("No token found");
+      if (!token) {
+        throw new Error("No token found");
+      }
+
+      const res = await fetch(`${BASE_URL}/roles`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch roles");
+      }
+
+      const data = await res.json();
+
+      // const formattedRoles = data.roles.map((role: any) => ({
+      //   value: String(role.id),
+      //   label: role.name,
+      // }));
+      const formattedRoles = (data.roles as Role[]).map((role) => ({
+        value: String(role.id),
+        label: role.name,
+      }));
+
+      setRoles(formattedRoles);
+    } catch (error) {
+      console.error("Failed to fetch roles:", error);
     }
-
-    const res = await fetch("http://localhost:8000/api/roles", {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch roles");
-    }
-
-    const data = await res.json();
-
-    // const formattedRoles = data.roles.map((role: any) => ({
-    //   value: String(role.id),
-    //   label: role.name,
-    // }));
-    const formattedRoles = (data.roles as Role[]).map((role) => ({
-  value: String(role.id),
-  label: role.name,
-}));
-
-    setRoles(formattedRoles);
-  } catch (error) {
-    console.error("Failed to fetch roles:", error);
-  }
-};
+  };
   useEffect(() => {
     fetchRoles();
   }, []);
@@ -127,7 +120,7 @@ const fetchRoles = async () => {
         email,
         password,
         router,
-      }) 
+      })
     );
   };
 
@@ -194,12 +187,12 @@ const fetchRoles = async () => {
 
                 <div>
                   <Label>Select Role<span className="text-error-500">*</span></Label>
-              <Select
-  options={roles}
-  placeholder="Select a role"
-  onChange={handleRoleChange}
-  value={formData.roleId}
-/>
+                  <Select
+                    options={roles}
+                    placeholder="Select a role"
+                    onChange={handleRoleChange}
+                    value={formData.roleId}
+                  />
 
 
                 </div>

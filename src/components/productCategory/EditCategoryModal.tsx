@@ -7,6 +7,7 @@ import { Modal } from '../ui/modal';
 import Input from '../form/input/InputField';
 import Label from '../form/Label';
 import Button from '../ui/button/Button';
+import { BASE_URL } from '@/services/apis';
 
 interface Props {
   isOpen: boolean;
@@ -73,7 +74,7 @@ const EditCategoryModal: React.FC<Props> = ({ isOpen, onClose }) => {
       const rawToken = localStorage.getItem("token");
       const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
 
-      const res = await fetch(`http://localhost:8000/api/category/${selectedCategory.id}`, {
+      const res = await fetch(`${BASE_URL}/category/${selectedCategory.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

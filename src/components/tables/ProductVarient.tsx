@@ -14,6 +14,7 @@ import { FaEdit } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import EditVariantModal from "./EditVariantModal";
 import axios from "axios";
+import { BASE_URL } from "@/services/apis";
 // import DeleteVariantModal from "./DeleteVariantModal";
 
 interface Product {
@@ -66,7 +67,7 @@ const fetchAllVariants = async () => {
   try {
     setLoading(true);
     setError("");
-    const res = await axios.get<Variant[]>("http://localhost:8000/api/variants");
+    const res = await axios.get<Variant[]>(`${BASE_URL}/variants`);
     setTableData(res.data); // update table data here!
     setSuccess("All variants loaded successfully");
     setTimeout(() => setSuccess(""), 3000);

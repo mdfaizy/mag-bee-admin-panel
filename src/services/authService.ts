@@ -1,7 +1,7 @@
 
 import { AppDispatch } from "@/redux/store";
 import { apiConnector } from "./apiConnector";
-import { endpoints } from "./apis";
+import { BASE_URL, endpoints } from "./apis";
 import { setToken } from "@/redux/authSlice";
 import { setUser } from "@/redux/profileSlice";
 import { toast } from "react-toastify";
@@ -153,7 +153,7 @@ export async function toggleUserStatus(id: number) {
   
   return await apiConnector(
     "PATCH",
-    `http://localhost:8000/api/customers/${id}/toggle`,
+    `${BASE_URL}/customers/${id}/toggle`,
     undefined,
     {
       Authorization: `Bearer ${token}`,
@@ -179,7 +179,7 @@ interface CreateRoleParams {
   router: AppRouter;
 }
 
-const CREATE_ROLE_API = "http://localhost:8000/api/roles"; 
+const CREATE_ROLE_API = `${BASE_URL}/roles`; 
 
 export const createRole = ({ name, description, router }: CreateRoleParams) => {
   return async (dispatch: AppDispatch) => {
@@ -226,10 +226,10 @@ export const createRole = ({ name, description, router }: CreateRoleParams) => {
 
 export async function getRolesAndPrivileges(token: string) {
   const [rolesRes, privilegesRes] = await Promise.all([
-    fetch("http://localhost:8000/api/roles", {
+    fetch(`${BASE_URL}/roles`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
-    fetch("http://localhost:8000/api/privileges", {
+    fetch(`${BASE_URL}/privileges`, {
       headers: { Authorization: `Bearer ${token}` },
     }),
   ]);
@@ -254,7 +254,7 @@ export async function assignPrivilegesToRole({
   privilegeIds: number[];
 }) {
   const response = await fetch(
-    "http://localhost:8000/api/roles/assign-privileges",
+    `${BASE_URL}/roles/assign-privileges`,
     {
       method: "POST",
       headers: {
@@ -275,7 +275,7 @@ export async function assignPrivilegesToRole({
 import { User } from "../utils/type";
 import axios from "axios";
 export const updateUserById = async (user: User, token: string): Promise<User> => {
-  const response = await axios.put(`${'http://localhost:8000/api'}/user/${user.id}`, user, {
+  const response = await axios.put(`${BASE_URL}/user/${user.id}`, user, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -284,7 +284,7 @@ export const updateUserById = async (user: User, token: string): Promise<User> =
 };
 
 export const deleteUserById = async (userId: number, token: string): Promise<void> => {
-  await axios.delete(`${'http://localhost:8000/api'}/user/${userId}`, {
+  await axios.delete(`${BASE_URL}/user/${userId}`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },

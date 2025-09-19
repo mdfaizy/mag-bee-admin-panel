@@ -13,6 +13,7 @@ import Button from "../ui/button/Button";
 import { fetchProductCategory } from "@/services/product-category/categoryService";
 import { setCategories } from "@/redux/productCategory";
 import { SubCategory } from "../types/category";
+import { BASE_URL } from "@/services/apis";
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -30,7 +31,7 @@ const EditSubCategoryModal: React.FC<Props> = ({ isOpen, onClose }) => {
   description: string;
   slug: string;
   categoryId: string;
-  imageUrl: string | File;   // 👈 string bhi aur File bhi allow karega
+  imageUrl: string | File;   
 }>({
   name: "",
   description: "",
@@ -121,7 +122,7 @@ useEffect(() => {
       }
 
       const res = await fetch(
-        `http://localhost:8000/api/subcategories/${selectedSubCategory.id}`,
+        `${BASE_URL}/subcategories/${selectedSubCategory.id}`,
         {
           method: "PUT",
           headers: {

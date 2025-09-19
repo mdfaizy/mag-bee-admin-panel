@@ -1,10 +1,17 @@
+
+
+
+
 export interface ProductImage {
   id: number;
   imageUrl: string;
   [key: string]: any;
 }
 
+
+
 export interface VariantAttribute {
+  id?: number;
   key: string;
   value: string;
 }
@@ -20,13 +27,7 @@ stock: number;
   attributes: { key: string; value: string }[];
 }
 
-// id?: number;
-//   sku: string;
-//   price: number;
-//   sellingPrice?: number;
-//   stock: number;
-//   offer?: number;
-//   attributes: { key: string; value: string }[];
+
 
 export interface Product {
   id: number;
@@ -49,16 +50,27 @@ export interface Product {
   url:string;
   originalPrice: string;
   offer: string;
+  stock: number;
+  // originalPrice: number;
+  // offer: number;
+  finalPrice: number;
   length: string;
   width: string;
   height: string;
   weight: string;
   weightUnit: string;
-  stock: string;
+  // stock: string;
   shippingAvailable: boolean;
   skuCode: string;
   returnPolicy: string;
   warrantyInfo: string;
   images?: ProductImage[];
   variants: Variant[];
+   imageUrl: string;
+   
+
+ 
+  hasVariants?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }

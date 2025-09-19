@@ -1,6 +1,6 @@
 
 import { apiConnector } from "../apiConnector";
-import { endpointsProduct } from "../apis"; 
+import { BASE_URL, endpointsProduct } from "../apis"; 
 const { PRODUCT_GELL_ALL,PRODUCT_BY_ID} = endpointsProduct;
 
 export const fetchProductAll = async () => {
@@ -32,7 +32,7 @@ export const fetchProductById = async (id: number, token: string) => {
 
 export const toggleProductStatus = async (productId: number) => {
   const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-  const res = await fetch(`http://localhost:8000/api/products/${productId}/toggle-active`, {
+  const res = await fetch(`${BASE_URL}/products/${productId}/toggle-active`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -48,7 +48,7 @@ export const toggleProductStatus = async (productId: number) => {
 export const updateProductStock = async (productId: number, newStock: number) => {
   const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
 
-  const res = await fetch(`http://localhost:8000/api/products/${productId}`, {
+  const res = await fetch(`${BASE_URL}/products/${productId}`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -87,7 +87,7 @@ export const updateProductById = async (
   formData: FormData,
   token: string
 ) => {
-  const res = await fetch(`http://localhost:8000/api/products/${id}`, {
+  const res = await fetch(`${BASE_URL}/products/${id}`, {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`, // ❌ don't set Content-Type manually
@@ -137,7 +137,7 @@ export const updateProductById = async (
 
 
 export const deleteProductById = async (id: number, token: string): Promise<string> => {
-  const res = await fetch(`http://localhost:8000/api/products/${id}`, {
+  const res = await fetch(`${BASE_URL}/products/${id}`, {
     method: "DELETE",
     headers: {
       Authorization: `Bearer ${token}`,
@@ -156,7 +156,7 @@ export const fetchPaginatedProducts = async (page: number, limit: number = 10) =
 
   const res = await apiConnector(
     "GET",
-    `http://localhost:8000/api/pagination-products?page=${page}&limit=${limit}`,
+    `${BASE_URL}/pagination-products?page=${page}&limit=${limit}`,
     {},
     {
       Authorization: `Bearer ${token}`,

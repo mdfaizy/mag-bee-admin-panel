@@ -2,7 +2,7 @@
 import { AppDispatch } from "@/redux/store";
 import { toast } from "react-toastify";
 import { apiConnector } from "@/services/apiConnector";
-import { endpointsCategory } from "../apis";
+import { BASE_URL, endpointsCategory } from "../apis";
 import { setCategories } from "../../redux/productCategory";
 import { AxiosError } from "axios";
 
@@ -68,7 +68,7 @@ export const deleteCategory = (id: number) => {
 
       await apiConnector(
         "DELETE",
-        `http://localhost:8000/api/category/${id}`,
+        `${BASE_URL}/category/${id}`,
         undefined,
         {
           Authorization: `Bearer ${token}`,

@@ -16,46 +16,6 @@ import { updateProductById } from "@/services/product/productService";
 import { fetchProductCategory } from "@/services/product-category/categoryService";
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
 import { Product,Variant} from "@/components/types/product";
-// interface ProductImage {
-//   id: number;
-//   imageUrl: string;
-//   [key: string]: any; // fallback if backend sends extra props
-// }
-// interface Product {
-//   id: number;
-//   name: string;
-//   description?: string;
-//   slug?: string;
-//   category?: {
-//     id: number;
-//     name: string;
-//   };
-//   subCategory?: {        
-//     id: number;
-//     name: string;
-//   };
-//   originalPrice?: number;
-//   offer?: number;
-//   stock?: number;
-//    images?: ProductImage[];
-
-//   variants?: any[];
-//   // ... बाकी fields
-// }
-
-
-
-
-// interface Variant {
-//   id?: number;
-//   sku: string;
-//   price: number;
-//   sellingPrice?: number;
-//   stock: number;
-//   offer?: number;
-//   attributes: { key: string; value: string }[];
-// }
-
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -158,7 +118,9 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
         // categoryId: selectedProduct.category?.id ? String(selectedProduct.category.id) : "",
         categoryId: selectedProduct.category?.id?.toString() || "",
         // subCategoryId: selectedProduct.subCategory?.id?.toString() || "",
-        subCategoryId: selectedProduct.subCategory?.name || "",
+        // subCategoryId: selectedProduct.subCategory?.name || "",
+        subCategoryId: selectedProduct.subCategory?.id?.toString() || "",
+
         originalPrice: safeNum(selectedProduct.originalPrice, 0),
         offer: safeNum(selectedProduct.offer, 0),
         stock: safeNum(selectedProduct.stock, 0),
@@ -264,7 +226,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     ]);
     setFormData((prev: any) => ({
       ...prev,
-      hasVariants: true, // 👈 Set to true
+      hasVariants: true, 
     }));
   };
 
@@ -332,18 +294,6 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       )
     );
   };
-
-  // const handleRemoveImage = (index: number) => {
-  //   const imgToRemove = images[index];
-  //   if (!imgToRemove) return;
-
-  //   // Track removed image DB id
-  //   if (selectedProduct?.images?.[index]?.id) {
-  //     setRemovedImageIds(prev => [...prev, selectedProduct.images[index].id]);
-  //   }
-  //   // Remove from UI
-  //   setImages(prev => prev.filter((_, i) => i !== index));
-  // };
 
 const handleRemoveImage = (index: number) => {
   const imgToRemove = images[index];
@@ -448,6 +398,8 @@ const handleRemoveImage = (index: number) => {
       productData.append("description", formData.description || "");
       productData.append("slug", formData.slug || "");
       productData.append("categoryId", String(formData.categoryId ?? 0));
+      productData.append("subCategoryId", String(formData.subCategoryId || ""));
+
       productData.append("material", formData.material || "");
       productData.append("stock", String(formData.stock ?? 0));
       productData.append("length", String(formData.length ?? 0));

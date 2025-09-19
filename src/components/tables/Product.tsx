@@ -14,7 +14,7 @@ import {
   fetchProductAll, deleteProductById, fetchPaginatedProducts, fetchProductById, toggleProductStatus, updateProductStock
 } from "@/services/product/productService";
 import { toast } from "react-toastify";
-import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";
+import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus, FaBox, FaTimes, FaExclamationTriangle, FaTimesCircle, FaCheckCircle } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import {
   Table,
@@ -28,7 +28,7 @@ import ViewProductModal from "../products/ViewProductModal";
 import EditProductModal from "../products/EditProductModal";
 import DeleteProductModal from "../products/DeleteProductModal";
 import Pagination from "./Pagination";
-import { getPriceDetails } from "@/utils/getPriceDB";
+
 interface VariantAttribute {
   id?: number;
   key: string;
@@ -43,34 +43,11 @@ export interface Variant {
   sellingPrice?: string;
   attributes: VariantAttribute[];
 }
-export interface Product {
-  id: string;
-  name: string;
-  description: string;
-  stock: number;
-  originalPrice: number;
-  offer: number;
-  finalPrice: number;
-  category: {
-    id: string;
-    name: string;
-  };
-  url: string;
-  shippingAvailable?: boolean;
-  warrantyInfo?: string;
-  skuCode?: string;
-  material?: string;
-  returnPolicy?: string;
-  manufactureDetails?: string;
-  imageUrl: string;
-  variants?: Variant[];
-  createdAt?: string;
-  updatedAt?: string;
-}
+
 const ProductTable = () => {
   const dispatch = useDispatch();
   const { loading } = useSelector((state: RootState) => state.product);
-  const [products, setProducts] = useState<Product[]>([]);
+  // const [products, setProducts] = useState<Product[]>([]);
   const [tableData, setTableData] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -81,12 +58,14 @@ const ProductTable = () => {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
   const [categories, setCategories] = useState<string[]>([]);
   const [totalItems, setTotalItems] = useState(0);
-  const [showVariants, setShowVariants] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
+  const [stockFilter, setStockFilter] = useState<"all" | "lowStock" | "outOfStock" | "allInactive" | "shouldBeOut">("all");
+
+
   const handleToggleActive = async (product: any) => {
     try {
       const data = await toggleProductStatus(product.id);
@@ -166,43 +145,7 @@ const ProductTable = () => {
     fetchProducts(currentPage);
   }, [currentPage, itemsPerPage]);
 
-  // Filter and sort products
-  const filteredAndSortedData = React.useMemo(() => {
-    let filtered = tableData.filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
 
-    // Apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(product =>
-        statusFilter === "active" ? product.isActive : !product.isActive
-      );
-    }
-
-    // Apply category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(product =>
-        product.category?.name === categoryFilter
-      );
-    }
-
-    // Apply sorting
-    if (sortConfig.key) {
-      filtered.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "asc" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "asc" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
-    return filtered;
-  }, [tableData, searchTerm, statusFilter, categoryFilter, sortConfig]);
 
   const handleSort = (key: string) => {
     let direction = "asc";
@@ -240,10 +183,7 @@ const ProductTable = () => {
       try {
         await deleteProductById(selectedProductId, token);
         const updatedList = await fetchProductAll();
-        // dispatch(setProducts(updatedList));
-        // dispatch(setProducts(updatedList) as any);
         dispatch(setReduxProducts(updatedList));
-
         setTableData(updatedList);
         toast.success("Product deleted successfully!");
       } catch (error: any) {
@@ -257,6 +197,8 @@ const ProductTable = () => {
   const calculateTotalVariantStock = (variants: Variant[]): number => {
     return variants?.reduce((total, variant) => total + (variant.stock || 0), 0);
   };
+
+
   // Reset filters
   const resetFilters = () => {
     setStatusFilter("all");
@@ -265,18 +207,190 @@ const ProductTable = () => {
     setSortConfig({ key: "", direction: "asc" });
   };
 
+
+  const filteredAndSortedData = React.useMemo(() => {
+    let filtered = tableData.filter(product =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // ✅ Apply status filter (sirf ek baar)
+    if (statusFilter !== "all") {
+      filtered = filtered.filter(product =>
+        statusFilter === "active" ? product.isActive : !product.isActive
+      );
+    }
+
+    // ✅ Apply stock filter
+    if (stockFilter !== "all") {
+      filtered = filtered.filter(product => {
+        const totalStock = product.hasVariants
+          ? calculateTotalVariantStock(product.variants || [])
+          : product.stock || 0;
+
+        if (stockFilter === "outOfStock") return totalStock === 0;
+        if (stockFilter === "lowStock") return totalStock > 0 && totalStock < 5;
+        if (stockFilter === "shouldBeOut") return !product.isActive && totalStock === 0;
+        if (stockFilter === "allInactive") return !product.isActive;
+        return true;
+      });
+    }
+
+    // ✅ Apply category filter
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(product =>
+        product.category?.name === categoryFilter
+      );
+    }
+
+    // ✅ Apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        if (a[sortConfig.key] < b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (a[sortConfig.key] > b[sortConfig.key]) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [tableData, searchTerm, statusFilter, stockFilter, categoryFilter, sortConfig]);
+
+  const totalProducts = tableData.length;
+  const lowStockProducts = tableData.filter(product => {
+    const totalStock = product.hasVariants
+      ? calculateTotalVariantStock(product.variants || [])
+      : product.stock || 0;
+    return totalStock > 0 && totalStock < 5;
+  }).length;
+  const activeProducts = tableData.filter(product => product.isActive).length;
+  const inactiveProducts = tableData.filter(product => !product.isActive).length;
+
   return (
     <div className="bg-white rounded-xl text-white shadow-sm p-4 md:p-6 border border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white ">
-      {/* Header with Search and Controls */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center ">
+        <h1 className="text-2xl font-bold text-gray-800  ">Product Management</h1>
+
+
+
+        <Link href="/add-new-product"> <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700  rounded-lg transition-colors">
+          <FaPlus size={14} />
+          <span>Add Product</span>
+        </button></Link>
+      </div>
+      <div className="p-4">
+        <div className="flex flex-col gap-2">
+
+          {/* Top Tabs */}
+          <div className="flex gap-2 border-b border-gray-300">
+             <button
+    className={`flex items-center px-4 py-3 rounded-t-lg font-medium transition-all duration-200 ${
+      statusFilter === "all"
+        ? "bg-blue-500 text-white shadow-md border-b-4 border-blue-700"
+        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+    }`}
+    onClick={() => { 
+      setStatusFilter("all"); 
+      setStockFilter("all"); 
+    }}
+  >
+    <FaBox className="mr-2" />
+    All ({totalProducts})
+  </button>
+            <button
+              className={`flex items-center px-4 py-3 rounded-t-lg font-medium transition-all duration-200 ${statusFilter === "active"
+                  ? "bg-green-500 text-white shadow-md border-b-4 border-green-700"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              onClick={() => { setStatusFilter("active"); setStockFilter("all"); }}
+            >
+              <FaCheckCircle className="mr-2" />
+              Active ({activeProducts})
+            </button>
+            <button
+              className={`flex items-center px-4 py-3 rounded-t-lg font-medium transition-all duration-200 ${statusFilter === "inactive"
+                  ? "bg-red-500 text-white shadow-md border-b-4 border-red-700"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              onClick={() => { setStatusFilter("inactive"); setStockFilter("allInactive"); }}
+            >
+              <FaTimesCircle className="mr-2" />
+              Inactive ({inactiveProducts})
+            </button>
+          </div>
+
+          {/* Bottom Buttons based on Tab */}
+          <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-b-lg rounded-tr-lg border border-t-0 border-gray-200">
+            {statusFilter === "active" && (
+              <>
+                <button
+                  className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "all"
+                      ? "bg-blue-500 text-white shadow-sm border-2 border-blue-700"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-blue-50"
+                    }`}
+                  onClick={() => setStockFilter("all")}
+                >
+                  <FaBox className="mr-2" />
+                  All Stock ({totalProducts})
+                </button>
+                <button
+                  className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "lowStock"
+                      ? "bg-yellow-500 text-white shadow-sm border-2 border-yellow-700"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-yellow-50"
+                    }`}
+                  onClick={() => setStockFilter("lowStock")}
+                >
+                  <FaExclamationTriangle className="mr-2" />
+                  Low Stock ({lowStockProducts})
+                </button>
+                <button
+                  className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "outOfStock"
+                      ? "bg-red-500 text-white shadow-sm border-2 border-red-700"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-red-50"
+                    }`}
+                  onClick={() => setStockFilter("outOfStock")}
+                >
+                  <FaTimes className="mr-2" />
+                  Out Of Stock
+                </button>
+              </>
+            )}
+
+            {statusFilter === "inactive" && (
+              <>
+                <button
+                  className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "allInactive"
+                      ? "bg-blue-500 text-white shadow-sm border-2 border-blue-700"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-blue-50"
+                    }`}
+                  onClick={() => setStockFilter("allInactive")}
+                >
+                  <FaBox className="mr-2" />
+                  All Inactive ({inactiveProducts})
+                </button>
+                <button
+                  className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "shouldBeOut"
+                      ? "bg-red-500 text-white shadow-sm border-2 border-red-700"
+                      : "bg-white text-gray-700 border border-gray-300 hover:bg-red-50"
+                    }`}
+                  onClick={() => setStockFilter("shouldBeOut")}
+                >
+                  <FaTimes className="mr-2" />
+                  Should be Out
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-4 mb-6 ">
 
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center ">
-          <h1 className="text-2xl font-bold text-gray-800  ">Product Management</h1>
-          <Link href="/add-new-product"> <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700  rounded-lg transition-colors">
-            <FaPlus size={14} />
-            <span>Add Product</span>
-          </button></Link>
-        </div>
+
         <div className="flex flex-col md:flex-row gap-4 justify-between">
           <div className="relative flex-1 max-w-2xl">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -285,7 +399,7 @@ const ProductTable = () => {
             <input
               type="text"
               placeholder="Search products by name, description or category..."
-              className="pl-10 pr-4 py-2.5 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="pl-10 pr-4 py-2.5 text-black w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -294,9 +408,9 @@ const ProductTable = () => {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2.5 text-black dar:text-white bg-slate-1000 hover:bg-gray-200 rounded-lg transition-colors"
             >
-              <FaFilter className="text-gray-600" />
+              <FaFilter className="text-black " />
               <span className="hidden sm:inline">Filters</span>
               {showFilters ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
             </button>
@@ -304,7 +418,7 @@ const ProductTable = () => {
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 hidden md:inline">Show:</span>
               <select
-                className="border rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="border text-black dar:text-white rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={itemsPerPage}
                 onChange={(e) => setItemsPerPage(Number(e.target.value))}
               >
@@ -323,20 +437,21 @@ const ProductTable = () => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full border text-black dar:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => setStatusFilter(e.target.value as | "active" | "inactive")}
               >
                 <option value="all">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
               </select>
+
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
               <select
-                className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full border text-black dar:text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
               >
@@ -358,16 +473,15 @@ const ProductTable = () => {
           </div>
         )}
       </div>
-
       {/* Product Table Container with Horizontal Scroll */}
       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:text-white">
-        <div className="min-w-[1000px] lg:min-w-full"> {/* Ensure table has minimum width on mobile */}
+        <div className="min-w-[1000px] lg:min-w-full">
           <Table className="min-w-full">
             <TableHead className="bg-gray-50 sticky top-0 z-10  dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white">
               <TableRow>
                 <TableHeadCell
                   className="cursor-pointe dark:text-white"
-                // onClick={() => handleSort("id")}
+                  onClick={() => handleSort("id")}
                 >
                   <div className="flex items-center gap-1">
                     ID
@@ -389,7 +503,7 @@ const ProductTable = () => {
                 </TableHeadCell>
                 <TableHeadCell
                   className="cursor-pointer dark:text-white"
-                // onClick={() => handleSort("price")}
+                  onClick={() => handleSort("price")}
                 >
                   <div className="flex items-center gap-1">
                     Price
@@ -435,7 +549,7 @@ const ProductTable = () => {
                       <div className="flex flex-col">
                         <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
                         <span className="text-xs text-gray-500 truncate max-w-xs dark:text-white">
-                          {item.description.substring(0, 50)}...
+                          {item.description.substring(0, 30)}...
                         </span>
                       </div>
                     </TableCell>
@@ -481,51 +595,6 @@ const ProductTable = () => {
 
 
                     </TableCell>
-
-
-                    {/* <TableCell>
-  {showVariants && item.hasVariants && item.variants?.length > 0 ? (
-    (() => {
-      const variantSellingPrices = item.variants.map((v: Variant) =>
-        v.sellingPrice ? Number(v.sellingPrice) : Number(v.price)
-      );
-      const variantOriginalPrices = item.variants.map((v: Variant) => Number(v.price));
-
-      const minIndex = variantSellingPrices.indexOf(Math.min(...variantSellingPrices));
-      const minSelling = variantSellingPrices[minIndex];
-      const originalAtMinSelling = variantOriginalPrices[minIndex];
-
-      return (
-        <div className="flex flex-col">
-          <span className="font-semibold text-gray-900 dark:text-white">
-            ₹{minSelling}
-          </span>
-          {originalAtMinSelling > minSelling && (
-            <span className="text-xs text-gray-500 line-through dark:text-white">
-              ₹{originalAtMinSelling}
-            </span>
-          )}
-        </div>
-      );
-    })()
-  ) : (
-    <div className="flex flex-col">
-      <span className="font-semibold text-gray-900 dark:text-white">
-        ₹{Number(item.price)}
-      </span>
-      {item.originalPrice && Number(item.originalPrice) > Number(item.price) && (
-        <span className="text-xs text-gray-500 line-through dark:text-white">
-          ₹{item.originalPrice}
-        </span>
-      )}
-    </div>
-  )}
-</TableCell> */}
-
-
-
-
-
                     <TableCell className="hidden md:table-cell">
                       {item.hasVariants && item.variants?.length > 0 ? (
                         <span className="px-2 py-1 bg-green-100 dark:bg-gray-600 dark:text-white text-green-800 text-xs font-medium rounded-full">
@@ -541,9 +610,6 @@ const ProductTable = () => {
                         <span className="text-gray-400">—</span>
                       )}
                     </TableCell>
-
-
-
                     <TableCell className="hidden lg:table-cell">
                       {item.category?.name ? (
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs font-medium rounded-full">
@@ -595,10 +661,6 @@ const ProductTable = () => {
                         </span>
                       )}
                     </TableCell>
-
-
-
-
                     <TableCell>
                       <div className="flex gap-2">
                         <button
@@ -649,7 +711,7 @@ const ProductTable = () => {
         isOpen={editModalOpen}
         onClose={() => {
           setEditModalOpen(false);
-          fetchProducts(currentPage); // Refresh data after editing
+          fetchProducts(currentPage);
         }}
       />
 

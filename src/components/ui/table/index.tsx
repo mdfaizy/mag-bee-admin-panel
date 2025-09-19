@@ -4,6 +4,7 @@ import React, { ReactNode } from "react";
 interface TableProps {
   children: ReactNode;
   className?: string;
+  
 }
 const Table: React.FC<TableProps> = ({ children, className }) => (
   <table className={`min-w-full ${className}`}>{children}</table>
@@ -40,9 +41,12 @@ const TableRow: React.FC<TableRowProps> = ({ children, className }) => (
 interface TableCellProps {
   children: ReactNode;
   className?: string;
+  onClick?: () => void;
 }
-const TableHeadCell: React.FC<TableCellProps> = ({ children, className }) => (
-  <th className={`px-6 py-3 text-left font-medium text-gray-600 ${className}`}>
+const TableHeadCell: React.FC<TableCellProps> = ({ children, className ,onClick}) => (
+  <th className={`px-6 py-3 text-left font-medium text-gray-600 ${className}`}
+  onClick={onClick}
+  >
     {children}
   </th>
 );

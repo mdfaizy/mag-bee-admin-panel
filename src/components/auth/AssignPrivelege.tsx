@@ -16,6 +16,7 @@ const MultiSelecterInput = dynamic(
 // Services
 import { fetchRoles } from "@/services/role";
 import { fetchPrivileges } from "@/services/usePrivillage";
+import { BASE_URL } from "@/services/apis";
 
 // Types
 interface RoleOption {
@@ -98,7 +99,7 @@ export default function AssignPrivilege() {
       if (!token) throw new Error("Not authenticated");
 
       const response = await fetch(
-        "http://localhost:8000/api/roles/assign-privileges",
+        `${BASE_URL}/roles/assign-privileges`,
         {
           method: "POST",
           headers: {
