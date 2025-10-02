@@ -29,6 +29,7 @@ import EditProductModal from "../products/EditProductModal";
 import DeleteProductModal from "../products/DeleteProductModal";
 import Pagination from "./Pagination";
 
+
 interface VariantAttribute {
   id?: number;
   key: string;
@@ -77,9 +78,7 @@ const ProductTable = () => {
       toast.error("Error updating status");
     }
   };
-  //  const toggleVariants = () => {
-  //     setShowVariants((prev) => !prev);
-  //   };
+
   const handleStockChange = async (product: any, newStock: number) => {
     try {
       await updateProductStock(product.id, newStock);
@@ -128,23 +127,49 @@ const ProductTable = () => {
   }, [dispatch]);
 
 
+  // const fetchProducts = async (page: number) => {
+  //   dispatch(setLoading(true));
+  //   try {
+  //     const res = await fetchPaginatedProducts(page, itemsPerPage);
+  //     setTableData(res.products);
+  //     setTotalPages(res.totalPages);
+  //     setTotalItems(res.total); // ✅ Set it here
+  //   } catch (error) {
+  //     toast.error("Failed to fetch products");
+  //   } finally {
+  //     dispatch(setLoading(false));
+  //   }
+  // };
+  // useEffect(() => {
+  //   fetchProducts(currentPage);
+  // }, [currentPage, itemsPerPage]);
+
+
+   // Fetch paginated products from backend
   const fetchProducts = async (page: number) => {
     dispatch(setLoading(true));
     try {
       const res = await fetchPaginatedProducts(page, itemsPerPage);
-      setTableData(res.products);
-      setTotalPages(res.totalPages);
-      setTotalItems(res.total); // ✅ Set it here
-    } catch (error) {
-      toast.error("Failed to fetch products");
+
+      // ✅ Correctly get products and pagination info
+      const products = res.data?.products || [];
+      const totalPages = res.data?.totalPages || 1;
+      const totalItems = res.data?.total || 0;
+
+      setTableData(products);
+      setTotalPages(totalPages);
+      setTotalItems(totalItems);
+      dispatch(setReduxProducts(products));
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch products");
     } finally {
       dispatch(setLoading(false));
     }
   };
+
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage, itemsPerPage]);
-
 
 
   const handleSort = (key: string) => {
@@ -285,7 +310,7 @@ const ProductTable = () => {
       <div className="p-4">
         <div className="flex flex-col gap-2">
 
-          {/* Top Tabs */}
+          
           <div className="flex gap-2 border-b border-gray-300">
              <button
     className={`flex items-center px-4 py-3 rounded-t-lg font-medium transition-all duration-200 ${
@@ -323,7 +348,7 @@ const ProductTable = () => {
             </button>
           </div>
 
-          {/* Bottom Buttons based on Tab */}
+          
           <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-b-lg rounded-tr-lg border border-t-0 border-gray-200">
             {statusFilter === "active" && (
               <>
@@ -387,6 +412,9 @@ const ProductTable = () => {
           </div>
         </div>
       </div>
+
+
+    
 
       <div className="flex flex-col gap-4 mb-6 ">
 

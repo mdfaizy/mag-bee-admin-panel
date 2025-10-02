@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import {
   fetchSubCategoryAll,
+  updateSubCategoryById,
   
 } from "../../services/subCategoryService/subCategoryService"; // <-- service file
 import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";
@@ -47,6 +48,9 @@ const [isOpen, setIsOpen] = React.useState(false);
   const itemsPerPage = 10;
   const startIndex = (currentPage - 1) * itemsPerPage;
 
+
+  console.log("SubCategoryTable data:", tableData);
+
   // Filtering + Sorting
   const filteredAndSortedData = React.useMemo(() => {
     let filtered = tableData.filter(sub =>
@@ -78,6 +82,7 @@ const [isOpen, setIsOpen] = React.useState(false);
       try {
         setLoading(true);
         const result = await fetchSubCategoryAll();
+         console.log("Final subcategories array:", result);
         dispatch(setSubCategories(result));
       } catch (error) {
         console.error("Failed to load subcategories", error);
@@ -98,11 +103,12 @@ const handleView = (id: number) => {
   setViewModalOpen(true);
 };
 
+const handleEdit = (subCategory: any) => {
+  dispatch(setSelectedSubCategory(subCategory));
+  setEditModalOpen(true);
+};
 
-  const handleEdit = (subCategory: any) => {
-    dispatch(setSelectedSubCategory(subCategory));
-    setEditModalOpen(true);
-  };
+
 
   const handleDeleteClick = (id: number) => {
     setSelectedDeleteId(id);
@@ -201,11 +207,12 @@ const handleView = (id: number) => {
             ) : (
               visibleData.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{item.id}</TableCell>
-                  <TableCell>{item.name || "—"}</TableCell>
-                  <TableCell className="hidden md:table-cell">{item.description || "—"}</TableCell>
+                  <TableCell>{item?.id}</TableCell>
+                  <TableCell>{item?.name || "—"}</TableCell>
+                  <TableCell className="hidden md:table-cell">{item?.description || "—"}</TableCell>
                   <TableCell className="hidden lg:table-cell">{item.slug || "—"}</TableCell>
-                  <TableCell>{item.category?.name || "—"}</TableCell>
+                  {/* <TableCell>{item.category?.name || "—"}</TableCell> */}
+                   <TableCell>{item.category?.name || "—"}</TableCell>
                   <TableCell>
                     {item.imageUrl ? (
                       <div className="relative w-10 h-10">

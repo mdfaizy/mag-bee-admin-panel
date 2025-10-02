@@ -9,8 +9,6 @@ import ChipInput from "@/components/form/input/ChipInput";
 import { HiChevronDown, HiPlus, HiUpload, HiX } from 'react-icons/hi';
 import { createCategory } from "@/services/product-category/categoryService";
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
-import RichTextEditor from "../form/input/TextEditor";
-// import { Product } from "@/components/types/Product";
 import { SubCategory, CategoryOption } from "@/components/types/category";
 import { BASE_URL } from "@/services/apis";
 
@@ -214,12 +212,10 @@ export default function AddNewProduct() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!formData.originalPrice && !showVariants) {
       alert("Original price is required.");
       return;
     }
-
 
     const variants = formData.variants
       .filter(v => v.sku || v.price || v.stock)
@@ -239,8 +235,6 @@ export default function AddNewProduct() {
       price: Number(formData.price) || (variants.length ? 0 : Number(formData.originalPrice)),
       offer: Number(formData.offer) || 0,
       stock: Number(formData.stock) || (variants.length ? 0 : Number(formData.stock)),
-      // variants: JSON.stringify(variants),
-      // variants: variants.length > 0 ? JSON.stringify(variants) : undefined,
       variants: showVariants && variants.length > 0 ? JSON.stringify(variants) : undefined,
       shippingAvailable: String(formData.shippingAvailable),
       keywords: JSON.stringify(formData.keywords),

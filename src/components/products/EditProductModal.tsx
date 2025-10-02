@@ -15,7 +15,7 @@ import Select from "../form/Select";
 import { updateProductById } from "@/services/product/productService";
 import { fetchProductCategory } from "@/services/product-category/categoryService";
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
-import { Product,Variant} from "@/components/types/product";
+import { Product, Variant } from "@/components/types/product";
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -115,12 +115,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
       setFormData({
         ...selectedProduct,
-        // categoryId: selectedProduct.category?.id ? String(selectedProduct.category.id) : "",
-        categoryId: selectedProduct.category?.id?.toString() || "",
-        // subCategoryId: selectedProduct.subCategory?.id?.toString() || "",
-        // subCategoryId: selectedProduct.subCategory?.name || "",
         subCategoryId: selectedProduct.subCategory?.id?.toString() || "",
-
         originalPrice: safeNum(selectedProduct.originalPrice, 0),
         offer: safeNum(selectedProduct.offer, 0),
         stock: safeNum(selectedProduct.stock, 0),
@@ -226,7 +221,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     ]);
     setFormData((prev: any) => ({
       ...prev,
-      hasVariants: true, 
+      hasVariants: true,
     }));
   };
 
@@ -295,17 +290,17 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     );
   };
 
-const handleRemoveImage = (index: number) => {
-  const imgToRemove = images[index];
-  if (!imgToRemove || !selectedProduct?.images) return; // ✅ check first
+  const handleRemoveImage = (index: number) => {
+    const imgToRemove = images[index];
+    if (!imgToRemove || !selectedProduct?.images) return; // ✅ check first
 
-  const imgObj = selectedProduct.images[index];
-  if (imgObj && "id" in imgObj) {
-    setRemovedImageIds(prev => [...prev, (imgObj as { id: number }).id]);
-  }
+    const imgObj = selectedProduct.images[index];
+    if (imgObj && "id" in imgObj) {
+      setRemovedImageIds(prev => [...prev, (imgObj as { id: number }).id]);
+    }
 
-  setImages(prev => prev.filter((_, i) => i !== index));
-};
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
 
 
 

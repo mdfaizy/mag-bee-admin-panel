@@ -6,51 +6,11 @@ import { FiX } from "react-icons/fi";
 import { fetchProductById } from "@/services/product/productService";
 import { toast } from "react-toastify";
 import Image from "next/image";
-import { Product,Variant} from "@/components/types/product";
-// interface Product {
-//   id: string | number;
-//   name: string;
-//   originalPrice: number;
-//   offer: number;
-//   finalPrice: number;
-//   price: number;
-//   description?: string;
-//   url?: string;
-//   stock?: number;
-//   isActive?: boolean;
-// // productId?:number;
-//   category?: {
-//     id: number;
-//     name: string;
-//   };
-
-//   images?: {
-//     id: number;
-//     imageUrl: string;
-//   }[];
-
-//   variants?: {
-//     id: number;
-//     sku: string;
-//     price: number;
-//     stock: number;
-//     attributes: {
-//       key: string;
-//       value: string;
-//     }[];
-//   }[];
-
-//   shippingAvailable?: boolean;
-//   warrantyInfo?: string;
-//   material?: string;
-//   returnPolicy?: string;
-//   manufactureDetails?: string;
-// }
-
+import { Product, Variant } from "@/components/types/product";
 interface Props {
   isOpen: boolean;
   onClose: () => void;
- 
+
   productId: string | null;
 }
 
@@ -60,33 +20,33 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
   const [error, setError] = useState<string | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
 
- useEffect(() => {
-  if (!isOpen || !productId) {
-    setSelectedProduct(null);
-    setActiveImageIndex(0);
-    return;
-  }
-
-  const fetchProduct = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-      // const productData = await fetchProductById(productId, token);
-      const productData = await fetchProductById(Number(productId), token);
-
-      console.log(productData);
-      setSelectedProduct(productData.product || productData);
-    } catch (error) {
-      setError("Failed to load product details");
-      toast.error("Failed to load product details");
-    } finally {
-      setIsLoading(false);
+  useEffect(() => {
+    if (!isOpen || !productId) {
+      setSelectedProduct(null);
+      setActiveImageIndex(0);
+      return;
     }
-  };
 
-  fetchProduct();
-}, [isOpen, productId]);
+    const fetchProduct = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+        // const productData = await fetchProductById(productId, token);
+        const productData = await fetchProductById(Number(productId), token);
+
+        console.log(productData);
+        setSelectedProduct(productData.product || productData);
+      } catch (error) {
+        setError("Failed to load product details");
+        toast.error("Failed to load product details");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [isOpen, productId]);
 
   if (!isOpen || !productId) return null;
 
@@ -131,7 +91,7 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
                         className="object-contain"
                       />
                     </div>
-                    
+
                     {/* Thumbnail Gallery */}
                     {selectedProduct.images.length > 1 && (
                       <div className="grid grid-cols-4 gap-2">
@@ -165,9 +125,9 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 mb-2">{selectedProduct.name}</h1>
                   <p className="text-sm text-gray-500 mb-4">Product ID: {selectedProduct.id}</p>
-                  
+
                   <div className="flex items-center gap-4 mb-4">
-                
+
 
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${selectedProduct.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {selectedProduct.isActive ? "Active" : "Inactive"}
@@ -280,22 +240,22 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
                           {/* {variant.sellingPrice} */}
                         </span>
                       </div>
-                    <div className="flex justify-between items-start">
-  <h2>Original Price</h2>
-  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-    ₹{Math.round(Number(variant.price))}<br></br>
-    {variant.sellingPrice && `  ₹${Math.round(Number(variant.sellingPrice))}`}
-  </span>
-</div>
+                      <div className="flex justify-between items-start">
+                        <h2>Original Price</h2>
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                          ₹{Math.round(Number(variant.price))}<br></br>
+                          {variant.sellingPrice && `  ₹${Math.round(Number(variant.sellingPrice))}`}
+                        </span>
+                      </div>
 
-                      
+
                       <div className="flex justify-between">
                         <span className="text-sm text-gray-600">Stock:</span>
                         <span className={`text-sm font-medium ${variant.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
                           {variant.stock} available
                         </span>
                       </div>
-                      
+
                       {variant.attributes && variant.attributes.length > 0 && (
                         <div>
                           <h5 className="text-sm font-medium text-gray-700 mb-1">Attributes:</h5>

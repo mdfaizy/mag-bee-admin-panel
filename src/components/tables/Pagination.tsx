@@ -39,9 +39,16 @@ const Pagination: React.FC<PaginationProps> = ({
 
   return (
     <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 flex-wrap">
-      <div className="text-sm text-gray-600">
+      {/* <div className="text-sm text-gray-600">
         Showing <strong>{start}</strong> to <strong>{end}</strong> of <strong>{totalItems}</strong> products
-      </div>
+      </div>*/}
+
+
+{!isNaN(start) && !isNaN(end) && !isNaN(totalItems) && (
+  <div className="text-sm text-gray-600">
+    Showing <strong>{start}</strong> to <strong>{end}</strong> of <strong>{totalItems}</strong> products
+  </div>
+)}
 
       <div className="flex gap-1 flex-wrap">
         <button

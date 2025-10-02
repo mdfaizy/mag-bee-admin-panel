@@ -14,6 +14,7 @@ import { fetchProductCategory } from "@/services/product-category/categoryServic
 import { setCategories } from "@/redux/productCategory";
 import { SubCategory } from "../types/category";
 import { BASE_URL } from "@/services/apis";
+import { updateSubCategoryById } from "@/services/subCategoryService/subCategoryService";
 interface Props {
   isOpen: boolean;
   onClose: () => void;
@@ -27,18 +28,18 @@ const EditSubCategoryModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const { categories } = useSelector((state: RootState) => state.category);
 
   const [formData, setFormData] = useState<{
-  name: string;
-  description: string;
-  slug: string;
-  categoryId: string;
-  imageUrl: string | File;   
-}>({
-  name: "",
-  description: "",
-  slug: "",
-  categoryId: "",
-  imageUrl: "",
-});
+    name: string;
+    description: string;
+    slug: string;
+    categoryId: string;
+    imageUrl: string | File;
+  }>({
+    name: "",
+    description: "",
+    slug: "",
+    categoryId: "",
+    imageUrl: "",
+  });
 
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -57,22 +58,22 @@ const EditSubCategoryModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   }, [selectedSubCategory]);
 
-// 🔹 Fetch categories when modal opens
-useEffect(() => {
-  const loadCategories = async () => {
-    try {
-      const result = await fetchProductCategory();
-      // ✅ Agar API direct array return kare to bhi handle
-      dispatch(setCategories(result.categories || result));
-    } catch (error: any) {
-      console.error("Error fetching categories:", error.message);
-    }
-  };
+  // 🔹 Fetch categories when modal opens
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const result = await fetchProductCategory();
+        // ✅ Agar API direct array return kare to bhi handle
+        dispatch(setCategories(result.categories || result));
+      } catch (error: any) {
+        console.error("Error fetching categories:", error.message);
+      }
+    };
 
-  if (isOpen) {
-    loadCategories();
-  }
-}, [isOpen, dispatch]);
+    if (isOpen) {
+      loadCategories();
+    }
+  }, [isOpen, dispatch]);
 
 
 
@@ -104,7 +105,6 @@ useEffect(() => {
       setImagePreview(URL.createObjectURL(file));
     }
   };
-
   const handleSubmit = async () => {
     if (!selectedSubCategory) return;
 
@@ -121,25 +121,14 @@ useEffect(() => {
         formDataObj.append("image", formData.imageUrl);
       }
 
-      const res = await fetch(
-        `${BASE_URL}/subcategories/${selectedSubCategory.id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formDataObj,
-        }
-      );
-
-      const result = await res.json();
-      if (!res.ok) {
-        throw new Error(result.message || "Failed to update subcategory");
-      }
+      const result = await updateSubCategoryById({
+        id: selectedSubCategory.id,
+        formData: formDataObj, // ✅ correct
+      });
 
       // ✅ Update Redux store
       const updatedList = subCategories.map((sub) =>
-        sub.id === selectedSubCategory.id ? result.updatedSubCategory : sub
+        sub.id === selectedSubCategory.id ? result : sub
       );
       dispatch(setSubCategories(updatedList));
 
@@ -149,6 +138,7 @@ useEffect(() => {
       alert(error.message || "Something went wrong");
     }
   };
+
 
   if (!selectedSubCategory) return null;
 
@@ -178,7 +168,8 @@ useEffect(() => {
             <Label>Category</Label>
             <select
               name="categoryId"
-              value={formData.categoryId.toString()}
+              // value={formData.categoryId.toString()}
+              value={formData.categoryId ? formData.categoryId.toString() : ""}
               onChange={handleChange}
               className="w-full border rounded p-2"
             >
@@ -234,3 +225,6 @@ useEffect(() => {
 };
 
 export default EditSubCategoryModal;
+
+
+
