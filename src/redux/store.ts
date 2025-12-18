@@ -5,6 +5,7 @@ import profileReducer from "./profileSlice";
 import productCategoryReducer from "./productCategory"
 import productReducer from './productSlice'
 import SubCategory from './productSubCategory'
+import bannerReducer from "./bannerSlice";
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -12,6 +13,7 @@ const store = configureStore({
     category:productCategoryReducer,
       product: productReducer,
       SubCategoryState:SubCategory,
+      banner:bannerReducer,
   },
 });
 

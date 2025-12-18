@@ -7,11 +7,6 @@ import { fetchCustomer, toggleUserStatus } from "../../services/customerServices
 import { toast } from "react-toastify";
 import { FiEdit, FiEye, FiSearch, FiFilter, FiRefreshCw } from "react-icons/fi";
 import { HiDotsVertical } from "react-icons/hi";
-// interface Role {
-//   id: number;
-//   name: string;
-// }
-
 interface User {
   id: number;
   name: string;

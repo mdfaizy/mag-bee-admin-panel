@@ -2,12 +2,12 @@
 import { AppDispatch } from "@/redux/store";
 import { apiConnector } from "./apiConnector";
 import { BASE_URL, endpoints } from "./apis";
-import { setToken } from "@/redux/authSlice";
-import { setUser } from "@/redux/profileSlice";
+// import { setToken } from "@/redux/authSlice";
+// import { setUser } from "@/redux/profileSlice";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
-
+import { setToken, setRefreshToken, setUser } from "@/redux/authSlice";
 type AppRouter = ReturnType<typeof useRouter>;
 
 const { LOGIN_API, SIGNUP_API ,USER_LIST_API} = endpoints;
@@ -101,7 +101,7 @@ export const login = ({ identifier, password, router }: LoginParams) => {
         password,
       });
 
-      const { token, user, message } = res.data;
+      const { token,refreshToken, user, message } = res.data;
 
       if (!message.includes("successful")) {
         throw new Error(message);
@@ -123,11 +123,21 @@ export const login = ({ identifier, password, router }: LoginParams) => {
 
 const updatedUser = { ...user, image: userImage };
 
+// dispatch(setToken(token));
+// dispatch(setUser(updatedUser));
+
 dispatch(setToken(token));
-dispatch(setUser(updatedUser));
+      dispatch(setRefreshToken(refreshToken));
+      dispatch(setUser(updatedUser));
+
+      // Save to localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+ 
 
 // Save updated user with image to localStorage
-localStorage.setItem("user", JSON.stringify(updatedUser));
+// localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Login successful!");
       router.push("/");
     } catch (err) {
@@ -165,7 +175,7 @@ export async function toggleUserStatus(id: number) {
 
 export const logout = () => (dispatch: AppDispatch) => {
   // dispatch(setToken(null));
-  dispatch(setUser(null));
+  // dispatch(setUser(null));
 
   localStorage.removeItem("token");
   localStorage.removeItem("user");

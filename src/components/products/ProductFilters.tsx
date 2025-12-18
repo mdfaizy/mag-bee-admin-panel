@@ -278,7 +278,3 @@ const ProductFilters: React.FC<Props> = ({
 };
 
 export default ProductFilters;
-
-
-
-

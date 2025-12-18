@@ -27,12 +27,14 @@ import {
 import { Modal } from "../ui/modal";
 import Image from "next/image";
 import { toast } from "react-toastify";
+import Pagination from "./Pagination";
 
 const CategoryTable = () => {
   const dispatch = useDispatch();
   const { categories } = useSelector((state: RootState) => state.category);
   const [tableData, setTableData] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
+  
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -208,6 +210,7 @@ const CategoryTable = () => {
             </div>
           </div>
         )}
+       
       </div>
 
       {/* Category Table */}
@@ -335,55 +338,14 @@ const CategoryTable = () => {
       </div>
 
       {/* Pagination */}
-      <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
-        <div className="text-sm text-gray-600">
-          Showing {filteredAndSortedData.length === 0 ? 0 : startIndex + 1} to{" "}
-          {Math.min(startIndex + itemsPerPage, filteredAndSortedData.length)} of{" "}
-          {filteredAndSortedData.length} categories
-        </div>
-        <div className="flex gap-1">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-3 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm"
-          >
-            Previous
-          </button>
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            let pageNum;
-            if (totalPages <= 5) {
-              pageNum = i + 1;
-            } else if (currentPage <= 3) {
-              pageNum = i + 1;
-            } else if (currentPage >= totalPages - 2) {
-              pageNum = totalPages - 4 + i;
-            } else {
-              pageNum = currentPage - 2 + i;
-            }
-            return (
-              <button
-                key={pageNum}
-                onClick={() => setCurrentPage(pageNum)}
-                className={`px-3 py-2 border rounded-md text-sm ${currentPage === pageNum
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "hover:bg-gray-50"
-                  } transition-colors`}
-              >
-                {pageNum}
-              </button>
-            );
-          })}
-          {totalPages > 5 && currentPage < totalPages - 2 && (
-            <span className="px-2 py-2">...</span>
-          )}
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-3 py-2 border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors text-sm"
-          >
-            Next
-          </button>
-        </div>
+      <div className="flex justify-end px-4 py-3">
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          itemsPerPage={itemsPerPage}
+          totalItems={tableData.length}
+          onPageChange={(page) => setCurrentPage(page)}
+        />
       </div>
 
       {/* Modals */}

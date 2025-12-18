@@ -54,7 +54,8 @@ const navItems: NavItem[] = [
     { name: "Add Products", path: "/add-new-product", pro: false },
     { name: "Products List", path: "/product", pro: false },
     {name: "Create Sub Category",path:'/create-sub-category',pro:false},
-    {name:'Sub Category Table',path:'/subCategoryTable',pro:false}
+    {name:'Sub Category Table',path:'/subCategoryTable',pro:false},
+    { name: "Banner Slider", path: "/banner-slider", pro: false },
 
 
   ],

@@ -1,6 +1,6 @@
 import { toast } from "react-toastify";
 import { apiConnector } from "@/services/apiConnector";
-import { endPointSubCategory } from "../apis";
+import { BASE_URL, endPointSubCategory } from "../apis";
 
 const { CREATE_SUB_CATEGORY ,SUB_CATEGORY_GELL_ALL,UPDATE_SUB_CATEGORY} = endPointSubCategory;
 
@@ -92,6 +92,21 @@ export const updateSubCategoryById = async ({ id, formData }: UpdateSubCategoryP
     toast.dismiss(toastId);
   }
 };
+
+
+
+// Fetch all child subcategories of a parent subcategory
+export async function fetchChildSubCategories(parentId: number) {
+  try {
+    const res = await fetch(`${BASE_URL}/subcategories/${parentId}/children`);
+    if (!res.ok) throw new Error("Failed to fetch child subcategories");
+    const data = await res.json();
+    return data.children; // ✅ the controller sends { parentId, children }
+  } catch (error) {
+    console.error("Error fetching child subcategories", error);
+    return [];
+  }
+}
 
 // export const deleteSubCategory = (id: number) => async (dispatch: any) => {
 //   await apiConnector("DELETE", `/subcategories/${id}`);

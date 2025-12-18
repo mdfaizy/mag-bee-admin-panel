@@ -1,7 +1,6 @@
 "use client";
 
 import { Table, TableBody, TableCell, TableHead, TableRow } from "../ui/table";
-import Badge from "../ui/badge/Badge";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { getAllOrders, updateOrderStatus } from "../../services/orders/ResentOrder";

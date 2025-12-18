@@ -6,9 +6,7 @@ export default function ProductCategortTable() {
     <div>
       <PageBreadcrumb pageTitle="Product" />
       <div className="space-y-6">
-      
           <ProductCategorttable/>
-    
       </div>
     </div>
   );

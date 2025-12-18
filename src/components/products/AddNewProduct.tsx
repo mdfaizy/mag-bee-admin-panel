@@ -7,7 +7,7 @@ import TextArea from "@/components/form/input/TextArea";
 import Select from "@/components/form/Select";
 import ChipInput from "@/components/form/input/ChipInput";
 import { HiChevronDown, HiPlus, HiUpload, HiX } from 'react-icons/hi';
-import { createCategory } from "@/services/product-category/categoryService";
+
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
 import { SubCategory, CategoryOption } from "@/components/types/category";
 import { BASE_URL } from "@/services/apis";
@@ -26,6 +26,8 @@ export default function AddNewProduct() {
   const [subCategory, setSubCategory] = useState<SubCategory[]>([]);
   const [filteredSubCategory, setFilteredSubCategory] = useState<SubCategory[]>([]);
   const [showVariants, setShowVariants] = useState(false);
+  const [subCategoryChildren, setSubCategoryChildren] = useState<SubCategory[]>([]);
+
   const [isActive, setIsActive] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -121,6 +123,7 @@ export default function AddNewProduct() {
     setFormData(prev => ({ ...prev, categoryId: value }));
     const filtered = subCategory.filter(sc => sc.categoryId === value);
     setFilteredSubCategory(filtered);
+    setSubCategoryChildren([]);
   };
 
   const toggleVariants = () => {
@@ -133,7 +136,33 @@ export default function AddNewProduct() {
       variants: prev.variants.filter((_, i) => i !== index)
     }));
   };
+  const fetchChildren = async (parentId: string) => {
+    try {
+      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+      const res = await fetch(`${BASE_URL}/subcategories/${parentId}/children`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
+      if (!res.ok) {
+        console.error("Failed to fetch subcategory children");
+        setSubCategoryChildren([]);
+        return;
+      }
+      const data = await res.json();
+      const children = Array.isArray(data.children) ? data.children : data;
+
+      const formatted = children.map((item: any) => ({
+        value: String(item.id),
+        label: item.name,
+        parentId: String(parentId),
+      }));
+
+      setSubCategoryChildren(formatted);
+    } catch (error) {
+      console.error("Failed to fetch subcategory children:", error);
+      setSubCategoryChildren([]);
+    }
+  };
   const removeAttribute = (variantIndex: number, attrIndex: number) => {
     setFormData(prev => {
       const updatedVariants = [...prev.variants];
@@ -209,7 +238,7 @@ export default function AddNewProduct() {
       return { ...prev, variants: updatedVariants };
     });
   };
-
+//sumbit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.originalPrice && !showVariants) {
@@ -453,18 +482,43 @@ export default function AddNewProduct() {
                     </span>
                   </div>
 
-                  <div className="relative">
-                    <Label>Select sub-category:<span className="ml-2 text-red-500">*</span></Label>
-                    <Select
-                      options={filteredSubCategory}
-                      placeholder="Select SubCategory"
-                      onChange={(value: string) => setFormData(prev => ({ ...prev, subCategoryId: value }))}
-                      className="appearance-none pr-10"
-                    />
-                    <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500 top-7">
-                      <HiChevronDown className="w-4 h-4" />
-                    </span>
-                  </div>
+                  {filteredSubCategory.length > 0 && (
+                    <div className="relative">
+                      <Label>Select sub-category:<span className="ml-2 text-red-500">*</span></Label>
+                      <Select
+                        options={filteredSubCategory}
+                        placeholder="Select SubCategory"
+                        // onChange={(value: string) => setFormData(prev => ({ ...prev, subCategoryId: value }))}
+                        onChange={(value: string) => {
+                          setFormData(prev => ({ ...prev, subCategoryId: value }));
+                          fetchChildren(value); // fetch children on subcategory select
+                        }}
+                        className="appearance-none pr-10"
+                      />
+                      <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500 top-7">
+                        <HiChevronDown className="w-4 h-4" />
+                      </span>
+                    </div>
+                  )}
+
+
+
+                  {subCategoryChildren.length > 0 && (
+                    <div className="relative">
+                      <Label>Select Sub Category Child:<span className="ml-2 text-red-500">*</span></Label>
+                      <Select
+                        options={subCategoryChildren}
+                        placeholder="Select Child SubCategory"
+                        onChange={(value: string) =>
+                          setFormData((prev) => ({ ...prev, childSubCategoryId: value }))
+                        }
+
+                      />
+                      <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500 top-7">
+                        <HiChevronDown className="w-4 h-4" />
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 

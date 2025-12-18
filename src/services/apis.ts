@@ -36,3 +36,13 @@ export const endPointSubCategory={
   UPDATE_SUB_CATEGORY:`${BASE_URL}/subcategories`,
 
 }
+
+export const endPointBanner={
+  CREATE_BANNER:`${BASE_URL}/banners`,
+  BANNER_GELL_ALL:`${BASE_URL}/banners`,
+  GET_BANNER_BY_ID: (id: number) => `${BASE_URL}/offerBanners/${id}`,
+ // ✅
+
+  UPDATE_BANNER: (id: number) => `${BASE_URL}/offerBanners/${id}`,
+  DELETE_BANNER: (id: number) => `${BASE_URL}/banners/${id}`,
+}

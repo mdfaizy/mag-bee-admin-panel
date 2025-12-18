@@ -209,7 +209,11 @@ const handleEdit = (subCategory: any) => {
                 <TableRow key={item.id}>
                   <TableCell>{item?.id}</TableCell>
                   <TableCell>{item?.name || "—"}</TableCell>
-                  <TableCell className="hidden md:table-cell">{item?.description || "—"}</TableCell>
+                  <TableCell className="hidden md:table-cell">{item?.description
+    ? item.description.length > 30
+      ? item.description.substring(0, 30) + "..."
+      : item.description
+    : "—"}</TableCell>
                   <TableCell className="hidden lg:table-cell">{item.slug || "—"}</TableCell>
                   {/* <TableCell>{item.category?.name || "—"}</TableCell> */}
                    <TableCell>{item.category?.name || "—"}</TableCell>

@@ -127,25 +127,8 @@ const ProductTable = () => {
   }, [dispatch]);
 
 
-  // const fetchProducts = async (page: number) => {
-  //   dispatch(setLoading(true));
-  //   try {
-  //     const res = await fetchPaginatedProducts(page, itemsPerPage);
-  //     setTableData(res.products);
-  //     setTotalPages(res.totalPages);
-  //     setTotalItems(res.total); // ✅ Set it here
-  //   } catch (error) {
-  //     toast.error("Failed to fetch products");
-  //   } finally {
-  //     dispatch(setLoading(false));
-  //   }
-  // };
-  // useEffect(() => {
-  //   fetchProducts(currentPage);
-  // }, [currentPage, itemsPerPage]);
 
 
-   // Fetch paginated products from backend
   const fetchProducts = async (page: number) => {
     dispatch(setLoading(true));
     try {
@@ -299,9 +282,6 @@ const ProductTable = () => {
     <div className="bg-white rounded-xl text-white shadow-sm p-4 md:p-6 border border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white ">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center ">
         <h1 className="text-2xl font-bold text-gray-800  ">Product Management</h1>
-
-
-
         <Link href="/add-new-product"> <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700  rounded-lg transition-colors">
           <FaPlus size={14} />
           <span>Add Product</span>
@@ -310,26 +290,25 @@ const ProductTable = () => {
       <div className="p-4">
         <div className="flex flex-col gap-2">
 
-          
+
           <div className="flex gap-2 border-b border-gray-300">
-             <button
-    className={`flex items-center px-4 py-3 rounded-t-lg font-medium transition-all duration-200 ${
-      statusFilter === "all"
-        ? "bg-blue-500 text-white shadow-md border-b-4 border-blue-700"
-        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-    }`}
-    onClick={() => { 
-      setStatusFilter("all"); 
-      setStockFilter("all"); 
-    }}
-  >
-    <FaBox className="mr-2" />
-    All ({totalProducts})
-  </button>
+            <button
+              className={`flex items-center px-4 py-3 rounded-t-lg font-medium transition-all duration-200 ${statusFilter === "all"
+                  ? "bg-blue-500 text-white shadow-md border-b-4 border-blue-700"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              onClick={() => {
+                setStatusFilter("all");
+                setStockFilter("all");
+              }}
+            >
+              <FaBox className="mr-2" />
+              All ({totalProducts})
+            </button>
             <button
               className={`flex items-center px-4 py-3 rounded-t-lg font-medium transition-all duration-200 ${statusFilter === "active"
-                  ? "bg-green-500 text-white shadow-md border-b-4 border-green-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-green-500 text-white shadow-md border-b-4 border-green-700"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               onClick={() => { setStatusFilter("active"); setStockFilter("all"); }}
             >
@@ -338,8 +317,8 @@ const ProductTable = () => {
             </button>
             <button
               className={`flex items-center px-4 py-3 rounded-t-lg font-medium transition-all duration-200 ${statusFilter === "inactive"
-                  ? "bg-red-500 text-white shadow-md border-b-4 border-red-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-red-500 text-white shadow-md border-b-4 border-red-700"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               onClick={() => { setStatusFilter("inactive"); setStockFilter("allInactive"); }}
             >
@@ -348,14 +327,14 @@ const ProductTable = () => {
             </button>
           </div>
 
-          
+
           <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-b-lg rounded-tr-lg border border-t-0 border-gray-200">
             {statusFilter === "active" && (
               <>
                 <button
                   className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "all"
-                      ? "bg-blue-500 text-white shadow-sm border-2 border-blue-700"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-blue-50"
+                    ? "bg-blue-500 text-white shadow-sm border-2 border-blue-700"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-blue-50"
                     }`}
                   onClick={() => setStockFilter("all")}
                 >
@@ -364,8 +343,8 @@ const ProductTable = () => {
                 </button>
                 <button
                   className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "lowStock"
-                      ? "bg-yellow-500 text-white shadow-sm border-2 border-yellow-700"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-yellow-50"
+                    ? "bg-yellow-500 text-white shadow-sm border-2 border-yellow-700"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-yellow-50"
                     }`}
                   onClick={() => setStockFilter("lowStock")}
                 >
@@ -374,8 +353,8 @@ const ProductTable = () => {
                 </button>
                 <button
                   className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "outOfStock"
-                      ? "bg-red-500 text-white shadow-sm border-2 border-red-700"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-red-50"
+                    ? "bg-red-500 text-white shadow-sm border-2 border-red-700"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-red-50"
                     }`}
                   onClick={() => setStockFilter("outOfStock")}
                 >
@@ -389,8 +368,8 @@ const ProductTable = () => {
               <>
                 <button
                   className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "allInactive"
-                      ? "bg-blue-500 text-white shadow-sm border-2 border-blue-700"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-blue-50"
+                    ? "bg-blue-500 text-white shadow-sm border-2 border-blue-700"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-blue-50"
                     }`}
                   onClick={() => setStockFilter("allInactive")}
                 >
@@ -399,8 +378,8 @@ const ProductTable = () => {
                 </button>
                 <button
                   className={`flex items-center px-3 py-2 rounded font-medium transition-all duration-200 ${stockFilter === "shouldBeOut"
-                      ? "bg-red-500 text-white shadow-sm border-2 border-red-700"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-red-50"
+                    ? "bg-red-500 text-white shadow-sm border-2 border-red-700"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-red-50"
                     }`}
                   onClick={() => setStockFilter("shouldBeOut")}
                 >
@@ -414,7 +393,7 @@ const ProductTable = () => {
       </div>
 
 
-    
+
 
       <div className="flex flex-col gap-4 mb-6 ">
 

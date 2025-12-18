@@ -1,0 +1,232 @@
+"use client";
+
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/redux/store";
+import Link from "next/link";
+import Image from "next/image";
+import { toast } from "react-toastify";
+
+import { setBanners, setSelectedBanner } from "@/redux/bannerSlice";
+import { fetchBanner, fetchBannerById } from "@/services/bannerServices/BannerService";
+
+import {
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableHeadCell,
+  TableCell,
+} from "../ui/table";
+
+import {
+  FaEdit,
+  FaSearch,
+  FaFilter,
+  FaChevronDown,
+  FaChevronUp,
+  FaPlus,
+} from "react-icons/fa";
+import { MdDeleteForever } from "react-icons/md";
+
+import Pagination from "./Pagination";
+import EditOfferBannerModal from "../productOffer/EditBannerModal";
+
+/* ---------------- TYPES ---------------- */
+interface Banner {
+  id: number;
+  title: string;
+  subtitle?: string;
+  imageUrl: string;
+  isActive: boolean;
+  startDate?: string;
+  endDate?: string;
+}
+
+/* ---------------- COMPONENT ---------------- */
+const BannerTable = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { banners } = useSelector((state: RootState) => state.banner);
+
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
+  /* ---------------- FETCH ALL ---------------- */
+  const loadBanners = async () => {
+    try {
+      setLoading(true);
+      const res = await fetchBanner();
+      dispatch(setBanners(res));
+    } catch {
+      toast.error("Failed to load banners");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBanners();
+  }, []);
+
+  /* ---------------- FILTER ---------------- */
+  const filteredData = useMemo(() => {
+    return banners.filter((b: Banner) =>
+      [b.title, b.subtitle]
+        .join(" ")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+    );
+  }, [banners, searchTerm]);
+
+  /* ---------------- PAGINATION ---------------- */
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const visibleData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  /* ---------------- EDIT (FIXED) ---------------- */
+  const handleEdit = async (banner: Banner) => {
+    try {
+      // ✅ thunk ko dispatch karo
+      await dispatch(fetchBannerById(banner.id));
+
+      // ✅ modal open karo
+      setEditModalOpen(true);
+    } catch {
+      toast.error("Failed to load banner details");
+    }
+  };
+
+  const formatDate = (date?: string) =>
+    date
+      ? new Date(date).toLocaleDateString("en-IN", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        })
+      : "—";
+
+  /* ---------------- UI ---------------- */
+  return (
+    <div className="bg-white rounded-xl shadow-sm p-6 border">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Banner Management</h1>
+        <Link href="/banner">
+          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg">
+            <FaPlus size={14} /> Add Banner
+          </button>
+        </Link>
+      </div>
+
+      {/* Search */}
+      <div className="flex gap-3 mb-4">
+        <div className="relative flex-1 max-w-lg">
+          <FaSearch className="absolute left-3 top-3 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search banner..."
+            className="pl-10 pr-4 py-2 w-full border rounded-lg"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <button
+          onClick={() => setShowFilters(!showFilters)}
+          className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-2"
+        >
+          <FaFilter />
+          {showFilters ? <FaChevronUp /> : <FaChevronDown />}
+        </button>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto border rounded-lg">
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableHeadCell>ID</TableHeadCell>
+              <TableHeadCell>Title</TableHeadCell>
+              <TableHeadCell>Image</TableHeadCell>
+              <TableHeadCell>Status</TableHeadCell>
+              <TableHeadCell>Start</TableHeadCell>
+              <TableHeadCell>End</TableHeadCell>
+              <TableHeadCell>Actions</TableHeadCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {loading ? (
+              <TableRow>
+                <TableCell className="text-center py-10">Loading...</TableCell>
+              </TableRow>
+            ) : visibleData.length === 0 ? (
+              <TableRow>
+                <TableCell className="text-center py-10">No banners found</TableCell>
+              </TableRow>
+            ) : (
+              visibleData.map((item: Banner) => (
+                <TableRow key={item.id}>
+                  <TableCell>{item.id}</TableCell>
+                  <TableCell>{item.title}</TableCell>
+
+                  <TableCell>
+                    <div className="relative w-12 h-12">
+                      <Image src={item.imageUrl} alt={item.title} fill />
+                    </div>
+                  </TableCell>
+
+                  <TableCell>
+                    {item.isActive ? "Active" : "Inactive"}
+                  </TableCell>
+
+                  <TableCell>{formatDate(item.startDate)}</TableCell>
+                  <TableCell>{formatDate(item.endDate)}</TableCell>
+
+                  <TableCell>
+                    <button
+                      onClick={() => handleEdit(item)}
+                      className="p-2 text-yellow-600"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button className="p-2 text-red-600">
+                      <MdDeleteForever />
+                    </button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        itemsPerPage={itemsPerPage}
+        totalItems={filteredData.length}
+        onPageChange={setCurrentPage}
+      />
+
+      {/* Edit Modal */}
+      <EditOfferBannerModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          dispatch(setSelectedBanner(null));
+          loadBanners();
+        }}
+      />
+    </div>
+  );
+};
+
+export default BannerTable;
