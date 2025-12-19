@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { setToken, setRefreshToken, setUser } from "@/redux/authSlice";
 type AppRouter = ReturnType<typeof useRouter>;
 
-const { LOGIN_API, SIGNUP_API ,USER_LIST_API} = endpoints;
+const { LOGIN_API, SIGNUP_API, USER_LIST_API } = endpoints;
 
 
 
@@ -101,7 +101,7 @@ export const login = ({ identifier, password, router }: LoginParams) => {
         password,
       });
 
-      const { token,refreshToken, user, message } = res.data;
+      const { token, refreshToken, user, message } = res.data;
 
       if (!message.includes("successful")) {
         throw new Error(message);
@@ -111,8 +111,8 @@ export const login = ({ identifier, password, router }: LoginParams) => {
         user?.image ||
         (user?.name
           ? `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(
-              user.name
-            )}`
+            user.name
+          )}`
           : "");
 
       dispatch(setToken(token));
@@ -121,12 +121,12 @@ export const login = ({ identifier, password, router }: LoginParams) => {
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(user));
 
-const updatedUser = { ...user, image: userImage };
+      const updatedUser = { ...user, image: userImage };
 
-// dispatch(setToken(token));
-// dispatch(setUser(updatedUser));
+      // dispatch(setToken(token));
+      // dispatch(setUser(updatedUser));
 
-dispatch(setToken(token));
+      dispatch(setToken(token));
       dispatch(setRefreshToken(refreshToken));
       dispatch(setUser(updatedUser));
 
@@ -134,10 +134,10 @@ dispatch(setToken(token));
       localStorage.setItem("token", token);
       localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("user", JSON.stringify(updatedUser));
- 
 
-// Save updated user with image to localStorage
-// localStorage.setItem("user", JSON.stringify(updatedUser));
+
+      // Save updated user with image to localStorage
+      // localStorage.setItem("user", JSON.stringify(updatedUser));
       toast.success("Login successful!");
       router.push("/");
     } catch (err) {
@@ -160,7 +160,7 @@ export const fetchAllUsers = async () => {
 
 export async function toggleUserStatus(id: number) {
   const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
-  
+
   return await apiConnector(
     "PATCH",
     `${BASE_URL}/customers/${id}/toggle`,
@@ -189,7 +189,7 @@ interface CreateRoleParams {
   router: AppRouter;
 }
 
-const CREATE_ROLE_API = `${BASE_URL}/roles`; 
+const CREATE_ROLE_API = `${BASE_URL}/roles`;
 
 export const createRole = ({ name, description, router }: CreateRoleParams) => {
   return async (dispatch: AppDispatch) => {
