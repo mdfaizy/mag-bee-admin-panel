@@ -8,7 +8,7 @@ import Image from "next/image";
 import { toast } from "react-toastify";
 
 import { setBanners, setSelectedBanner } from "@/redux/bannerSlice";
-import { fetchBanner, fetchBannerById } from "@/services/bannerServices/BannerService";
+import { fetchBanner, fetchBannerById, toggleBannerStatus } from "@/services/bannerServices/BannerService";
 
 import {
   Table,
@@ -105,11 +105,30 @@ const BannerTable = () => {
   const formatDate = (date?: string) =>
     date
       ? new Date(date).toLocaleDateString("en-IN", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "—";
+
+
+  //       const handleToggleActive = async (banner: Banner) => {
+  //   try {
+  //     await dispatch(toggleBannerStatus(banner.id));
+
+  //   } catch {
+  //     toast.error("Status update failed");
+  //   }
+  // };
+
+  const handleToggleActive = async (id: number) => {
+    try {
+      await dispatch(toggleBannerStatus(id));
+    } catch {
+      toast.error("Error updating status");
+    }
+  };
+
 
   /* ---------------- UI ---------------- */
   return (
@@ -182,8 +201,20 @@ const BannerTable = () => {
                     </div>
                   </TableCell>
 
-                  <TableCell>
+                  {/* <TableCell>
                     {item.isActive ? "Active" : "Inactive"}
+                  </TableCell> */}
+                  <TableCell className="hidden md:table-cell">
+                    <div
+                      // onClick={() => handleToggleActive(item)}
+                      onClick={() => handleToggleActive(item.id)}
+
+                      className={`relative inline-flex items-center cursor-pointer w-12 h-6 rounded-full transition-colors ${item.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
+                    >
+                      <div
+                        className={`absolute left-0.5 top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transform transition-transform ${item.isActive ? 'translate-x-6' : ''}`}
+                      />
+                    </div>
                   </TableCell>
 
                   <TableCell>{formatDate(item.startDate)}</TableCell>

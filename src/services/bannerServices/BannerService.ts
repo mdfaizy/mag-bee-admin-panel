@@ -74,3 +74,28 @@ export const updateOfferBanner =
       toast.error(error?.message || "Banner update failed");
     }
   };
+
+export const toggleBannerStatus =
+  (id: number) => async (dispatch: AppDispatch) => {
+    try {
+      const res = await apiConnector(
+        "PATCH",
+        endPointBanner.TOGGLE_BANNER_STATUS(id),
+        {},
+        {
+          Authorization: `Bearer ${getToken()}`,
+        }
+      );
+
+      dispatch(updateBanner(res.data));
+
+      toast.success(
+        `Banner is now ${res.data.isActive ? "Active" : "Inactive"}`
+      );
+
+      return res.data;
+    } catch (error: any) {
+      toast.error("Failed to update banner status");
+      throw error;
+    }
+  };

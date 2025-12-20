@@ -23,7 +23,7 @@ interface OfferBannerFormData {
 const OfferSliderForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-
+ const [isActive, setIsActive] = useState(true);
   const [form, setForm] = useState<OfferBannerFormData>({
     title: "",
     subtitle: "",
@@ -32,6 +32,7 @@ const OfferSliderForm = () => {
     endDate: "",
     image: null,
   });
+// const [isActive, setIsActive] = useState(true);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -88,6 +89,7 @@ const OfferSliderForm = () => {
     formData.append("startDate", form.startDate);
     formData.append("endDate", form.endDate);
     formData.append("image", form.image);
+    formData.append("isActive", String(isActive));
 
     try {
       setLoading(true);
@@ -107,6 +109,23 @@ const OfferSliderForm = () => {
       <h2 className="text-2xl font-bold text-gray-800">
         Create New Offer Banner
       </h2>
+
+       <div className="flex items-center">
+            <span className="mr-2 text-sm font-medium text-gray-700">Status:</span>
+            <button
+              type="button"
+              onClick={() => setIsActive(!isActive)}
+              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${isActive ? 'bg-green-500' : 'bg-gray-300'}`}
+            >
+              <span className="sr-only">Toggle Status</span>
+              <span
+                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`}
+              />
+            </button>
+            <span className="ml-2 text-sm font-medium text-gray-700">
+              {isActive ? 'Active' : 'Inactive'}
+            </span>
+          </div>
 
       {/* Title */}
       <div>

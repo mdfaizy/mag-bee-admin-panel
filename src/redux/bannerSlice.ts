@@ -51,20 +51,30 @@ const bannerSlice = createSlice({
     },
 
     /* UPDATE BANNER (🔥 IMPORTANT) */
-    updateBanner: (state, action: PayloadAction<Banner>) => {
-      const index = state.banners.findIndex(
-        (b) => b.id === action.payload.id
-      );
-      if (index !== -1) {
-        state.banners[index] = action.payload;
-      }
-      if (
-        state.selectedBanner &&
-        state.selectedBanner.id === action.payload.id
-      ) {
-        state.selectedBanner = action.payload;
-      }
-    },
+    // updateBanner: (state, action: PayloadAction<Banner>) => {
+    //   const index = state.banners.findIndex(
+    //     (b) => b.id === action.payload.id
+    //   );
+    //   if (index !== -1) {
+    //     state.banners[index] = action.payload;
+    //   }
+    //   if (
+    //     state.selectedBanner &&
+    //     state.selectedBanner.id === action.payload.id
+    //   ) {
+    //     state.selectedBanner = action.payload;
+    //   }
+    // },
+    
+
+    updateBanner: (state, action) => {
+  const updated = action.payload.banner || action.payload;
+
+  state.banners = state.banners.map(b =>
+    b.id === updated.id ? updated : b
+  );
+},
+
 
     /* LOADING */
     setLoading: (state, action: PayloadAction<boolean>) => {
