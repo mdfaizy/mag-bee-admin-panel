@@ -4,19 +4,31 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+// import {
+//   // BoxCubeIcon,
+//   // CalenderIcon,
+//   ChevronDownIcon,
+//   GridIcon,
+//   HorizontaLDots,
+//   ListIcon,
+//   // PageIcon,
+//   PieChartIcon,
+//   PlugInIcon,
+//   TableIcon,
+//   UserCircleIcon,
+// } from "../icons/index";
+
 import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
-} from "../icons/index";
+  FaChevronDown,     // ChevronDownIcon
+  FaThLarge,         // GridIcon
+  FaEllipsisH,       // HorizontaLDots
+  FaList,            // ListIcon
+  FaChartPie,        // PieChartIcon
+  FaPlug,            // PlugInIcon
+  FaTable,           // TableIcon
+  FaUserCircle       // UserCircleIcon
+} from 'react-icons/fa';
+
 import { FaShoppingCart } from "react-icons/fa";
 
 
@@ -29,7 +41,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   {
-    icon: <GridIcon />,
+    icon: <FaThLarge />,
     name: "Dashboard",
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
@@ -37,80 +49,79 @@ const navItems: NavItem[] = [
   name: "Ecommerce",
   icon: <FaShoppingCart />,
   subItems: [
-    { name: "Add Category", path: "/product-category", pro: false },
-    { name: "View Category", path: "/add-category", pro: false },
-    
-    { name: "Add Product", path: "/add-new-product", pro: false },
+    { name: "Add Category", path: "/category", pro: false },
+    { name: "Product Category List", path: "/product-category-table", pro: false },
+    { name: "Add Products", path: "/add-new-product", pro: false },
+    { name: "Products List", path: "/product", pro: false },
+    {name: "Create Sub Category",path:'/create-sub-category',pro:false},
+    {name:'Sub Category Table',path:'/subCategoryTable',pro:false},
+    { name: "Banner Slider", path: "/banner-slider", pro: false },
+
 
   ],
 },
 
 
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
+  // {
+  //   icon: <CalenderIcon />,
+  //   name: "Calendar",
+  //   path: "/calendar",
+  // },
+ 
 
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
+  // {
+  //   name: "Forms",
+  //   icon: <ListIcon />,
+  //   subItems: [
+  //     // { name: "Form Elements", path: "/form-elements", pro: false },
+  //     // { name: "Add Prduct Category", path: "/product-category", pro: false }
+  //     // { name: "Role Ctreate", path: "/created-role", pro: false },
+  //     //  { name: "Assign Privelege", path: "/assign-privelege", pro: false },
+  //   ],
+  // },
   {
     name: "Tables",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false },
-       { name: "Product Category Table Table", path: "/product-category-table", pro: false },
-       { name: "User Table", path: "/user-table", pro: false },
+    icon: <FaTable />,
+    subItems: [{ name: "Resent Order", path: "/orders-tables", pro: false },
+       { name: "Employees For MagBee", path: "/user-table", pro: false },
+       { name: "Customer List", path: "/customer", pro: false },
+         { name: "Product Varient", path: "/product-varient", pro: false },
     ],
   },
+  //  {
+  //   icon: <PieChartIcon />,
+  //   name: "Charts",
+  //   subItems: [
+  //     { name: "Line Chart", path: "/line-chart", pro: false },
+  //     { name: "Bar Chart", path: "/bar-chart", pro: false },
+  //   ],
+  // },
   {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
-  },
-];
-
-const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
+    icon: <FaPlug />,
     name: "Authentication",
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
       { name: "Sign Up", path: "/signup", pro: false },
-       { name: "Role Ctreate", path: "/rol-", pro: false },
-       { name: "Assign Privelegee", path: "/assign-privelegee", pro: false },
+         { name: "Role Ctreate", path: "/created-role", pro: false },
+       { name: "Assign Privelege", path: "/assign-privelege", pro: false },
 
     ],
+  },
+  // {
+  //   name: "Pages",
+  //   icon: <PageIcon />,
+  //   subItems: [
+  //     { name: "404 Error", path: "/error-404", pro: false },
+  //   ],
+  // },
+];
+
+const othersItems: NavItem[] = [
+ 
+   {
+    icon: <FaUserCircle />,
+    name: "User Profile",
+    path: "/profile",
   },
 ];
 
@@ -151,7 +162,7 @@ const AppSidebar: React.FC = () => {
                 <span className={`menu-item-text`}>{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDownIcon
+                <FaChevronDown
                   className={`ml-auto w-5 h-5 transition-transform duration-200  ${
                     openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
@@ -221,17 +232,7 @@ const AppSidebar: React.FC = () => {
                             new
                           </span>
                         )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge `}
-                          >
-                            pro
-                          </span>
-                        )}
+                       
                       </span>
                     </Link>
                   </li>
@@ -333,14 +334,14 @@ const AppSidebar: React.FC = () => {
             <>
               <Image
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/logo.png"
                 alt="Logo"
                 width={150}
                 height={40}
               />
               <Image
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/images/logo/logo.png"
                 alt="Logo"
                 width={150}
                 height={40}
@@ -348,7 +349,7 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
+              src="/images/logo/logo.png"
               alt="Logo"
               width={32}
               height={32}
@@ -370,7 +371,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
                 ) : (
-                  <HorizontaLDots />
+                  <FaEllipsisH />
                 )}
               </h2>
               {renderMenuItems(navItems, "main")}
@@ -387,7 +388,7 @@ const AppSidebar: React.FC = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Others"
                 ) : (
-                  <HorizontaLDots />
+                  <FaEllipsisH />
                 )}
               </h2>
               {renderMenuItems(othersItems, "others")}
