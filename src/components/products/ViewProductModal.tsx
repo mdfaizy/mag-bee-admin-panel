@@ -31,10 +31,8 @@ const ViewProductModal: React.FC<Props> = ({ isOpen, onClose, productId }) => {
       setIsLoading(true);
       setError(null);
       try {
-        const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-        // const productData = await fetchProductById(productId, token);
-        const productData = await fetchProductById(Number(productId), token);
 
+        const productData = await fetchProductById(Number(productId));
         console.log(productData);
         setSelectedProduct(productData.product || productData);
       } catch (error) {

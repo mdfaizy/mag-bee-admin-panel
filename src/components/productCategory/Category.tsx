@@ -7,9 +7,12 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
 import { createCategory } from "../../services/product-category/categoryService";
+import { AppDispatch } from "@/redux/store";
 
 export default function CreateProductCategory() {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+
   const router = useRouter();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -18,7 +21,7 @@ export default function CreateProductCategory() {
     image: null as File | null,
   });
 
- 
+
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -32,6 +35,12 @@ export default function CreateProductCategory() {
           ...prev,
           image: file,
         }));
+
+        //     if (file) {
+        // if (file.size > 2 * 1024 * 1024) {
+        //   toast.error("Image size must be less than 2MB");
+        //   return;
+        // }
 
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -80,8 +89,8 @@ export default function CreateProductCategory() {
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto mt-8 mb-8 bg-white dark:bg-gray-800 rounded-xl shadow-md p-4">
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-800 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
           <h1 className="text-start font-semibold uppercase mb-6 text-lg">
-          Create Product Category
-        </h1>
+            Create Product Category
+          </h1>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
             Add a new category to organize your products
           </p>
@@ -114,7 +123,7 @@ export default function CreateProductCategory() {
               />
             </div>
 
-            
+
 
             <div>
               <Label className="block mb-2">
@@ -142,7 +151,7 @@ export default function CreateProductCategory() {
                         onChange={handleChange}
                         className="hidden"
                         accept="image/*"
-                        // required
+                      // required
                       />
                     </label>
                   </div>

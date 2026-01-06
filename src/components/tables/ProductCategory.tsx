@@ -80,7 +80,8 @@ const CategoryTable = () => {
       try {
         setLoading(true);
         const result = await fetchProductCategory();
-        dispatch(setCategories(result));
+        // dispatch(setCategories(result));
+        dispatch(setCategories(result.categories));
       } catch (error) {
         console.error("Failed to load categories", error);
         toast.error("Failed to load categories");

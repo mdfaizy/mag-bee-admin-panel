@@ -1,4 +1,4 @@
- "use client";
+"use client";
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/store';
@@ -7,13 +7,12 @@ import { Modal } from '../ui/modal';
 import Input from '../form/input/InputField';
 import Label from '../form/Label';
 import Button from '../ui/button/Button';
-import { BASE_URL } from '@/services/apis';
+import { apiConnector } from '@/services/apiConnector';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
 }
-
 const EditCategoryModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
   const { selectedCategory, categories } = useSelector((state: RootState) => state.category);
@@ -66,27 +65,14 @@ const EditCategoryModal: React.FC<Props> = ({ isOpen, onClose }) => {
       alert("Image upload failed");
     }
   };
-
   const handleSubmit = async () => {
     if (!selectedCategory) return;
-
     try {
-      const rawToken = localStorage.getItem("token");
-      const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
-
-      const res = await fetch(`${BASE_URL}/category/${selectedCategory.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const result = await res.json();
-
-      if (!res.ok) {
-        throw new Error(result.message || "Failed to update category");
+      const res = await apiConnector("PUT", `/category/${selectedCategory.id}`,
+        formData);
+      const result = res.data;
+      if (!result?.success) {
+        throw new Error(result?.message || "Failed to update category");
       }
 
       // Update Redux store
@@ -94,16 +80,13 @@ const EditCategoryModal: React.FC<Props> = ({ isOpen, onClose }) => {
         cat.id === selectedCategory.id ? result.updatedCategory : cat
       );
       dispatch(setCategories(updatedList));
-
       dispatch(setSelectedCategory(null));
       onClose();
     } catch (error: any) {
       alert(error.message || "Something went wrong");
     }
   };
-
   if (!selectedCategory) return null;
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-[600px] m-4">
       <div className="p-6 bg-white dark:bg-gray-900 rounded-2xl">

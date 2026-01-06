@@ -22,6 +22,16 @@ const productSlice = createSlice({
     setProducts: (state, action: PayloadAction<Product[]>) => {
       state.products = action.payload;
     },
+     addProduct(state, action: PayloadAction<Product>) {
+      state.products.unshift(action.payload); // 🔥 optimistic update
+    },
+    removeProduct(state, action: PayloadAction<number>) {
+      state.products = state.products.filter(p => p.id !== action.payload);
+    },
+    toggleProduct(state, action: PayloadAction<number>) {
+      const product = state.products.find(p => p.id === action.payload);
+      if (product) product.isActive = !product.isActive;
+    },
     setSelectedProduct: (state, action: PayloadAction<Product | null>) => {
      
       state.selectedProduct = action.payload;
@@ -37,6 +47,9 @@ const productSlice = createSlice({
 
 export const {
   setProducts,
+  addProduct,
+  removeProduct,
+  toggleProduct,
   setSelectedProduct,
   setLoading,
   setError,

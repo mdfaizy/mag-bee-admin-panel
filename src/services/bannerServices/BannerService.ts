@@ -6,18 +6,12 @@ import { toast } from "react-toastify";
 import { updateBanner ,setSelectedBanner} from "@/redux/bannerSlice";
 
 const { CREATE_BANNER, BANNER_GELL_ALL,UPDATE_BANNER,GET_BANNER_BY_ID,DELETE_BANNER} = endPointBanner;
-const getToken = () =>
-  localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-
 export const createOfferBanner =
   ({ formData, router }: { formData: FormData; router: any }) =>
   async (dispatch: AppDispatch) => {
     try {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-
-      const res = await apiConnector("POST", CREATE_BANNER, formData, {
-        Authorization: `Bearer ${token}`,
-      });
+      
+      const res = await apiConnector("POST", CREATE_BANNER, formData);
 
       dispatch(addBanner(res.data));
       toast.success("Banner created successfully");
@@ -38,10 +32,7 @@ export const fetchBannerById =
     try {
       const res = await apiConnector(
         "GET",
-        endPointBanner.GET_BANNER_BY_ID(id),
-        undefined,
-        { Authorization: `Bearer ${getToken()}` }
-      );
+        endPointBanner.GET_BANNER_BY_ID(id));
 
       console.log("Banner by ID response:", res);
       // ✅ ONLY DATA
@@ -60,12 +51,7 @@ export const updateOfferBanner =
     try {
       const res = await apiConnector(
         "PUT",
-        endPointBanner.UPDATE_BANNER(id),
-        formData,
-        {
-          Authorization: `Bearer ${getToken()}`,
-        }
-      );
+        endPointBanner.UPDATE_BANNER(id));
 
       dispatch(updateBanner(res.data));
       toast.success("Banner updated successfully");
@@ -80,12 +66,7 @@ export const toggleBannerStatus =
     try {
       const res = await apiConnector(
         "PATCH",
-        endPointBanner.TOGGLE_BANNER_STATUS(id),
-        {},
-        {
-          Authorization: `Bearer ${getToken()}`,
-        }
-      );
+        endPointBanner.TOGGLE_BANNER_STATUS(id));
 
       dispatch(updateBanner(res.data));
 

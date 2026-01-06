@@ -10,7 +10,7 @@ import Button from "../ui/button/Button";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import { setSelectedProduct, setProducts } from "@/redux/productSlice";
-import Select from "../form/Select";
+// import Select from "../form/Select";
 // import { HiChevronDown, HiX } from 'react-icons/hi';
 import { updateProductById } from "@/services/product/productService";
 import { fetchProductCategory } from "@/services/product-category/categoryService";
@@ -62,6 +62,8 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
         setCategoryLoading(false);
       }
     };
+   
+
 
     fetchCategoriesData();
   }, []);
@@ -370,8 +372,6 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     setLoading(true);
 
     try {
-      const rawToken = localStorage.getItem("token");
-      const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
 
       const sanitizedVariants = variants.map((v) => ({
         id: v.id,
@@ -419,7 +419,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
         productData.append("images", file);
       });
 
-      const updatedProduct = await updateProductById(formData.id, productData, token);
+      const updatedProduct = await updateProductById(formData.id, productData);
 
       // Update Redux
       const updatedList = products.map((p) =>
@@ -470,7 +470,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
                     <Label className="text-gray-700 dark:text-gray-300">Product Name</Label>
                     <Input
                       name="name"
-                      value={formData.name}
+                      value={formData?.name}
                       onChange={handleChange}
                       placeholder="Enter product name"
                       className="w-full"

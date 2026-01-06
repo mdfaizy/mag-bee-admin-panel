@@ -8,16 +8,17 @@ interface User {
   
 }
 interface AuthState {
-  token: string | null;
+  // token: string | null;
  
-  refreshToken: string | null;
+  // refreshToken: string | null;
   user: User | null;
   loading: boolean;
+
 }
 
 const initialState: AuthState = {
-  token: null,
-  refreshToken: null,
+  // token: null,
+  // refreshToken: null,
   user: null,
   loading: false,
 };
@@ -26,12 +27,12 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setToken: (state, action: PayloadAction<string>) => {
-      state.token = action.payload;
-    },
-     setRefreshToken: (state, action: PayloadAction<string>) => {
-      state.refreshToken = action.payload;
-    },
+    // setToken: (state, action: PayloadAction<string>) => {
+    //   state.token = action.payload;
+    // },
+    //  setRefreshToken: (state, action: PayloadAction<string>) => {
+    //   state.refreshToken = action.payload;
+    // },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
     },
@@ -39,12 +40,13 @@ const authSlice = createSlice({
       state.loading = action.payload;
     },
     logout: (state) => {
-      state.token = null;
-      state.refreshToken = null;
+      // state.token = null;
+      // state.refreshToken = null;
       state.user = null;
     },
   },
 });
 
-export const { setToken,setRefreshToken, setUser, setLoading, logout } = authSlice.actions;
+export const {  setUser, setLoading, logout } = authSlice.actions;
 export default authSlice.reducer;
+

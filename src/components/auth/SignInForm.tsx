@@ -4,34 +4,23 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
 import Link from "next/link";
-// import { EyeIcon, EyeCloseIcon } from "@/icons";
 import { IoEyeOff } from "react-icons/io5";
 import { IoEye } from "react-icons/io5";
-
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { AppDispatch } from "@/redux/store";
 import { login } from "../../services/authService";
 import { SignInFormData } from "../types/auth";
-// interface SignInFormData {
-//   identifier: string;
-//   password: string;
-//   isChecked: boolean;
-//   showPassword: boolean;
-// }
-
 export default function SignInForm() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-
   const [formData, setFormData] = useState<SignInFormData>({
     identifier: "",
     password: "",
     isChecked: false,
     showPassword: false,
   });
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -39,14 +28,12 @@ export default function SignInForm() {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
-
   const toggleShowPassword = () => {
     setFormData((prev) => ({
       ...prev,
       showPassword: !prev.showPassword,
     }));
   };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const { identifier, password } = formData;
@@ -55,22 +42,11 @@ export default function SignInForm() {
       toast.error("Please fill all fields");
       return;
     }
-
     dispatch(login({ identifier, password, router }));
   };
 
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full">
-      {/* <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-        >
-          <ChevronLeftIcon />
-          Back to dashboard
-        </Link>
-      </div> */}
-
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div className="mb-5 sm:mb-8">
           <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">

@@ -20,6 +20,7 @@ import Select from "../form/Select";
 import type { AppDispatch } from "@/redux/store";
 import { RoleOption, Role } from "../types/auth";
 import { BASE_URL } from "@/services/apis";
+import { apiConnector } from "@/services/apiConnector";
 export default function SignUpForm() {
   const dispatch: AppDispatch = useDispatch();
   const router = useRouter();
@@ -55,46 +56,31 @@ export default function SignUpForm() {
   const toggleShowPassword = () => {
     setShowPassword((prev) => !prev);
   };
-
-
-  const fetchRoles = async () => {
-    try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        throw new Error("No token found");
-      }
-
-      const res = await fetch(`${BASE_URL}/roles`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch roles");
-      }
-
-      const data = await res.json();
-
-      // const formattedRoles = data.roles.map((role: any) => ({
-      //   value: String(role.id),
-      //   label: role.name,
-      // }));
-      const formattedRoles = (data.roles as Role[]).map((role) => ({
-        value: String(role.id),
-        label: role.name,
-      }));
-
-      setRoles(formattedRoles);
-    } catch (error) {
-      console.error("Failed to fetch roles:", error);
-    }
+  const fetchRoles = async (): Promise<Role[]> => {
+    const res = await apiConnector("GET", "/roles");
+    console.log("Roles response:", res);
+    const data = res.data;
+    return data.roles as Role[];
   };
   useEffect(() => {
-    fetchRoles();
+    const loadRoles = async () => {
+      try {
+        const rolesData = await fetchRoles();
+        const formattedRoles = rolesData.map((role) => ({
+          value: String(role.id),
+          label: role.name,
+        }));
+
+        setRoles(formattedRoles);
+      } catch (error) {
+        console.error("Failed to fetch roles:", error);
+        toast.error("Failed to load roles");
+      }
+    };
+
+    loadRoles();
   }, []);
+
 
   const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

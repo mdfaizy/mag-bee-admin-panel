@@ -99,6 +99,10 @@ const ProductTable = () => {
         console.log("Fetched products:", result);
 
         dispatch(setReduxProducts(result));
+        // const products = result.products || [];
+
+// dispatch(setReduxProducts(products));
+// setTableData(products);
 
 
         setTableData(result);
@@ -170,8 +174,8 @@ const ProductTable = () => {
 
   const handleEdit = async (product: any) => {
     try {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-      const productData = await fetchProductById(product.id, token);
+
+      const productData = await fetchProductById(product.id);
       console.log("Editing product:", productData);
       dispatch(setSelectedProduct(productData));
       setEditModalOpen(true);
@@ -187,9 +191,9 @@ const ProductTable = () => {
 
   const confirmDeleteProduct = async () => {
     if (selectedProductId !== null) {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
+      
       try {
-        await deleteProductById(selectedProductId, token);
+        await deleteProductById(selectedProductId);
         const updatedList = await fetchProductAll();
         dispatch(setReduxProducts(updatedList));
         setTableData(updatedList);
@@ -556,7 +560,7 @@ const ProductTable = () => {
                       <div className="flex flex-col">
                         <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
                         <span className="text-xs text-gray-500 truncate max-w-xs dark:text-white">
-                          {item.description.substring(0, 30)}...
+                          {item?.description?.substring(0, 30)}...
                         </span>
                       </div>
                     </TableCell>

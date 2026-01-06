@@ -111,16 +111,6 @@ const BannerTable = () => {
       })
       : "—";
 
-
-  //       const handleToggleActive = async (banner: Banner) => {
-  //   try {
-  //     await dispatch(toggleBannerStatus(banner.id));
-
-  //   } catch {
-  //     toast.error("Status update failed");
-  //   }
-  // };
-
   const handleToggleActive = async (id: number) => {
     try {
       await dispatch(toggleBannerStatus(id));

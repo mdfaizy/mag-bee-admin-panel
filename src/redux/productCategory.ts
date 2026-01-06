@@ -20,6 +20,20 @@ const productCategorySlice = createSlice({
     setCategories: (state, action: PayloadAction<Category[]>) => {
       state.categories = action.payload;
     },
+     updateCategory(state, action: PayloadAction<Category>) {
+      const index = state.categories.findIndex(
+        c => c.id === action.payload.id
+      );
+      if (index !== -1) {
+        state.categories[index] = action.payload;
+      }
+    },
+
+    removeCategory(state, action: PayloadAction<number>) {
+      state.categories = state.categories.filter(
+        c => c.id !== action.payload
+      );
+    },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
@@ -34,6 +48,8 @@ const productCategorySlice = createSlice({
 
 export const {
   setCategories,
+  updateCategory,
+  removeCategory,
   setLoading,
   setError,
   setSelectedCategory,

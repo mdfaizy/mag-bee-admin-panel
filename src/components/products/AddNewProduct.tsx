@@ -11,7 +11,10 @@ import { HiChevronDown, HiPlus, HiUpload, HiX } from 'react-icons/hi';
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
 import { SubCategory, CategoryOption } from "@/components/types/category";
 import { BASE_URL } from "@/services/apis";
-
+import { apiConnector } from "@/services/apiConnector";
+import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+// import { createProductThunk } from "@/services/product/productThunks";
 
 type Variant = {
   sku: string;
@@ -27,7 +30,8 @@ export default function AddNewProduct() {
   const [filteredSubCategory, setFilteredSubCategory] = useState<SubCategory[]>([]);
   const [showVariants, setShowVariants] = useState(false);
   const [subCategoryChildren, setSubCategoryChildren] = useState<SubCategory[]>([]);
-
+  const dispatch = useDispatch<any>();
+  const router = useRouter();
   const [isActive, setIsActive] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -78,17 +82,10 @@ export default function AddNewProduct() {
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-
       try {
-        const res = await fetch(`${BASE_URL}/category`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        const data = await res.json();
-        const formatted = data.map((item: any) => ({
+        const res = await apiConnector("GET", "/category");
+
+        const formatted = res.data.map((item: any) => ({
           value: String(item.id),
           label: item.name,
         }));
@@ -138,19 +135,8 @@ export default function AddNewProduct() {
   };
   const fetchChildren = async (parentId: string) => {
     try {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-      const res = await fetch(`${BASE_URL}/subcategories/${parentId}/children`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) {
-        console.error("Failed to fetch subcategory children");
-        setSubCategoryChildren([]);
-        return;
-      }
-      const data = await res.json();
-      const children = Array.isArray(data.children) ? data.children : data;
-
+      const res = await apiConnector("GET", `/subcategories/${parentId}/children`);
+      const children = Array.isArray(res.data.children) ? res.data.children : res.data;
       const formatted = children.map((item: any) => ({
         value: String(item.id),
         label: item.name,
@@ -238,7 +224,7 @@ export default function AddNewProduct() {
       return { ...prev, variants: updatedVariants };
     });
   };
-//sumbit function
+  //sumbit function
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.originalPrice && !showVariants) {
@@ -279,27 +265,20 @@ export default function AddNewProduct() {
     Object.entries(payload).forEach(([key, value]) => {
       form.append(key, value !== undefined && value !== null ? value.toString() : "");
     });
-
     productImages.forEach((file) => form.append("imageUrl", file));
-
     try {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "") || "";
-      const res = await fetch(`${BASE_URL}/product`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: form,
-      });
-
-      if (res.ok) {
+      const res = await apiConnector("POST", "/product"
+        , form
+      );
+      //  dispatch(createProductThunk(payload, router));
+      if (res.status === 201 || res.status === 200) {
         alert("Product created successfully!");
-      } else {
-        alert("Submission failed.");
       }
-    } catch (error) {
-      console.error("Error submitting form:", error);
+    } catch (error: any) {
+      console.error("Error submitting form:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Submission failed");
     }
   };
-
   return (
     <div className="flex flex-col flex-1 lg:w-11/12 w-full mx-auto items-center">
       <div className="flex flex-col justify-center w-full p-4 bg-white rounded-lg shadow-sm">

@@ -12,11 +12,11 @@ const MultiSelecterInput = dynamic(
   () => import("../form/MultiSelect"),
   { ssr: false }
 );
-
 // Services
 import { fetchRoles } from "@/services/role";
 import { fetchPrivileges } from "@/services/usePrivillage";
 import { BASE_URL } from "@/services/apis";
+import { apiConnector } from "@/services/apiConnector";
 
 // Types
 interface RoleOption {
@@ -45,19 +45,18 @@ export default function AssignPrivilege() {
     async function loadData() {
       try {
         setIsLoading(true);
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("No token found");
-
-        const rolesData = await fetchRoles(token);
-        const privilegesData = await fetchPrivileges(token);
-
+        const rolesData = await fetchRoles();
+        const privilegesData = await fetchPrivileges();
+        // const [rolesData, privilegesData] = await Promise.all([
+        //   fetchRoles(),
+        //   fetchPrivileges(),
+        // ]);
         setRoles(
           rolesData.map((r) => ({
             value: String(r.id),
             label: r.name,
           }))
         );
-
         setPrivileges(
           privilegesData.map((p) => ({
             value: String(p.id),
@@ -71,11 +70,9 @@ export default function AssignPrivilege() {
         setIsLoading(false);
       }
     }
-
     loadData();
   }, []);
 
-  // Handlers
   const handleRoleChange = (value: string) => {
     setForm((prev) => ({ ...prev, roleId: value }));
   };
@@ -87,38 +84,22 @@ export default function AssignPrivilege() {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const { roleId, privileges } = form;
-
     if (!roleId || privileges.length === 0) {
       toast.error("Please fill all required fields including privileges.");
       return;
     }
-
     try {
       setIsLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Not authenticated");
-
-      const response = await fetch(
-        `${BASE_URL}/roles/assign-privileges`,
+      const response = await apiConnector("POST", `/roles/assign-privileges`,
         {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            roleId,
-            privilegeIds: privileges.map((p) => Number(p.value)),
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text);
+          roleId: Number(roleId),
+          privilegeIds: privileges.map(p => Number(p.value)),
+        });
+      // toast.success("Privileges assigned successfully!");
+      if (!response.data?.success) {
+        throw new Error(response.data?.message);
       }
-
-      toast.success("Privileges assigned successfully!");
+      toast.success(response.data.message || "Privileges assigned successfully");
       setForm({ roleId: "", privileges: [] });
     } catch (error) {
       console.error("Error submitting:", error);
@@ -161,7 +142,6 @@ export default function AssignPrivilege() {
               placeholder="Select privileges"
             />
           </div>
-
           {/* Submit Button */}
           <div className="mb-8 mt-8">
             <button
