@@ -11,7 +11,12 @@ export const fetchProductAll = async () => {
     const res = await apiConnector("GET", PRODUCT_GELL_ALL);
     console.log('allmproduct',res);
     // return res.data;
-    return res.data.products || [];
+    // return res.data.products || [];
+    return Array.isArray(res.data?.products)
+      ? res.data.products
+      : Array.isArray(res.data?.data?.products)
+      ? res.data.data.products
+      : [];
   } catch (err: any) {
     console.error("API error:", err.response?.data || err.message);
     throw err;
@@ -22,7 +27,6 @@ export const fetchProductById = async (id: number) => {
   const res = await apiConnector(
     "GET",
     `${PRODUCT_BY_ID}/${id}`);
-
   return res.data || res;
 };
 

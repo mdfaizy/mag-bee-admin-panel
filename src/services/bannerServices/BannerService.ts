@@ -15,7 +15,7 @@ export const createOfferBanner =
 
       dispatch(addBanner(res.data));
       toast.success("Banner created successfully");
-      router.push("/banners");
+      router.push("/banner-slider");
     } catch (error: any) {
       toast.error(error.message || "Banner creation failed");
     }

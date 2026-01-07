@@ -31,6 +31,8 @@ const computeSellingPrice = (price: number, offer: number) =>
 
 const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
+
+
   const { selectedProduct, products } = useSelector((state: RootState) => state.product);
 
   const [formData, setFormData] = useState<any>(null);
@@ -49,7 +51,11 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       try {
         setCategoryLoading(true);
         const response = await fetchProductCategory();
-        const formatted = response.map((cat: any) => ({
+        console.log("CATEGORY API RESPONSE 👉", response);
+       console.log("CATEGORY API RESPONSE 👉", response);
+
+      const categories = Array.isArray(response) ? response : [];
+        const formatted = categories.map((cat: any) => ({
           value: String(cat.id),
           label: cat.name,
         }));
@@ -67,6 +73,10 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
     fetchCategoriesData();
   }, []);
+
+  useEffect(() => {
+  console.log("categoryOptions UPDATED 👉", categoryOptions);
+}, [categoryOptions]);
 
   useEffect(() => {
     const fetchSubCategoryAllData = async () => {
@@ -98,6 +108,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
   // Initialize form data and variants when selectedProduct changes
   useEffect(() => {
     if (selectedProduct) {
+      
       const initialVariants: Variant[] = (selectedProduct.variants || []).map((v: any) => {
         const price = safeNum(v.price, 0);
         const offer = safeNum(v.offer, 0);
@@ -117,7 +128,17 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
       setFormData({
         ...selectedProduct,
-        subCategoryId: selectedProduct.subCategory?.id?.toString() || "",
+        // subCategoryId: selectedProduct.subCategory?.id?.toString() || "",
+        // categoryId: selectedProduct.category?.id?.toString() || "",
+      //  categoryId: selectedProduct.category?.id?.toString() || "",
+      // // subCategoryId: selectedProduct.subCategory?.id?.toString() || "",
+      categoryId: selectedProduct.category
+    ? String(selectedProduct.category.id)
+    : "",
+
+  subCategoryId: selectedProduct.subCategory
+    ? String(selectedProduct.subCategory.id)
+    : "",
         originalPrice: safeNum(selectedProduct.originalPrice, 0),
         offer: safeNum(selectedProduct.offer, 0),
         stock: safeNum(selectedProduct.stock, 0),
@@ -157,6 +178,8 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
       setRemovedImageIds([]);
     }
   }, [selectedProduct]);
+
+
 
 
   // Scroll to top when modal opens
@@ -342,7 +365,6 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
 
 
-
     // Validate file types and size
     const validFiles = filesArray.filter(file => {
       if (!file.type.startsWith('image/')) {
@@ -358,6 +380,12 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
 
     setNewImages(prev => [...prev, ...validFiles]);
   };
+useEffect(() => {
+  if (!formData) return;
+
+  console.log("categoryId:", formData.categoryId);
+  console.log("categoryOptions:", categoryOptions);
+}, [formData, categoryOptions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -440,7 +468,13 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }
   };
 
-  if (!formData) return null;
+  useEffect(() => {
+  console.log("FORM DATA:", formData);
+}, [formData]);
+
+  // if (!formData) return null;
+  if (!isOpen) return null;
+
 
 
 
@@ -482,7 +516,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
                       <Label>Category</Label>
                       <select
                         name="categoryId"
-                        value={formData?.categoryId || ""}
+                        value={formData.categoryId}
                         onChange={handleChange}
                         className="w-full border rounded-lg p-3 text-black dark:text-white dark:bg-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
@@ -520,7 +554,7 @@ const EditProductModal: React.FC<Props> = ({ isOpen, onClose }) => {
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-black"
                       rows={4}
                       placeholder="Product description..."
                     />

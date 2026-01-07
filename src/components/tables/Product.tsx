@@ -91,68 +91,95 @@ const ProductTable = () => {
     }
   };
 
-  useEffect(() => {
-    const getProducts = async () => {
-      try {
-        dispatch(setLoading(true));
-        const result = await fetchProductAll();
-        console.log("Fetched products:", result);
+//   useEffect(() => {
+//     const getProducts = async () => {
+//       try {
+//         dispatch(setLoading(true));
+//         const result = await fetchProductAll();
+//         console.log("Fetched products:", result);
 
-        dispatch(setReduxProducts(result));
-        // const products = result.products || [];
+//         dispatch(setReduxProducts(result));
+//         const products = result.products || [];
 
 // dispatch(setReduxProducts(products));
 // setTableData(products);
 
 
-        setTableData(result);
+//         setTableData(result);
 
 
-        const uniqueCategories = [
-          ...new Set(
-            result
-              .filter((product: any) => product.category?.name)
-              .map((product: any) => product.category.name)
-          ),
-        ];
-        // setCategories(uniqueCategories );
-        setCategories(uniqueCategories as string[]);
-
-
-
-      } catch (error: any) {
-        console.error("Error while processing products:", error);
-        toast.error(error?.message || "Failed to load products");
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-    getProducts();
-  }, [dispatch]);
+//         const uniqueCategories = [
+//           ...new Set(
+//             result
+//               .filter((product: any) => product.category?.name)
+//               .map((product: any) => product.category.name)
+//           ),
+//         ];
+//         // setCategories(uniqueCategories );
+//         setCategories(uniqueCategories as string[]);
 
 
 
+//       } catch (error: any) {
+//         console.error("Error while processing products:", error);
+//         toast.error(error?.message || "Failed to load products");
+//       } finally {
+//         dispatch(setLoading(false));
+//       }
+//     };
+//     getProducts();
+//   }, [dispatch]);
 
-  const fetchProducts = async (page: number) => {
-    dispatch(setLoading(true));
-    try {
-      const res = await fetchPaginatedProducts(page, itemsPerPage);
 
-      // ✅ Correctly get products and pagination info
-      const products = res.data?.products || [];
-      const totalPages = res.data?.totalPages || 1;
-      const totalItems = res.data?.total || 0;
 
-      setTableData(products);
-      setTotalPages(totalPages);
-      setTotalItems(totalItems);
-      dispatch(setReduxProducts(products));
-    } catch (error: any) {
-      toast.error(error?.message || "Failed to fetch products");
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
+
+  // const fetchProducts = async (page: number) => {
+  //   dispatch(setLoading(true));
+  //   try {
+  //     const res = await fetchPaginatedProducts(page, itemsPerPage);
+
+  //     // ✅ Correctly get products and pagination info
+  //     const products = res.data?. products || [];
+  //     const totalPages = res.data?.totalPages || 1;
+  //     const totalItems = res.data?.total || 0;
+    
+
+  //     setTableData(products);
+  //     setTotalPages(totalPages);
+  //     setTotalItems(totalItems);
+  //     dispatch(setReduxProducts(products));
+  //   } catch (error: any) {
+  //     toast.error(error?.message || "Failed to fetch products");
+  //   } finally {
+  //     dispatch(setLoading(false));
+  //   }
+  // };
+
+
+  
+
+
+ const fetchProducts = async (page: number) => {
+  dispatch(setLoading(true));
+  try {
+    const res = await fetchPaginatedProducts(page, itemsPerPage);
+console.log('ptoduct table',res);
+    const products = res?.data?.products ?? [];
+    const totalPages = res?.data?.totalPages ?? 1;
+    const totalItems = res?.data?.total ?? 0;
+
+    setTableData(products);
+    setTotalPages(totalPages);
+    setTotalItems(totalItems);
+    dispatch(setReduxProducts(products));
+  } catch (error: any) {
+    toast.error(error?.message || "Failed to fetch products");
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+
 
   useEffect(() => {
     fetchProducts(currentPage);
@@ -176,8 +203,11 @@ const ProductTable = () => {
     try {
 
       const productData = await fetchProductById(product.id);
+      
       console.log("Editing product:", productData);
-      dispatch(setSelectedProduct(productData));
+      // dispatch(setSelectedProduct(productData));
+      
+      dispatch(setSelectedProduct(productData.product));
       setEditModalOpen(true);
     } catch (error) {
       toast.error("Failed to load product details");
@@ -272,6 +302,8 @@ const ProductTable = () => {
     return filtered;
   }, [tableData, searchTerm, statusFilter, stockFilter, categoryFilter, sortConfig]);
 
+
+  
   const totalProducts = tableData.length;
   const lowStockProducts = tableData.filter(product => {
     const totalStock = product.hasVariants
@@ -554,6 +586,7 @@ const ProductTable = () => {
                 </TableRow>
               ) : (
                 filteredAndSortedData.map((item) => (
+                  
                   <TableRow key={item.id} className="hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-500 dark:text-white even:bg-gray-50/30">
                     <TableCell className="font-medium dark:text-white">{item.id}</TableCell>
                     <TableCell>

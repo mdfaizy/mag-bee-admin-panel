@@ -7,7 +7,7 @@ import { BASE_URL, endpoints } from "./apis";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
-import {  setUser } from "@/redux/authSlice";
+import { setUser } from "@/redux/authSlice";
 type AppRouter = ReturnType<typeof useRouter>;
 
 const { LOGIN_API, SIGNUP_API, USER_LIST_API } = endpoints;
@@ -104,8 +104,17 @@ export const login = ({ identifier, password, router }: LoginParams) => {
       // ✅ IMPORTANT: replace not push
       router.replace("/");
 
+      // } 
     } catch (err: any) {
-      toast.error(err.response?.data?.message || err.message);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.response?.data?.errors?.[0]?.message ||
+        err.message ||
+        "Login failed";
+
+      toast.error(errorMessage);
+
+
     } finally {
       toast.dismiss(toastId);
     }
@@ -114,11 +123,15 @@ export const login = ({ identifier, password, router }: LoginParams) => {
 
 
 
+
+
+
+
 export const fetchAllUsers = async () => {
-  
+
   const res = await apiConnector("GET", USER_LIST_API);
-  console.log('localStorage.getItem("user")',localStorage.getItem("user"));
-  
+  console.log('localStorage.getItem("user")', localStorage.getItem("user"));
+
   return res.data;
 };
 
@@ -130,10 +143,10 @@ export async function toggleUserStatus(id: number) {
 
 
 
-export const logout = () => async(dispatch: AppDispatch) => {
+export const logout = () => async (dispatch: AppDispatch) => {
   // dispatch(setToken(null));
   // dispatch(setUser(null));
- await apiConnector("POST", "/logout");
+  await apiConnector("POST", "/logout");
   // dispatch(setUser(null));
   localStorage.removeItem("user");
   toast.success("Logged Out");
@@ -153,7 +166,7 @@ export const createRole = ({ name, description, router }: CreateRoleParams) => {
     const toastId = toast.loading("Creating role...");
 
     try {
-       const res = await apiConnector(
+      const res = await apiConnector(
         "POST",
         CREATE_ROLE_API,
         {
@@ -201,40 +214,39 @@ export async function assignPrivilegesToRole({
   roleId: string;
   privilegeIds: number[];
 }) {
-  const response = await fetch(
-    `${BASE_URL}/roles/assign-privileges`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ roleId, privilegeIds }),
-    }
+  // const response = await fetch(
+  //   `${BASE_URL}/roles/assign-privileges`,
+  //   {
+  //     method: "POST",
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //     body: JSON.stringify({ roleId, privilegeIds }),
+  //   }
+  // );
+  const res = await axiosInstance.post(
+    "/roles/assign-privileges",
+    { roleId, privilegeIds }
   );
 
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || "Failed to assign privileges");
-  }
+  return res.data;
 
-  return true;
+  // if (!response.ok) {
+  //   const text = await response.text();
+  //   throw new Error(text || "Failed to assign privileges");
+  // }
+
+  // return true;
 }
 import { User } from "../utils/type";
-import axios from "axios";
+// import axios from "axios";
+import axiosInstance from "./axiosInstance";
 export const updateUserById = async (user: User, token: string): Promise<User> => {
-  const response = await axios.put(`${BASE_URL}/user/${user.id}`, user, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  return response.data;
+  const res = await axiosInstance.put(`/user/${user.id}`, user);
+  return res.data;
 };
 
 export const deleteUserById = async (userId: number, token: string): Promise<void> => {
-  await axios.delete(`${BASE_URL}/user/${userId}`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
+  await axiosInstance.delete(`/user/${userId}`);
 };

@@ -84,8 +84,11 @@ export default function AddNewProduct() {
     const fetchCategories = async () => {
       try {
         const res = await apiConnector("GET", "/category");
-
-        const formatted = res.data.map((item: any) => ({
+       console.log("res",res);
+          const categories = Array.isArray(res.data?.categories)
+        ? res.data.categories
+        : [];
+        const formatted = categories.map((item: any) => ({
           value: String(item.id),
           label: item.name,
         }));
