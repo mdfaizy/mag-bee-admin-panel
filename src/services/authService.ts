@@ -29,6 +29,7 @@ interface ErrorResponse {
 
 interface SignupResponse {
   message: string;
+  emailSent?: boolean;
   success?: boolean;
 }
 export const signup = ({
@@ -53,10 +54,15 @@ export const signup = ({
           role_id: roleId,
           email,
           password,
-          is_active: true,
+          is_active: false,
         },
       );
-      toast.success("Registration successful!");
+      // toast.success("Registration successful!");
+      if (res.data?.emailSent) {
+  toast.success(res.data.message || "Verification email sent 📧");
+} else {
+  toast.success("Registration successful");
+}
       router.push("/");
 
     } catch (err) {

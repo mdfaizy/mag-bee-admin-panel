@@ -21,7 +21,7 @@ export default function VerifyEmailPage() {
 
     const verifyEmail = async () => {
       try {
-        const res = await axiosInstance.get(
+        const res = await axiosInstance.post(
           `/verify-email?token=${encodeURIComponent(token)}`
         );
 
