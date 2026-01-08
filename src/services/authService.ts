@@ -79,23 +79,78 @@ interface LoginParams {
   router: AppRouter;
 }
 
+// export const login = ({ identifier, password, router }: LoginParams) => {
+//   return async (dispatch: AppDispatch) => {
+//     const toastId = toast.loading("Logging in...");
+//     try {
+//       const res = await apiConnector("POST", LOGIN_API, {
+//         identifier,
+//         password,
+//       });
+
+//       if (!res.data?.user) {
+//         throw new Error(res.data?.message || "Invalid credentials");
+//       }
+
+//       const { user, message } = res.data;
+
+//       if (!message?.toLowerCase().includes("successful")) {
+//         throw new Error(message || "Login failed");
+//       }
+
+//       const userImage =
+//         user?.image ||
+//         `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(
+//           user.name
+//         )}`;
+
+//       const updatedUser = { ...user, image: userImage };
+
+//       dispatch(setUser(updatedUser));
+//       localStorage.setItem("user", JSON.stringify(updatedUser));
+
+//       toast.success("Login successful");
+
+//       // ✅ IMPORTANT: replace not push
+//       router.replace("/");
+
+//       // } 
+//     } catch (err: any) {
+//       const errorMessage =
+//         err.response?.data?.message ||
+//         err.response?.data?.errors?.[0]?.message ||
+//         err.message ||
+//         "Login failed";
+
+//       toast.error(errorMessage);
+
+
+//     } finally {
+//       toast.dismiss(toastId);
+//     }
+//   };
+// };
+
+
 export const login = ({ identifier, password, router }: LoginParams) => {
   return async (dispatch: AppDispatch) => {
     const toastId = toast.loading("Logging in...");
+
     try {
       const res = await apiConnector("POST", LOGIN_API, {
         identifier,
         password,
       });
 
-      const { user, message } = res.data;
-
-      if (!message?.toLowerCase().includes("successful")) {
-        throw new Error(message || "Login failed");
+      // 🔴 Single source of truth
+      if (!res.data?.user) {
+        throw new Error(res.data?.message || "Invalid credentials");
       }
 
+      const user = res.data.user;
+
       const userImage =
-        user?.image ||
+        user.image ||
         `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(
           user.name
         )}`;
@@ -107,20 +162,17 @@ export const login = ({ identifier, password, router }: LoginParams) => {
 
       toast.success("Login successful");
 
-      // ✅ IMPORTANT: replace not push
+      // ✅ redirect ONLY on success
       router.replace("/");
 
-      // } 
     } catch (err: any) {
       const errorMessage =
         err.response?.data?.message ||
-        err.response?.data?.errors?.[0]?.message ||
         err.message ||
         "Login failed";
 
       toast.error(errorMessage);
-
-
+      return; // 🔥 IMPORTANT (stop flow)
     } finally {
       toast.dismiss(toastId);
     }

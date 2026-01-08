@@ -24,9 +24,17 @@
         try {
           const res = await axiosInstance.get("/auth/me");
           dispatch(setUser(res.data.user));
-        } catch {
-          router.replace("/signin");
-        } finally {
+        } catch (err: any) {
+  // ❗ only redirect if NOT already on signin
+  if (window.location.pathname !== "/signin") {
+    router.replace("/signin");
+  }
+}
+        // catch {
+        //   router.replace("/signin");
+        // } 
+        
+        finally {
           setLoading(false);
         }
       };
