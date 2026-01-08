@@ -1,3 +1,4 @@
+"use client"; 
 import ResetPassword from "@/components/auth/ResetPassword";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import React from "react";
