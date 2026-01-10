@@ -20,7 +20,7 @@ interface SignupParams {
   mobileNo: string;
   roleId: number;
   email: string;
-  password: string;
+  // password: string;
   router: AppRouter;
 }
 interface ErrorResponse {
@@ -32,17 +32,58 @@ interface SignupResponse {
   emailSent?: boolean;
   success?: boolean;
 }
+// export const signup = ({
+//   name,
+//   username,
+//   mobileNo,
+//   roleId,
+//   email,
+//   password,
+//   router,
+// }: SignupParams) => {
+//   return async (dispatch: AppDispatch) => {
+//     const toastId = toast.loading("Registering...");
+//     try {
+//       const res = await apiConnector<SignupResponse>(
+//         "POST",
+//         SIGNUP_API,
+//         {
+//           name,
+//           username,
+//           phone_number: mobileNo,
+//           role_id: roleId,
+//           email,
+//           password,
+//           is_active: false,
+//         },
+//       );
+//       // toast.success("Registration successful!");
+//       if (res.data?.emailSent) {
+//   toast.success(res.data.message || "Verification email sent 📧");
+// } else {
+//   toast.success("Registration successful");
+// }
+//       router.push("/");
+
+//     } catch (err) {
+//       const error = err as AxiosError<ErrorResponse>;
+//       toast.error(error.response?.data?.message || error.message || "Signup failed.");
+//     } finally {
+//       toast.dismiss(toastId);
+//     }
+//   };
+// };
+
 export const signup = ({
   name,
   username,
   mobileNo,
   roleId,
   email,
-  password,
   router,
 }: SignupParams) => {
-  return async (dispatch: AppDispatch) => {
-    const toastId = toast.loading("Registering...");
+  return async (_dispatch: AppDispatch) => {
+    const toastId = toast.loading("Creating user...");
     try {
       const res = await apiConnector<SignupResponse>(
         "POST",
@@ -53,26 +94,28 @@ export const signup = ({
           phone_number: mobileNo,
           role_id: roleId,
           email,
-          password,
-          is_active: false,
-        },
+        }
       );
-      // toast.success("Registration successful!");
-      if (res.data?.emailSent) {
-  toast.success(res.data.message || "Verification email sent 📧");
-} else {
-  toast.success("Registration successful");
-}
-      router.push("/");
 
+      toast.success(
+        res.data?.message || "User created. Verification email sent 📧"
+      );
+      
+      // ✅ best UX
+      router.push("/");
     } catch (err) {
       const error = err as AxiosError<ErrorResponse>;
-      toast.error(error.response?.data?.message || error.message || "Signup failed.");
+      toast.error(
+        error.response?.data?.message ||
+          error.message ||
+          "User creation failed"
+      );
     } finally {
       toast.dismiss(toastId);
     }
   };
 };
+
 interface LoginParams {
   identifier: string;
   password: string;
@@ -196,7 +239,7 @@ export const fetchAllUsers = async () => {
 export async function toggleUserStatus(id: number) {
   return await apiConnector(
     "PATCH",
-    `/customers/${id}/toggle`,);
+    `/users/${id}/toggle`,);
 }
 
 

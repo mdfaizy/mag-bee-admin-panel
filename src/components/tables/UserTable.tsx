@@ -62,17 +62,37 @@ const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const visibleData = tableData.slice(startIndex, startIndex + itemsPerPage);
 
   // ✅ Toggle function
-  const handleToggle = async (id: number) => {
-    try {
-      await toggleUserStatus(id);
-      const result = await fetchAllUsers();
-      setTableData(result.users);
+  // const handleToggle = async (id: number) => {
+  //   try {
+  //     await toggleUserStatus(id);
+  //     const result = await fetchAllUsers();
+  //     setTableData(result.users);
 
       
-    } catch (error) {
-      console.error("Error toggling user status:", error);
-    }
-  };
+  //   } catch (error) {
+  //     console.error("Error toggling user status:", error);
+  //   }
+  // };
+  const handleToggle = async (id: number) => {
+  try {
+    const res = await toggleUserStatus(id);
+    const updatedUser = res.data.user;
+
+    setTableData((prev) =>
+      prev.map((u) =>
+        u.id === updatedUser.id
+          ? { ...u, is_active: updatedUser.is_active }
+          : u
+      )
+    );
+
+    toast.success(res.data.message);
+  } catch (error) {
+    console.error("Error toggling user status:", error);
+    toast.error("Failed to toggle status");
+  }
+};
+
 
   const handleSaveUser = async (updatedUser: User) => {
   try {

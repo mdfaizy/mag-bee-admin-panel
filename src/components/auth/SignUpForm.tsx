@@ -31,7 +31,7 @@ export default function SignUpForm() {
     mobileNo: "",
     roleId: "",
     email: "",
-    password: "",
+    // password: "",
   });
 
   const [roles, setRoles] = useState<RoleOption[]>([]);
@@ -85,9 +85,9 @@ export default function SignUpForm() {
   const handleSignUp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { name, username, mobileNo, roleId, email, password } = formData;
+    const { name, username, mobileNo, roleId, email } = formData;
 
-    if (!name || !username || !mobileNo || !roleId || !email || !password) {
+    if (!name || !username || !mobileNo || !roleId || !email) {
       toast.error("Please fill all required fields.");
       return;
     }
@@ -104,7 +104,7 @@ export default function SignUpForm() {
         mobileNo,
         roleId: Number(roleId),
         email,
-        password,
+        // password,
         router,
       })
     );
@@ -194,7 +194,7 @@ export default function SignUpForm() {
                   onChange={handleChange}
                 />
               </div>
-
+{/* 
               <div>
                 <Label>Password<span className="text-error-500">*</span></Label>
                 <div className="relative">
@@ -216,7 +216,7 @@ export default function SignUpForm() {
                     )}
                   </span>
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex items-center gap-3">
                 <Checkbox
