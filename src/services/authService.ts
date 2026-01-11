@@ -100,7 +100,7 @@ export const signup = ({
       toast.success(
         res.data?.message || "User created. Verification email sent 📧"
       );
-      
+
       // ✅ best UX
       router.push("/");
     } catch (err) {
@@ -231,8 +231,6 @@ export const login = ({ identifier, password, router }: LoginParams) => {
 export const fetchAllUsers = async () => {
 
   const res = await apiConnector("GET", USER_LIST_API);
-  console.log('localStorage.getItem("user")', localStorage.getItem("user"));
-
   return res.data;
 };
 
@@ -350,4 +348,79 @@ export const updateUserById = async (user: User, token: string): Promise<User> =
 
 export const deleteUserById = async (userId: number, token: string): Promise<void> => {
   await axiosInstance.delete(`/user/${userId}`);
+};
+
+
+export const forgotPassword = (
+  email: string,
+  setEmailSent: (val: boolean) => void
+) => {
+  return async (_dispatch: AppDispatch) => {
+    const toastId = toast.loading("Sending reset email...");
+
+    try {
+      const res = await apiConnector(
+        "POST",
+        endpoints.FORGOT_PASSWORD_API,
+        { email }
+      );
+
+      toast.success(
+        res.data?.message || "Reset password email sent 📧"
+      );
+
+      setEmailSent(true);
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to send reset email"
+      );
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
+};
+
+
+export const resetPassword = (
+  password: string,
+  confirmPassword: string,
+  token: string | null,
+  setResetComplete: (val: boolean) => void
+) => {
+  return async (_dispatch: AppDispatch) => {
+    if (!token) {
+      toast.error("Invalid or missing reset token");
+      return;
+    }
+
+    const toastId = toast.loading("Resetting password...");
+
+    try {
+      const res = await apiConnector(
+        "POST",
+        endpoints.RESET_PASSWORD_API,
+        {
+          token,
+          password,
+          confirmPassword,
+        }
+      );
+
+      toast.success(
+        res.data?.message || "Password reset successfully ✅"
+      );
+
+      setResetComplete(true);
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.message ||
+          err.message ||
+          "Failed to reset password"
+      );
+    } finally {
+      toast.dismiss(toastId);
+    }
+  };
 };

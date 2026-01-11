@@ -1,76 +1,118 @@
 "use client";
 
-import React, { useState, FormEvent } from "react";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { resetPassword } from "@/services/authService";
+import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-// import { AuthService } from "@/services/authService";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-const ResetPassword: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { loading } = useAppSelector((state) => state.auth);
+export default function ResetPassword({ token }: { token: string }) {
+  const dispatch = useDispatch<AppDispatch>();
+  const { loading } = useSelector((state: any) => state.auth);
 
-  const [email, setEmail] = useState<string>("");
-  const [emailSent, setEmailSent] = useState<boolean>(false);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [resetComplete, setResetComplete] = useState(false);
 
-  const handleOnSubmit = (e: FormEvent<HTMLFormElement>) => {
+  // 👁 Show / Hide states
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // dispatch(AuthService.forgotPassword(email, setEmailSent));
+
+    if (!token) return alert("Invalid or expired reset link");
+    if (password !== confirmPassword) return alert("Passwords do not match");
+
+    dispatch(resetPassword(password, confirmPassword, token, setResetComplete));
   };
 
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] place-items-center bg-gray-900 text-white pt-10 pb-6 mb-2">
-      {loading ? (
-        <div className="custom-loader" />
-      ) : (
-        <div className="max-w-[500px] p-4 lg:p-8">
-          <h1 className="text-[1.875rem] font-semibold leading-[2.375rem]">
-            {!emailSent ? "Reset your password" : "Check email"}
-          </h1>
+    <div className="flex items-center justify-center px-6 w-2/4 min-h-screen bg-gray-900 text-white">
+      <div className="w-full max-w-md">
 
-          <p className="my-4 text-[1.125rem] leading-[1.625rem] text-gray-300">
-            {!emailSent
-              ? "Have no fear. We'll email you instructions to reset your password."
-              : `We have sent the reset email to ${email}`}
-          </p>
+        <h1 className="text-2xl font-semibold mb-2">
+          {resetComplete ? "Password Updated 🎉" : "Choose New Password"}
+        </h1>
 
-          <form onSubmit={handleOnSubmit}>
-            {!emailSent && (
-              <label className="w-full">
-                <p className="mb-1 text-sm">
-                  Email Address <sup className="text-red-600">*</sup>
-                </p>
-                <input
-                  required
-                  type="email"
-                  name="email"
-                  placeholder="Enter email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-lg bg-gray-200 p-3 text-black placeholder-gray-500 focus:outline-none"
-                />
-              </label>
-            )}
+        <p className="text-sm text-gray-400 mb-6">
+          {resetComplete
+            ? "Your password has been reset successfully."
+            : "Enter a strong password and confirm it below."}
+        </p>
+
+        {!resetComplete ? (
+          <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* NEW PASSWORD */}
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="New password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-md bg-gray-800 border border-gray-700 p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+
+            {/* CONFIRM PASSWORD */}
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full rounded-md bg-gray-800 border border-gray-700 p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                required
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  setShowConfirmPassword(!showConfirmPassword)
+                }
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-yellow-400"
+              >
+                {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
 
             <button
               type="submit"
-              className="mt-6 w-full rounded-lg bg-blue-500 py-3 font-medium text-black hover:bg-blue-600 transition"
+              disabled={loading}
+              className="w-full rounded-md bg-brand-500 py-3 text-black font-medium hover:bg-brand-700 transition disabled:opacity-60"
             >
-              {!emailSent ? "Reset Password" : "Resend Email"}
+              {loading ? "Resetting..." : "Reset Password"}
             </button>
           </form>
+        ) : (
+          <Link href="/signin">
+            <button className="w-full mt-4 rounded-md bg-green-500 py-3 font-medium text-black hover:bg-green-600 transition">
+              Go to Login
+            </button>
+          </Link>
+        )}
 
-          <div className="mt-6">
+        {/* BACK TO LOGIN */}
+        {!resetComplete && (
+          <div className="mt-6 text-center">
             <Link
-              href="/login"
-              className="flex items-center gap-x-2 text-sm text-gray-300 hover:text-white"
+              href="/signin"
+              className="text-sm text-gray-400 hover:text-yellow-400 transition"
             >
               ← Back to Login
             </Link>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
-};
-
-export default ResetPassword;
+}

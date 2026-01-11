@@ -1,4 +1,6 @@
 "use client";
+import { useSelector } from "react-redux";
+ 
 import React, { useEffect, useRef, useState,useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -31,13 +33,46 @@ import {
 
 import { FaShoppingCart } from "react-icons/fa";
 
+type NavSubItem = {
+  name: string;
+  path: string;
+  permissions?: string[];   // ✅ ADD THIS
+  pro?: boolean;
+  new?: boolean;
+};
+// type NavItem = {
+//   name: string;
+//   icon: React.ReactNode;
+//   path?: string;
+//   permissions?: string[];
+//   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+// };
+// type NavSubItem = {
+//   name: string;
+//   path: string;
+//   permissions?: string[];   // ✅ ADD THIS
+//   pro?: boolean;
+//   new?: boolean;
+// };
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  permissions?: string[];
+  subItems?: NavSubItem[];
 };
+
+const hasPermission = (
+  userPermissions: string[],
+  required?: string[]
+) => {
+  if (!required || required.length === 0) return false; // 🔥 VERY IMPORTANT
+  return required.some(p => userPermissions.includes(p));
+};
+
+
+
 
 const navItems: NavItem[] = [
   {
@@ -48,9 +83,10 @@ const navItems: NavItem[] = [
   {
   name: "Ecommerce",
   icon: <FaShoppingCart />,
+  permissions: ["VIEW_PRODUCT"],
   subItems: [
-    { name: "Add Category", path: "/category", pro: false },
-    { name: "Product Category List", path: "/product-category-table", pro: false },
+    { name: "Add Category", path: "/category",permissions: ["CREATE_CATEGORY"], pro: false },
+    { name: "Product Category List", path: "/product-category-table",  permissions: ["VIEW_CATEGORY"],pro: false },
     { name: "Add Products", path: "/add-new-product", pro: false },
     { name: "Products List", path: "/product", pro: false },
     {name: "Create Sub Category",path:'/create-sub-category',pro:false},
@@ -129,6 +165,9 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+const userPermissions = useSelector(
+  (state: any) => state.auth.user?.permissions || []
+);
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -242,6 +281,7 @@ const AppSidebar: React.FC = () => {
             </div>
           )}
         </li>
+        
       ))}
     </ul>
   );
