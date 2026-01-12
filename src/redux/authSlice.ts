@@ -5,7 +5,7 @@ interface User {
   email?: string;
   role?: string;
   image?: string;
-  
+  permissions?: string[]; 
 }
 interface AuthState {
   // token: string | null;

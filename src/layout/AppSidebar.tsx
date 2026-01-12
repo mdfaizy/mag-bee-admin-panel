@@ -1,25 +1,14 @@
 "use client";
 import { useSelector } from "react-redux";
- 
+import { IoLayersSharp } from "react-icons/io5";
+import { LuFileText } from "react-icons/lu";
+import { CiUser } from "react-icons/ci";
+import { FaUsers } from "react-icons/fa6";
 import React, { useEffect, useRef, useState,useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
-// import {
-//   // BoxCubeIcon,
-//   // CalenderIcon,
-//   ChevronDownIcon,
-//   GridIcon,
-//   HorizontaLDots,
-//   ListIcon,
-//   // PageIcon,
-//   PieChartIcon,
-//   PlugInIcon,
-//   TableIcon,
-//   UserCircleIcon,
-// } from "../icons/index";
-
 import {
   FaChevronDown,     // ChevronDownIcon
   FaThLarge,         // GridIcon
@@ -32,6 +21,7 @@ import {
 } from 'react-icons/fa';
 
 import { FaShoppingCart } from "react-icons/fa";
+import { BiPieChart } from "react-icons/bi";
 
 type NavSubItem = {
   name: string;
@@ -67,9 +57,17 @@ const hasPermission = (
   userPermissions: string[],
   required?: string[]
 ) => {
-  if (!required || required.length === 0) return false; // 🔥 VERY IMPORTANT
+  // ✅ Full access (ADMIN / SUPER_ADMIN)
+  if (userPermissions.includes("*")) return true;
+
+  // Agar permission required hi nahi
+  if (!required || required.length === 0) return true;
+
+  // Normal permission check
   return required.some(p => userPermissions.includes(p));
 };
+
+
 
 
 
@@ -80,77 +78,123 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
-  {
+//   {
+//   name: "Ecommerce",
+//   icon: <FaShoppingCart />,
+//  permissions: ["VIEW_PRODUCT"],
+//   subItems: [
+//     // { name: "Category", path: "/category",permissions: ["CREATE_CATEGORY"], pro: false },
+//     // { name: "Product Category List", path: "/product-category-table",  permissions: ["VIEW_CATEGORY"],pro: false },
+//     { name: "Add Product", path: "/add-new-product", pro: false },
+//     { name: "Products List", path: "/product", pro: false },
+//     // {name: "Create Sub Category",path:'/create-sub-category',pro:false},
+//     // {name:'Sub Category Table',path:'/subCategoryTable',pro:false},
+//     // { name: "Create New Banner", path: "/banner", pro: false },
+//     // { name: "Banner Slider List", path: "/banner-slider", pro: false },
+
+
+//   ],
+// },
+{
   name: "Ecommerce",
   icon: <FaShoppingCart />,
   permissions: ["VIEW_PRODUCT"],
   subItems: [
-    { name: "Add Category", path: "/category",permissions: ["CREATE_CATEGORY"], pro: false },
-    { name: "Product Category List", path: "/product-category-table",  permissions: ["VIEW_CATEGORY"],pro: false },
-    { name: "Add Products", path: "/add-new-product", pro: false },
-    { name: "Products List", path: "/product", pro: false },
-    {name: "Create Sub Category",path:'/create-sub-category',pro:false},
-    {name:'Sub Category Table',path:'/subCategoryTable',pro:false},
-    { name: "Create New Banner", path: "/banner", pro: false },
-    { name: "Banner Slider List", path: "/banner-slider", pro: false },
-
-
+    {
+      name: "Add Product",
+      path: "/add-new-product",
+      permissions: ["CREATE_PRODUCT"],
+    },
+    {
+      name: "Products List",
+      path: "/product",
+      permissions: ["VIEW_PRODUCT"],
+    },
   ],
 },
 
 
-  // {
-  //   icon: <CalenderIcon />,
-  //   name: "Calendar",
-  //   path: "/calendar",
-  // },
- 
+{
+  name: "Banner",
+  icon: <IoLayersSharp />,
+ permissions:["VIEW-BANNER"],
+  subItems: [
+     { name: "New Banner", path: "/banner", permissions:["CREATE-BANNER"], },
+    { name: "Banner List", path: "/banner-slider",permissions:["VIEW-BANNER"], },
+  ],
+},
+ {
+  name: "Sub Category",
+  icon: <IoLayersSharp />,
+  //  permissions:["VIEW-SUB-CATEGORY"],
+  subItems: [
+     {name: "Add Sub Category",path:'/create-sub-category',permissions:["CREACTE-SUB-CATEGORY"],},
+    {name:'Sub Category Table',path:'/subCategoryTable',pro:false},
+  ],
+},
 
+ {
+  name: "Category",
+  icon: <IoLayersSharp />,
+
+  subItems: [
+    { name: "Category List", path: "/product-category-table" },
+    { name: "New Category", path: "/category", permissions: ["CREATE_CATEGORY"] },
+  ],
+},
   // {
-  //   name: "Forms",
-  //   icon: <ListIcon />,
-  //   subItems: [
-  //     // { name: "Form Elements", path: "/form-elements", pro: false },
-  //     // { name: "Add Prduct Category", path: "/product-category", pro: false }
-  //     // { name: "Role Ctreate", path: "/created-role", pro: false },
-  //     //  { name: "Assign Privelege", path: "/assign-privelege", pro: false },
+  //   name: "Tables",
+  //   icon: <FaTable />,
+  //   subItems: [{ name: "Resent Order", path: "/orders-tables", pro: false },
+  //      { name: "Employees For MagBee", path: "/user-table", pro: false },
+  //      { name: "Customer List", path: "/customer", pro: false },
+  //        { name: "Product Varient", path: "/product-varient", pro: false },
   //   ],
   // },
+
   {
-    name: "Tables",
-    icon: <FaTable />,
-    subItems: [{ name: "Resent Order", path: "/orders-tables", pro: false },
-       { name: "Employees For MagBee", path: "/user-table", pro: false },
+    name: "Orders",
+    icon: <LuFileText />,
+    subItems: [{ name: "Resent Order", path: "/orders-tables", pro: false },],
+  },
+  {
+    name: "User",
+    icon: <CiUser />,
+    permissions:["VIEW_USER"],
+    subItems: [{ name: "All Employees", path: "/user-table", permissions:["VIEW_USER"] },
+      { name: "Add New Employee", path: "/signup", permissions: ["CREATE_USER"]},
        { name: "Customer List", path: "/customer", pro: false },
-         { name: "Product Varient", path: "/product-varient", pro: false },
+      ],
+  },
+  {
+    name: "Roles",
+    icon: <FaUsers />,
+    permissions: ["VIEW_ROLE"],
+    subItems: [{ name: "All Roles", path: "/",  permissions: ["VIEW_ROLE"],},
+      { name: "Role Ctreate", path: "/created-role",permissions: ["CREATE_ROLE"]  },
+      { name: "Assign Privelege", path: "/assign-privelege",  },
+    ],
+  }, 
+  // 
+   {
+    icon: <BiPieChart />,
+    name: "Charts",
+    subItems: [
+      { name: "Line Chart", path: "/line-chart", pro: false },
+      { name: "Bar Chart", path: "/bar-chart", pro: false },
     ],
   },
-  //  {
-  //   icon: <PieChartIcon />,
-  //   name: "Charts",
-  //   subItems: [
-  //     { name: "Line Chart", path: "/line-chart", pro: false },
-  //     { name: "Bar Chart", path: "/bar-chart", pro: false },
-  //   ],
-  // },
   {
     icon: <FaPlug />,
     name: "Authentication",
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-         { name: "Role Ctreate", path: "/created-role", pro: false },
-       { name: "Assign Privelege", path: "/assign-privelege", pro: false },
+      { name: "Add New Employee", path: "/signup", permissions: ["CREATE_USER"]},
+        //  { name: "Role Ctreate", path: "/created-role", pro: false },
+      //  { name: "Assign Privelege", path: "/assign-privelege", pro: false },
 
     ],
   },
-  // {
-  //   name: "Pages",
-  //   icon: <PageIcon />,
-  //   subItems: [
-  //     { name: "404 Error", path: "/error-404", pro: false },
-  //   ],
-  // },
 ];
 
 const othersItems: NavItem[] = [
@@ -169,12 +213,44 @@ const userPermissions = useSelector(
   (state: any) => state.auth.user?.permissions || []
 );
 
+  // const renderMenuItems = (
+  //   navItems: NavItem[],
+  //   menuType: "main" | "others"
+  // ) => (
   const renderMenuItems = (
-    navItems: NavItem[],
-    menuType: "main" | "others"
-  ) => (
+  navItems: NavItem[],
+  menuType: "main" | "others"
+) => {
+  // 🔐 PERMISSION FILTER
+  const filteredNavItems = navItems
+    .map((nav) => {
+      // Parent permission
+      if (!hasPermission(userPermissions, nav.permissions)) {
+        return null;
+      }
+
+      // SubItem permission
+      if (nav.subItems) {
+        const allowedSubItems = nav.subItems.filter((sub) =>
+          hasPermission(userPermissions, sub.permissions)
+        );
+
+        if (allowedSubItems.length === 0) {
+          return null;
+        }
+
+        return { ...nav, subItems: allowedSubItems };
+      }
+
+      return nav;
+    })
+    .filter(Boolean) as NavItem[];
+
+  // ✅ RETURN JSX (VERY IMPORTANT)
+  return (
     <ul className="flex flex-col gap-4">
-      {navItems.map((nav, index) => (
+      {/* {navItems.map((nav, index) => ( */}
+      {filteredNavItems.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
             <button
@@ -285,6 +361,7 @@ const userPermissions = useSelector(
       ))}
     </ul>
   );
+}
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";

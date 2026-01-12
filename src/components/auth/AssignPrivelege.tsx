@@ -110,8 +110,8 @@ export default function AssignPrivilege() {
   };
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto mt-8">
+    <div className="overflow-hidden rounded-xl border h-full border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] ">
+      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto mt-8 z-999">
         <h1 className="text-center font-semibold uppercase mb-6 text-lg">
           Assign Privilege
         </h1>
@@ -131,7 +131,7 @@ export default function AssignPrivilege() {
           </div>
 
           {/* Privilege MultiSelect */}
-          <div>
+          <div className="z-100">
             <Label>
               Select Privileges <span className="text-error-500">*</span>
             </Label>
