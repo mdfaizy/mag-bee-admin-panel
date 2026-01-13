@@ -12,6 +12,7 @@ interface SelectProps {
   className?: string;
   defaultValue?: string;
   value?: string; 
+  disabled?: boolean;
 }
   
 const Select: React.FC<SelectProps> = ({

@@ -198,7 +198,7 @@ export const login = ({ identifier, password, router }: LoginParams) => {
           user.name
         )}`;
 
-      const updatedUser = { ...user, image: userImage };
+      const updatedUser = { ...user, image: userImage, permissions: user.permissions || [], };
 
       dispatch(setUser(updatedUser));
       localStorage.setItem("user", JSON.stringify(updatedUser));

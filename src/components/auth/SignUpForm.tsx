@@ -10,10 +10,10 @@ import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 // import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
-import { FaArrowLeft } from "react-icons/fa6";
+// import { FaArrowLeft } from "react-icons/fa6";
 
-import { IoEyeOff } from "react-icons/io5";
-import { IoEye } from "react-icons/io5";
+// import { IoEyeOff } from "react-icons/io5";
+// import { IoEye } from "react-icons/io5";
 import Link from "next/link";
 import { signup } from "@/services/authService";
 import Select from "../form/Select";
@@ -111,8 +111,8 @@ export default function SignUpForm() {
   };
 
   return (
-    <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
-      <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
+    <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar mx-auto">
+      {/* <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
         <Link
           href="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
@@ -120,16 +120,17 @@ export default function SignUpForm() {
           <FaArrowLeft />
           Back to dashboard
         </Link>
-      </div>
+      </div> */}
 
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Sign Up
+              {/* Sign Up */}
+              Create New Employee
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your details to create an account!
+              Fill in the details below to add a new employee.
             </p>
           </div>
 
@@ -141,7 +142,7 @@ export default function SignUpForm() {
                   <Input
                     type="text"
                     name="name"
-                    placeholder="Enter your name"
+                    placeholder="Enter employee name"
                     value={formData.name}
                     onChange={handleChange}
                   />
@@ -152,7 +153,7 @@ export default function SignUpForm() {
                   <Input
                     type="text"
                     name="username"
-                    placeholder="Enter your username"
+                    placeholder="Enter employee username"
                     value={formData.username}
                     onChange={handleChange}
                   />
@@ -165,7 +166,7 @@ export default function SignUpForm() {
                   <Input
                     type="text"
                     name="mobileNo"
-                    placeholder="Enter your mobile number"
+                    placeholder="Enter employee mobile number"
                     value={formData.mobileNo}
                     onChange={handleChange}
                   />
@@ -179,45 +180,18 @@ export default function SignUpForm() {
                     onChange={handleRoleChange}
                     value={formData.roleId}
                   />
-
-
                 </div>
               </div>
-
               <div>
                 <Label>Email<span className="text-error-500">*</span></Label>
                 <Input
                   type="email"
                   name="email"
-                  placeholder="Enter your email"
+                  placeholder="Enter employee email"
                   value={formData.email}
                   onChange={handleChange}
                 />
               </div>
-{/* 
-              <div>
-                <Label>Password<span className="text-error-500">*</span></Label>
-                <div className="relative">
-                  <Input
-                    name="password"
-                    placeholder="Enter your password"
-                    type={showPassword ? "text" : "password"}
-                    value={formData.password}
-                    onChange={handleChange}
-                  />
-                  <span
-                    onClick={toggleShowPassword}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
-                  >
-                    {showPassword ? (
-                      <IoEye className="fill-gray-500 dark:fill-gray-400" />
-                    ) : (
-                      <IoEyeOff className="fill-gray-500 dark:fill-gray-400" />
-                    )}
-                  </span>
-                </div>
-              </div> */}
-
               <div className="flex items-center gap-3">
                 <Checkbox
                   className="w-5 h-5"
@@ -225,7 +199,7 @@ export default function SignUpForm() {
                   onChange={setIsChecked}
                 />
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  By signing up, you agree to our{" "}
+                  I confirm this employee agrees to company policies.{" "}
                   <span className="text-gray-800 dark:text-white">Terms</span> &{" "}
                   <span className="text-gray-800 dark:text-white">Privacy Policy</span>.
                 </p>

@@ -64,16 +64,7 @@ export default function UserDropdown() {
   alt={user?.name || "User"}
   className="rounded-full"
 />
-
         </span>
-
-        {/* <span className="block mr-1 font-medium text-theme-sm">
-          {user?.name}
-        </span> */}
-
-        {/* <FaChevronDown
-    className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-  /> */}
       </button>
 
       <Dropdown

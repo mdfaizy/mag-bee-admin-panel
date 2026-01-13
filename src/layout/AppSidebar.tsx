@@ -184,17 +184,17 @@ const navItems: NavItem[] = [
       { name: "Bar Chart", path: "/bar-chart", pro: false },
     ],
   },
-  {
-    icon: <FaPlug />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Add New Employee", path: "/signup", permissions: ["CREATE_USER"]},
-        //  { name: "Role Ctreate", path: "/created-role", pro: false },
-      //  { name: "Assign Privelege", path: "/assign-privelege", pro: false },
+  // {
+  //   icon: <FaPlug />,
+  //   name: "Authentication",
+  //   subItems: [
+  //     { name: "Sign In", path: "/signin", pro: false },
+  //     { name: "Add New Employee", path: "/signup", permissions: ["CREATE_USER"]},
+  //       //  { name: "Role Ctreate", path: "/created-role", pro: false },
+  //     //  { name: "Assign Privelege", path: "/assign-privelege", pro: false },
 
-    ],
-  },
+  //   ],
+  // },
 ];
 
 const othersItems: NavItem[] = [

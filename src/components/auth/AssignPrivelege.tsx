@@ -15,7 +15,7 @@ const MultiSelecterInput = dynamic(
 // Services
 import { fetchRoles } from "@/services/role";
 import { fetchPrivileges } from "@/services/usePrivillage";
-import { BASE_URL } from "@/services/apis";
+// import { BASE_URL } from "@/services/apis";
 import { apiConnector } from "@/services/apiConnector";
 
 // Types
