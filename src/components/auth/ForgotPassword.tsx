@@ -5,17 +5,34 @@ import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { forgotPassword } from "@/services/authService";
 import { AppDispatch } from "@/redux/store";
-
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  forgotPasswordFormSchema,
+  ForgotPasswordFormType,
+} from "@/validations/Schema";
 export default function ForgotPassword() {
   const dispatch = useDispatch<AppDispatch>();
   const { loading } = useSelector((state: any) => state.auth);
 
-  const [email, setEmail] = useState("");
+  // const [email, setEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    dispatch(forgotPassword(email, setEmailSent));
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   dispatch(forgotPassword(email, setEmailSent));
+  // };
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm<ForgotPasswordFormType>({
+    resolver: zodResolver(forgotPasswordFormSchema),
+  });
+  const email = watch("email");
+  const onSubmit = (data: ForgotPasswordFormType) => {
+    dispatch(forgotPassword(data.email, setEmailSent));
   };
 
   return (
@@ -36,18 +53,21 @@ export default function ForgotPassword() {
           </p>
 
           {!emailSent && (
-            <form onSubmit={handleSubmit} className="mt-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-4">
               <input
                 type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...register("email")}
+                // onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter email"
                 className="w-full rounded p-3 text-black border "
               />
-              
-              <button className="mt-4 w-full rounded bg-blue-500 py-2">
-                Reset Password
+              {errors.email && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.email.message}
+                </p>
+              )}
+              <button className="mt-4 w-full rounded bg-blue-500 py-2" disabled={loading}>
+                {loading ? "Sending..." : "Reset Password"}
               </button>
             </form>
           )}
@@ -60,5 +80,3 @@ export default function ForgotPassword() {
     </div>
   );
 }
-
-

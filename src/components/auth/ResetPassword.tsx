@@ -6,6 +6,12 @@ import { resetPassword } from "@/services/authService";
 import { AppDispatch } from "@/redux/store";
 import Link from "next/link";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  resetPasswordFormSchema,
+  ResetPasswordFormType,
+} from "@/validations/Schema";
 
 export default function ResetPassword({ token }: { token: string }) {
   const dispatch = useDispatch<AppDispatch>();
@@ -19,13 +25,33 @@ export default function ResetPassword({ token }: { token: string }) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    if (!token) return alert("Invalid or expired reset link");
-    if (password !== confirmPassword) return alert("Passwords do not match");
+  //   if (!token) return alert("Invalid or expired reset link");
+  //   if (password !== confirmPassword) return alert("Passwords do not match");
 
-    dispatch(resetPassword(password, confirmPassword, token, setResetComplete));
+  //   dispatch(resetPassword(password, confirmPassword, token, setResetComplete));
+  // };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ResetPasswordFormType>({
+    resolver: zodResolver(resetPasswordFormSchema),
+  });
+
+  const onSubmit = (data: ResetPasswordFormType) => {
+    if (!token) return;
+
+    dispatch(
+      resetPassword(
+        data.password,
+        data.confirmPassword,
+        token,
+        setResetComplete
+      )
+    );
   };
 
   return (
@@ -43,18 +69,24 @@ export default function ResetPassword({ token }: { token: string }) {
         </p>
 
         {!resetComplete ? (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
             {/* NEW PASSWORD */}
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="New password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                // value={password}
+                // onChange={(e) => setPassword(e.target.value)}
+                {...register("password")}
                 className="w-full rounded-md bg-gray-800 border border-gray-700 p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                required
+              
               />
+              {errors.password && (
+                <p className="text-red-400 text-sm mt-1">
+                  {errors.password.message}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
@@ -69,11 +101,17 @@ export default function ResetPassword({ token }: { token: string }) {
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                // value={confirmPassword}
+                // onChange={(e) => setConfirmPassword(e.target.value)}
+                {...register("confirmPassword")}
                 className="w-full rounded-md bg-gray-800 border border-gray-700 p-3 pr-12 focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 required
               />
+               {errors.confirmPassword && (
+                <p className="text-red-400 text-sm mt-1">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
               <button
                 type="button"
                 onClick={() =>

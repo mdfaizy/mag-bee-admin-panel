@@ -170,7 +170,7 @@ const navItems: NavItem[] = [
     name: "Roles",
     icon: <FaUsers />,
     permissions: ["VIEW_ROLE"],
-    subItems: [{ name: "All Roles", path: "/",  permissions: ["VIEW_ROLE"],},
+    subItems: [{ name: "All Roles", path: "/created-role/role-table",  permissions: ["VIEW_ROLE"],},
       { name: "Role Ctreate", path: "/created-role",permissions: ["CREATE_ROLE"]  },
       { name: "Assign Privelege", path: "/assign-privelege",  },
     ],

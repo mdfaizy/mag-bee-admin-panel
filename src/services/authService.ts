@@ -1,9 +1,7 @@
 
 import { AppDispatch } from "@/redux/store";
 import { apiConnector } from "./apiConnector";
-import { BASE_URL, endpoints } from "./apis";
-// import { setToken } from "@/redux/authSlice";
-// import { setUser } from "@/redux/profileSlice";
+import { BASE_URL, endpoints, endpointsRoles } from "./apis";
 import { toast } from "react-toastify";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
@@ -13,7 +11,7 @@ type AppRouter = ReturnType<typeof useRouter>;
 const { LOGIN_API, SIGNUP_API, USER_LIST_API } = endpoints;
 
 
-
+const { CREATE_ROLE_API,GET_ROLES} =endpointsRoles;
 interface SignupParams {
   name: string;
   username: string;
@@ -32,47 +30,6 @@ interface SignupResponse {
   emailSent?: boolean;
   success?: boolean;
 }
-// export const signup = ({
-//   name,
-//   username,
-//   mobileNo,
-//   roleId,
-//   email,
-//   password,
-//   router,
-// }: SignupParams) => {
-//   return async (dispatch: AppDispatch) => {
-//     const toastId = toast.loading("Registering...");
-//     try {
-//       const res = await apiConnector<SignupResponse>(
-//         "POST",
-//         SIGNUP_API,
-//         {
-//           name,
-//           username,
-//           phone_number: mobileNo,
-//           role_id: roleId,
-//           email,
-//           password,
-//           is_active: false,
-//         },
-//       );
-//       // toast.success("Registration successful!");
-//       if (res.data?.emailSent) {
-//   toast.success(res.data.message || "Verification email sent 📧");
-// } else {
-//   toast.success("Registration successful");
-// }
-//       router.push("/");
-
-//     } catch (err) {
-//       const error = err as AxiosError<ErrorResponse>;
-//       toast.error(error.response?.data?.message || error.message || "Signup failed.");
-//     } finally {
-//       toast.dismiss(toastId);
-//     }
-//   };
-// };
 
 export const signup = ({
   name,
@@ -105,11 +62,7 @@ export const signup = ({
       router.push("/");
     } catch (err) {
       const error = err as AxiosError<ErrorResponse>;
-      toast.error(
-        error.response?.data?.message ||
-          error.message ||
-          "User creation failed"
-      );
+      toast.error(error.response?.data?.message || "Something went wrong");
     } finally {
       toast.dismiss(toastId);
     }
@@ -121,60 +74,6 @@ interface LoginParams {
   password: string;
   router: AppRouter;
 }
-
-// export const login = ({ identifier, password, router }: LoginParams) => {
-//   return async (dispatch: AppDispatch) => {
-//     const toastId = toast.loading("Logging in...");
-//     try {
-//       const res = await apiConnector("POST", LOGIN_API, {
-//         identifier,
-//         password,
-//       });
-
-//       if (!res.data?.user) {
-//         throw new Error(res.data?.message || "Invalid credentials");
-//       }
-
-//       const { user, message } = res.data;
-
-//       if (!message?.toLowerCase().includes("successful")) {
-//         throw new Error(message || "Login failed");
-//       }
-
-//       const userImage =
-//         user?.image ||
-//         `https://api.dicebear.com/5.x/initials/svg?seed=${encodeURIComponent(
-//           user.name
-//         )}`;
-
-//       const updatedUser = { ...user, image: userImage };
-
-//       dispatch(setUser(updatedUser));
-//       localStorage.setItem("user", JSON.stringify(updatedUser));
-
-//       toast.success("Login successful");
-
-//       // ✅ IMPORTANT: replace not push
-//       router.replace("/");
-
-//       // } 
-//     } catch (err: any) {
-//       const errorMessage =
-//         err.response?.data?.message ||
-//         err.response?.data?.errors?.[0]?.message ||
-//         err.message ||
-//         "Login failed";
-
-//       toast.error(errorMessage);
-
-
-//     } finally {
-//       toast.dismiss(toastId);
-//     }
-//   };
-// };
-
-
 export const login = ({ identifier, password, router }: LoginParams) => {
   return async (dispatch: AppDispatch) => {
     const toastId = toast.loading("Logging in...");
@@ -183,7 +82,7 @@ export const login = ({ identifier, password, router }: LoginParams) => {
       const res = await apiConnector("POST", LOGIN_API, {
         identifier,
         password,
-      });
+      }, { skipAuthRefresh: true });
 
       // 🔴 Single source of truth
       if (!res.data?.user) {
@@ -206,7 +105,8 @@ export const login = ({ identifier, password, router }: LoginParams) => {
       toast.success("Login successful");
 
       // ✅ redirect ONLY on success
-      router.replace("/");
+      router.push("/");
+
 
     } catch (err: any) {
       const errorMessage =
@@ -243,10 +143,8 @@ export async function toggleUserStatus(id: number) {
 
 
 export const logout = () => async (dispatch: AppDispatch) => {
-  // dispatch(setToken(null));
-  // dispatch(setUser(null));
+  dispatch(setUser(null));
   await apiConnector("POST", "/logout");
-  // dispatch(setUser(null));
   localStorage.removeItem("user");
   toast.success("Logged Out");
 };
@@ -258,7 +156,7 @@ interface CreateRoleParams {
   router: AppRouter;
 }
 
-const CREATE_ROLE_API = `${BASE_URL}/roles`;
+// const CREATE_ROLE_API = `${BASE_URL}/roles`;
 
 export const createRole = ({ name, description, router }: CreateRoleParams) => {
   return async (dispatch: AppDispatch) => {
@@ -284,6 +182,12 @@ export const createRole = ({ name, description, router }: CreateRoleParams) => {
   };
 };
 
+export const fetchAllRoles = async () => {
+
+  const res = await apiConnector("GET", GET_ROLES);
+  return res.data;
+};
+// roles
 
 interface Role { id: number; name: string }
 interface Privilege { id: number; name: string }
@@ -305,7 +209,6 @@ export async function getRolesAndPrivileges(): Promise<{
 
 
 export async function assignPrivilegesToRole({
-  token,
   roleId,
   privilegeIds,
 }: {
@@ -313,44 +216,22 @@ export async function assignPrivilegesToRole({
   roleId: string;
   privilegeIds: number[];
 }) {
-  // const response = await fetch(
-  //   `${BASE_URL}/roles/assign-privileges`,
-  //   {
-  //     method: "POST",
-  //     headers: {
-  //       "Content-Type": "application/json",
-  //       Authorization: `Bearer ${token}`,
-  //     },
-  //     body: JSON.stringify({ roleId, privilegeIds }),
-  //   }
-  // );
   const res = await axiosInstance.post(
     "/roles/assign-privileges",
     { roleId, privilegeIds }
   );
 
   return res.data;
-
-  // if (!response.ok) {
-  //   const text = await response.text();
-  //   throw new Error(text || "Failed to assign privileges");
-  // }
-
-  // return true;
 }
 import { User } from "../utils/type";
-// import axios from "axios";
 import axiosInstance from "./axiosInstance";
 export const updateUserById = async (user: User, token: string): Promise<User> => {
   const res = await axiosInstance.put(`/user/${user.id}`, user);
   return res.data;
 };
-
 export const deleteUserById = async (userId: number, token: string): Promise<void> => {
   await axiosInstance.delete(`/user/${userId}`);
 };
-
-
 export const forgotPassword = (
   email: string,
   setEmailSent: (val: boolean) => void
@@ -373,16 +254,14 @@ export const forgotPassword = (
     } catch (err: any) {
       toast.error(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to send reset email"
+        err.message ||
+        "Failed to send reset email"
       );
     } finally {
       toast.dismiss(toastId);
     }
   };
 };
-
-
 export const resetPassword = (
   password: string,
   confirmPassword: string,
@@ -416,8 +295,8 @@ export const resetPassword = (
     } catch (err: any) {
       toast.error(
         err.response?.data?.message ||
-          err.message ||
-          "Failed to reset password"
+        err.message ||
+        "Failed to reset password"
       );
     } finally {
       toast.dismiss(toastId);

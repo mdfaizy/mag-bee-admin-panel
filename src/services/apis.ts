@@ -1,6 +1,6 @@
 // src/services/apis.ts
-export const BASE_URL = "https://ecommerce.magaritatech.com/api";
-// export const BASE_URL = "http://localhost:8000/api";
+// export const BASE_URL = "https://ecommerce.magaritatech.com/api";
+export const BASE_URL = "http://localhost:8000/api";
 export const endpoints = {
   SIGNUP_API: `${BASE_URL}/register`,
   LOGIN_API: `${BASE_URL}/login`,
@@ -10,6 +10,10 @@ export const endpoints = {
  
 };
 
+export const endpointsRoles={
+    CREATE_ROLE_API:`${BASE_URL}/roles`,
+    GET_ROLES:`${BASE_URL}/roles`
+};
 
 export const endpointsCategory={
    CREATE_CATEGORY_API:`${BASE_URL}/category`,
