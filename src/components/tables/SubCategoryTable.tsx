@@ -16,12 +16,7 @@ import {
 import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeadCell,
-  TableCell,
+  Table, TableHeader, TableBody, TableRow, TableCell
 } from "../ui/table";
 import { Modal } from "../ui/modal";
 import Image from "next/image";
@@ -44,7 +39,7 @@ const [selectedSubCategoryId, setSelectedSubCategoryId] = useState<number | null
   const [showFilters, setShowFilters] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
   const [loading, setLoading] = useState(false);
-const [isOpen, setIsOpen] = React.useState(false);
+// const [isOpen, setIsOpen] = React.useState(false);
   const itemsPerPage = 10;
   const startIndex = (currentPage - 1) * itemsPerPage;
 
@@ -182,19 +177,19 @@ const handleEdit = (subCategory: any) => {
       {/* Table */}
       <div className="overflow-x-auto rounded-lg border border-gray-200">
         <Table className="min-w-full">
-          <TableHead className="bg-gray-50">
+          <TableHeader className="bg-gray-50">
             <TableRow>
-              <TableHeadCell>ID</TableHeadCell>
-              <TableHeadCell>Name</TableHeadCell>
-              <TableHeadCell className="hidden md:table-cell">Description</TableHeadCell>
-              <TableHeadCell className="hidden lg:table-cell">Slug</TableHeadCell>
-              <TableHeadCell>Category</TableHeadCell>
-              <TableHeadCell>Image</TableHeadCell>
-              <TableHeadCell className="hidden lg:table-cell">Created</TableHeadCell>
-              <TableHeadCell className="hidden xl:table-cell">Updated</TableHeadCell>
-              <TableHeadCell>Actions</TableHeadCell>
+              <TableCell isHeader>ID</TableCell>
+              <TableCell>Name</TableCell>
+              <TableCell className="hidden md:table-cell">Description</TableCell>
+              <TableCell className="hidden lg:table-cell">Slug</TableCell>
+              <TableCell>Category</TableCell>
+              <TableCell>Image</TableCell>
+              <TableCell className="hidden lg:table-cell">Created</TableCell>
+              <TableCell className="hidden xl:table-cell">Updated</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
-          </TableHead>
+          </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow><TableCell >Loading...</TableCell></TableRow>

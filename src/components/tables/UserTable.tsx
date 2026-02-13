@@ -1,12 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeadCell,
-  TableCell,
+  Table, TableHeader, TableBody, TableRow, TableCell
 } from "../ui/table";
 import Pagination from "./Pagination";
 import { fetchAllUsers, toggleUserStatus,deleteUserById ,updateUserById} from "../../services/authService";
@@ -136,18 +131,18 @@ const handleDeleteUser = async () => {
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
       <div className="w-full overflow-x-auto">
         <Table className="divide-y divide-gray-200 dark:divide-white/[0.05] text-sm dark:text-white">
-          <TableHead className="bg-gray-100 dark:bg-white/[0.05] dark:text-white">
+          <TableHeader className="bg-gray-100 dark:bg-white/[0.05] dark:text-white">
             <TableRow className="">
-              <TableHeadCell className="dark:text-white">Name</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Email</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Username</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Phone</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Role ID</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Status</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Created</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Actions</TableHeadCell>
+              <TableCell isHeader className="dark:text-white">Name</TableCell>
+              <TableCell className="dark:text-white">Email</TableCell>
+              <TableCell className="dark:text-white">Username</TableCell>
+              <TableCell className="dark:text-white">Phone</TableCell>
+              <TableCell className="dark:text-white">Role ID</TableCell>
+              <TableCell className="dark:text-white">Status</TableCell>
+              <TableCell className="dark:text-white">Created</TableCell>
+              <TableCell className="dark:text-white">Actions</TableCell>
             </TableRow>
-          </TableHead>
+          </TableHeader>
           <TableBody className="divide-y  divide-gray-200 dark:divide-white/[0.05]">
             {visibleData.map((user) => (
               <TableRow
@@ -211,11 +206,6 @@ const handleDeleteUser = async () => {
         </Table>
       </div>
       <div className="flex justify-end px-4 py-3">
-        {/* <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => setCurrentPage(page)}
-        /> */}
         <Pagination
   currentPage={currentPage}
   totalPages={totalPages}

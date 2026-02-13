@@ -13,21 +13,29 @@
     deleteCategory,
   } from "@/services/product-category/categoryService";
   import ViewCategoryModal from "../productCategory/ViewCategoryModal";
-  import EditCategoryModal from "../productCategory/EditCategoryModal";
   import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus } from "react-icons/fa";
   import { MdDeleteForever } from "react-icons/md";
+  // import {
+  //   Table,
+  //   TableHead,
+  //   TableBody,
+  //   TableRow,
+  //   TableCell ,
+  //   TableCell,
+  // } from "../ui/table";
   import {
-    Table,
-    TableHead,
-    TableBody,
-    TableRow,
-    TableHeadCell,
-    TableCell,
-  } from "../ui/table";
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableCell,
+} from "../ui/table";
+
   import { Modal } from "../ui/modal";
   import Image from "next/image";
   import { toast } from "react-toastify";
   import Pagination from "./Pagination";
+  import { useRouter } from "next/navigation";
 export interface Category {
   id: number;
   name: string;
@@ -41,6 +49,7 @@ export interface Category {
 }
   const CategoryTable = () => {
     const dispatch = useDispatch();
+    const router = useRouter();
     const { categories } = useSelector((state: RootState) => state.category);
 
 
@@ -150,10 +159,7 @@ export interface Category {
       setViewModalOpen(true);
     };
 
-    const handleEdit = (category: any) => {
-      dispatch(setSelectedCategory(category));
-      setEditModalOpen(true);
-    };
+  
 
     const handleDeleteClick = (id: number) => {
       setSelectedDeleteId(id);
@@ -183,8 +189,8 @@ export interface Category {
     };
 
     return (
-      <div className="bg-white rounded-xl shadow-sm p-4 text-gray-800 md:p-6 border dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white  ">
-        {/* Header with Search and Controls */}
+      // <div className="bg-white rounded-xl shadow-sm p-4 text-gray-800 md:p-6 border dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white  ">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white px-4 py-4"> 
         <div className="flex flex-col gap-4 mb-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
             <h1 className="text-2xl font-bold  mb-4 md:mb-0">Category Management</h1>
@@ -257,9 +263,9 @@ export interface Category {
         {/* Category Table */}
         <div className="overflow-x-auto rounded-lg border border-gray-200">
           <Table className="min-w-full">
-            <TableHead className="bg-gray-50">
+            <TableHeader className="bg-gray-50">
               <TableRow>
-                <TableHeadCell
+                <TableCell isHeader
                   className="cursor-pointer hover:bg-gray-100"
                 // onClick={() => handleSort("id")}
                 >
@@ -269,8 +275,8 @@ export interface Category {
                       sortConfig.direction === "asc" ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />
                     )}
                   </div>
-                </TableHeadCell>
-                <TableHeadCell
+                </TableCell>
+                <TableCell 
                   className="cursor-pointer hover:bg-gray-100"
                 // onClick={() => handleSort("name")}
                 >
@@ -280,15 +286,15 @@ export interface Category {
                       sortConfig.direction === "asc" ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />
                     )}
                   </div>
-                </TableHeadCell>
-                <TableHeadCell className="hidden md:table-cell">Description</TableHeadCell>
-                <TableHeadCell className="hidden lg:table-cell">Slug</TableHeadCell>
-                <TableHeadCell>Image</TableHeadCell>
-                <TableHeadCell className="hidden lg:table-cell">Created</TableHeadCell>
-                <TableHeadCell className="hidden xl:table-cell">Updated</TableHeadCell>
-                <TableHeadCell>Actions</TableHeadCell>
+                </TableCell>
+                <TableCell  className="hidden md:table-cell">Description</TableCell >
+                <TableCell  className="hidden lg:table-cell">Slug</TableCell>
+                <TableCell >Image</TableCell>
+                <TableCell  className="hidden lg:table-cell">Created</TableCell >
+                <TableCell  className="hidden xl:table-cell">Updated</TableCell >
+                <TableCell >Actions</TableCell>
               </TableRow>
-            </TableHead>
+            </TableHeader>
             <TableBody>
               {loading ? (
                 Array.from({ length: itemsPerPage }).map((_, index) => (
@@ -355,13 +361,21 @@ export interface Category {
                         >
                           <FaEye size={16} />
                         </button>
-                        <button
+                        {/* <button
                           onClick={() => handleEdit(item)}
                           className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
                           title="Edit"
                         >
                           <FaEdit size={16} />
-                        </button>
+                        </button> */}
+                        <button
+  onClick={() => router.push(`/edit-category/${item.id}`)}
+  className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
+  title="Edit"
+>
+  <FaEdit size={16} />
+</button>
+
                         <button
                           onClick={() => handleDeleteClick(item.id)}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
@@ -393,12 +407,7 @@ export interface Category {
         <ViewCategoryModal
           isOpen={viewModalOpen}
           onClose={() => setViewModalOpen(false)}
-        />
-
-        <EditCategoryModal
-          isOpen={editModalOpen}
-          onClose={() => setEditModalOpen(false)}
-        />
+        />  
 
         {/* Delete Confirmation Modal */}
         <Modal

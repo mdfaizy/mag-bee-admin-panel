@@ -11,12 +11,7 @@ import { setBanners, setSelectedBanner } from "@/redux/bannerSlice";
 import { fetchBanner, fetchBannerById, toggleBannerStatus } from "@/services/bannerServices/BannerService";
 
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeadCell,
-  TableCell,
+  Table, TableHeader, TableBody, TableRow, TableCell
 } from "../ui/table";
 
 import {
@@ -158,17 +153,17 @@ const BannerTable = () => {
       {/* Table */}
       <div className="overflow-x-auto border rounded-lg">
         <Table>
-          <TableHead>
+          <TableHeader>
             <TableRow>
-              <TableHeadCell>ID</TableHeadCell>
-              <TableHeadCell>Title</TableHeadCell>
-              <TableHeadCell>Image</TableHeadCell>
-              <TableHeadCell>Status</TableHeadCell>
-              <TableHeadCell>Start</TableHeadCell>
-              <TableHeadCell>End</TableHeadCell>
-              <TableHeadCell>Actions</TableHeadCell>
+              <TableCell isHeader>ID</TableCell>
+              <TableCell>Title</TableCell>
+              <TableCell>Image</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Start</TableCell>
+              <TableCell>End</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
-          </TableHead>
+          </TableHeader>
 
           <TableBody>
             {loading ? (

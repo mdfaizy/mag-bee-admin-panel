@@ -5,7 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
 import Link from "next/link";
 import {
-  setSelectedProduct,
+  // setSelectedProduct,
   setProducts as setReduxProducts,
   // setProducts,
   setLoading
@@ -17,17 +17,13 @@ import { toast } from "react-toastify";
 import { FaEye, FaEdit, FaSearch, FaFilter, FaChevronDown, FaChevronUp, FaPlus, FaBox, FaTimes, FaExclamationTriangle, FaTimesCircle, FaCheckCircle } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeadCell,
-  TableCell,
+  Table, TableHeader, TableBody, TableRow, TableCell
 } from "../ui/table";
-import ViewProductModal from "../products/ViewProductModal";
-import EditProductModal from "../products/EditProductModal";
+
 import DeleteProductModal from "../products/DeleteProductModal";
 import Pagination from "./Pagination";
+import { useRouter } from "next/navigation";
+
 
 
 interface VariantAttribute {
@@ -44,15 +40,12 @@ export interface Variant {
   sellingPrice?: string;
   attributes: VariantAttribute[];
 }
-
 const ProductTable = () => {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { loading } = useSelector((state: RootState) => state.product);
-  // const [products, setProducts] = useState<Product[]>([]);
   const [tableData, setTableData] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [totalPages, setTotalPages] = useState(1);
@@ -90,102 +83,27 @@ const ProductTable = () => {
       toast.error("Error updating stock");
     }
   };
+  const fetchProducts = async (page: number) => {
+    dispatch(setLoading(true));
+    try {
+      const res = await fetchPaginatedProducts(page, itemsPerPage);
+      const products = res?.data?.products ?? [];
+      const totalPages = res?.data?.totalPages ?? 1;
+      const totalItems = res?.data?.total ?? 0;
 
-//   useEffect(() => {
-//     const getProducts = async () => {
-//       try {
-//         dispatch(setLoading(true));
-//         const result = await fetchProductAll();
-//         console.log("Fetched products:", result);
-
-//         dispatch(setReduxProducts(result));
-//         const products = result.products || [];
-
-// dispatch(setReduxProducts(products));
-// setTableData(products);
-
-
-//         setTableData(result);
-
-
-//         const uniqueCategories = [
-//           ...new Set(
-//             result
-//               .filter((product: any) => product.category?.name)
-//               .map((product: any) => product.category.name)
-//           ),
-//         ];
-//         // setCategories(uniqueCategories );
-//         setCategories(uniqueCategories as string[]);
-
-
-
-//       } catch (error: any) {
-//         console.error("Error while processing products:", error);
-//         toast.error(error?.message || "Failed to load products");
-//       } finally {
-//         dispatch(setLoading(false));
-//       }
-//     };
-//     getProducts();
-//   }, [dispatch]);
-
-
-
-
-  // const fetchProducts = async (page: number) => {
-  //   dispatch(setLoading(true));
-  //   try {
-  //     const res = await fetchPaginatedProducts(page, itemsPerPage);
-
-  //     // ✅ Correctly get products and pagination info
-  //     const products = res.data?. products || [];
-  //     const totalPages = res.data?.totalPages || 1;
-  //     const totalItems = res.data?.total || 0;
-    
-
-  //     setTableData(products);
-  //     setTotalPages(totalPages);
-  //     setTotalItems(totalItems);
-  //     dispatch(setReduxProducts(products));
-  //   } catch (error: any) {
-  //     toast.error(error?.message || "Failed to fetch products");
-  //   } finally {
-  //     dispatch(setLoading(false));
-  //   }
-  // };
-
-
-  
-
-
- const fetchProducts = async (page: number) => {
-  dispatch(setLoading(true));
-  try {
-    const res = await fetchPaginatedProducts(page, itemsPerPage);
-console.log('ptoduct table',res);
-    const products = res?.data?.products ?? [];
-    const totalPages = res?.data?.totalPages ?? 1;
-    const totalItems = res?.data?.total ?? 0;
-
-    setTableData(products);
-    setTotalPages(totalPages);
-    setTotalItems(totalItems);
-    dispatch(setReduxProducts(products));
-  } catch (error: any) {
-    toast.error(error?.message || "Failed to fetch products");
-  } finally {
-    dispatch(setLoading(false));
-  }
-};
-
-
-
+      setTableData(products);
+      setTotalPages(totalPages);
+      setTotalItems(totalItems);
+      dispatch(setReduxProducts(products));
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch products");
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
   useEffect(() => {
     fetchProducts(currentPage);
   }, [currentPage, itemsPerPage]);
-
-
   const handleSort = (key: string) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -193,27 +111,6 @@ console.log('ptoduct table',res);
     }
     setSortConfig({ key, direction });
   };
-
-  const handleView = (product: any) => {
-    setSelectedProductId(product.id);
-    setViewModalOpen(true);
-  };
-
-  const handleEdit = async (product: any) => {
-    try {
-
-      const productData = await fetchProductById(product.id);
-      
-      console.log("Editing product:", productData);
-      // dispatch(setSelectedProduct(productData));
-      
-      dispatch(setSelectedProduct(productData.product));
-      setEditModalOpen(true);
-    } catch (error) {
-      toast.error("Failed to load product details");
-    }
-  };
-
   const handleDeleteClick = (id: number) => {
     setSelectedProductId(id);
     setDeleteModalOpen(true);
@@ -221,7 +118,7 @@ console.log('ptoduct table',res);
 
   const confirmDeleteProduct = async () => {
     if (selectedProductId !== null) {
-      
+
       try {
         await deleteProductById(selectedProductId);
         const updatedList = await fetchProductAll();
@@ -303,7 +200,7 @@ console.log('ptoduct table',res);
   }, [tableData, searchTerm, statusFilter, stockFilter, categoryFilter, sortConfig]);
 
 
-  
+
   const totalProducts = tableData.length;
   const lowStockProducts = tableData.filter(product => {
     const totalStock = product.hasVariants
@@ -313,9 +210,18 @@ console.log('ptoduct table',res);
   }).length;
   const activeProducts = tableData.filter(product => product.isActive).length;
   const inactiveProducts = tableData.filter(product => !product.isActive).length;
+  if (loading && tableData.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-xl text-white shadow-sm p-4 md:p-6 border border-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white ">
+    // <div className=" bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white ">
+    <div className="w-full max-w-none bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white">
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center ">
         <h1 className="text-2xl font-bold text-gray-800  ">Product Management</h1>
         <Link href="/add-new-product"> <button className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700  rounded-lg transition-colors">
@@ -330,8 +236,8 @@ console.log('ptoduct table',res);
           <div className="flex gap-2 border-b border-gray-300">
             <button
               className={`flex items-center px-4 py-3 rounded-t-lg font-medium transition-all duration-200 ${statusFilter === "all"
-                  ? "bg-blue-500 text-white shadow-md border-b-4 border-blue-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-blue-500 text-white shadow-md border-b-4 border-blue-700"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               onClick={() => {
                 setStatusFilter("all");
@@ -427,13 +333,7 @@ console.log('ptoduct table',res);
           </div>
         </div>
       </div>
-
-
-
-
       <div className="flex flex-col gap-4 mb-6 ">
-
-
         <div className="flex flex-col md:flex-row gap-4 justify-between">
           <div className="relative flex-1 max-w-2xl">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -520,49 +420,43 @@ console.log('ptoduct table',res);
       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:text-white">
         <div className="min-w-[1000px] lg:min-w-full">
           <Table className="min-w-full">
-            <TableHead className="bg-gray-50 sticky top-0 z-10  dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white">
+            <TableHeader className="bg-gray-50 sticky top-0 z-10 dark:border-gray-800 dark:bg-gray-900 dark:text-white">
               <TableRow>
-                <TableHeadCell
-                  className="cursor-pointe dark:text-white"
-                  onClick={() => handleSort("id")}
-                >
+                <TableCell isHeader className="cursor-pointer">
                   <div className="flex items-center gap-1">
                     ID
-                    {sortConfig.key === "id" && (
-                      sortConfig.direction === "asc" ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />
-                    )}
+                    {sortConfig.key === "id" &&
+                      (sortConfig.direction === "asc"
+                        ? <FaChevronUp size={10} />
+                        : <FaChevronDown size={10} />)}
                   </div>
-                </TableHeadCell>
-                <TableHeadCell
-                  className="cursor-pointer  dark:text-white"
-                // onClick={() => handleSort("name")}
-                >
+                </TableCell>
+
+                <TableCell isHeader className="cursor-pointer">
                   <div className="flex items-center gap-1">
                     Name
-                    {sortConfig.key === "name" && (
-                      sortConfig.direction === "asc" ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />
-                    )}
                   </div>
-                </TableHeadCell>
-                <TableHeadCell
-                  className="cursor-pointer dark:text-white"
-                  onClick={() => handleSort("price")}
-                >
+                </TableCell>
+
+                <TableCell isHeader className="cursor-pointer">
                   <div className="flex items-center gap-1">
                     Price
-                    {sortConfig.key === "price" && (
-                      sortConfig.direction === "asc" ? <FaChevronUp size={10} /> : <FaChevronDown size={10} />
-                    )}
+                    {sortConfig.key === "price" &&
+                      (sortConfig.direction === "asc"
+                        ? <FaChevronUp size={10} />
+                        : <FaChevronDown size={10} />)}
                   </div>
-                </TableHeadCell>
-                <TableHeadCell className="hidden md:table-cell dark:text-white">Offer</TableHeadCell>
-                <TableHeadCell className="hidden lg:table-cell dark:text-white">Category</TableHeadCell>
-                <TableHeadCell className="hidden lg:table-cell dark:text-white">Image</TableHeadCell>
-                <TableHeadCell className="hidden md:table-cell dark:text-white">Status</TableHeadCell>
-                <TableHeadCell className="hidden lg:table-cell dark:text-white">Stock</TableHeadCell>
-                <TableHeadCell className="dark:text-white">Actions</TableHeadCell>
+                </TableCell>
+
+                <TableCell isHeader className="hidden md:table-cell">Offer</TableCell>
+                <TableCell isHeader className="hidden lg:table-cell">Category</TableCell>
+                <TableCell isHeader className="hidden lg:table-cell">Image</TableCell>
+                <TableCell isHeader className="hidden md:table-cell">Status</TableCell>
+                <TableCell isHeader className="hidden lg:table-cell">Stock</TableCell>
+                <TableCell isHeader>Actions</TableCell>
               </TableRow>
-            </TableHead>
+            </TableHeader>
+
             <TableBody>
               {loading ? (
                 Array.from({ length: itemsPerPage }).map((_, index) => (
@@ -586,7 +480,7 @@ console.log('ptoduct table',res);
                 </TableRow>
               ) : (
                 filteredAndSortedData.map((item) => (
-                  
+
                   <TableRow key={item.id} className="hover:bg-gray-50 dark:bg-gray-800 dark:hover:bg-gray-500 dark:text-white even:bg-gray-50/30">
                     <TableCell className="font-medium dark:text-white">{item.id}</TableCell>
                     <TableCell>
@@ -636,8 +530,6 @@ console.log('ptoduct table',res);
                           )}
                         </div>
                       )}
-
-
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       {item.hasVariants && item.variants?.length > 0 ? (
@@ -708,14 +600,15 @@ console.log('ptoduct table',res);
                     <TableCell>
                       <div className="flex gap-2">
                         <button
-                          onClick={() => handleView(item)}
+                          onClick={() => router.push(`/view-product/${item.id}`)}
                           className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                           title="View"
                         >
                           <FaEye size={16} />
                         </button>
                         <button
-                          onClick={() => handleEdit(item)}
+                          onClick={() => router.push(`/edit-product/${item.id}`)}
+
                           className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
                           title="Edit"
                         >
@@ -744,21 +637,6 @@ console.log('ptoduct table',res);
         totalItems={totalItems}
         onPageChange={setCurrentPage}
       />
-      {/* Modals */}
-      <ViewProductModal
-        isOpen={viewModalOpen}
-        onClose={() => setViewModalOpen(false)}
-        productId={selectedProductId !== null ? selectedProductId.toString() : null}
-      />
-
-      <EditProductModal
-        isOpen={editModalOpen}
-        onClose={() => {
-          setEditModalOpen(false);
-          fetchProducts(currentPage);
-        }}
-      />
-
       <DeleteProductModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}

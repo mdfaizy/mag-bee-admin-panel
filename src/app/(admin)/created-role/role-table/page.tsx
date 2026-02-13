@@ -2,12 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeadCell,
-  TableCell,
+ Table, TableHeader, TableBody, TableRow, TableCell
 } from "@/components/ui/table";
 import Pagination from "@/components/tables/Pagination";
 import { toast } from "react-toastify";
@@ -63,15 +58,15 @@ export default function RoleTable() {
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:bg-white/[0.03] shadow-sm">
       <div className="w-full overflow-x-auto">
         <Table className="text-sm">
-          <TableHead className="bg-gray-100 dark:bg-white/[0.05]">
+          <TableHeader className="bg-gray-100 dark:bg-white/[0.05]">
             <TableRow>
-              <TableHeadCell>Name</TableHeadCell>
-              <TableHeadCell>Description</TableHeadCell>
-              <TableHeadCell>Privileges</TableHeadCell>
-              <TableHeadCell>Created</TableHeadCell>
-              <TableHeadCell>Actions</TableHeadCell>
+              <TableCell isHeader>Name</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Privileges</TableCell>
+              <TableCell>Created</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
-          </TableHead>
+          </TableHeader>
 
           <TableBody>
             {visibleData.map((role) => (
