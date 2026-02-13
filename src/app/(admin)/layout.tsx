@@ -120,8 +120,8 @@ export default function AdminLayout({
   // 🔒 IMPORTANT GUARD
   if (loading) {
     return (
-      <div className="p-6 text-gray-500 text-center">
-        Checking authentication…
+       <div className="flex items-center justify-center h-64">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
