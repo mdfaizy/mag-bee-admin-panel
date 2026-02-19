@@ -100,24 +100,44 @@ const EditCategoryPage = () => {
     }
   };
 
+  // const handleSubmit = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     const res = await apiConnector("PUT", `/category/${id}`, formData);
+
+  //     if (!res.data?.success) {
+  //       throw new Error(res.data?.message);
+  //     }
+
+  //     toast.success("Category updated successfully ✅");
+  //     router.back();
+  //   } catch (err: any) {
+  //     toast.error(err.message || "Update failed");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const handleSubmit = async () => {
-    try {
-      setLoading(true);
+  try {
+    setLoading(true);
 
-      const res = await apiConnector("PUT", `/category/${id}`, formData);
+    const res = await apiConnector("PUT", `/category/${id}`, formData);
 
-      if (!res.data?.success) {
-        throw new Error(res.data?.message);
-      }
-
-      toast.success("Category updated successfully ✅");
+    // ✅ success detect properly
+    if (res?.data?.updatedCategory) {
+      toast.success(res.data.message || "Category updated successfully ✅");
       router.back();
-    } catch (err: any) {
-      toast.error(err.message || "Update failed");
-    } finally {
-      setLoading(false);
+    } else {
+      throw new Error(res?.data?.message || "Update failed");
     }
-  };
+  } catch (err: any) {
+    toast.error(err.message || "Update failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // ✅ page loader
   if (pageLoading) {

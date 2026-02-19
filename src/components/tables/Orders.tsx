@@ -39,6 +39,25 @@ import { toast } from "react-toastify";
 
 type OrderStatus = "PENDING" | "ON_HOLD" | "READY_TO_SHIP" | "SHIPPED" | "DELIVERED" | "CANCELLED";
 
+const backendStatusMap: Record<OrderStatus, string> = {
+  PENDING: "PLACED",
+  ON_HOLD: "CONFIRMED",
+  READY_TO_SHIP: "PACKED",
+  SHIPPED: "SHIPPED",
+  DELIVERED: "DELIVERED",
+  CANCELLED: "CANCELLED",
+};
+// 🔥 UI ke liye normalize
+
+const uiStatusMap: Record<string, OrderStatus> = {
+  PLACED: "PENDING",
+  CONFIRMED: "READY_TO_SHIP",
+  PACKED: "READY_TO_SHIP",
+  SHIPPED: "SHIPPED",
+  DELIVERED: "DELIVERED",
+  CANCELLED: "CANCELLED",
+};
+
 interface OrderItem {
   id: string;
   quantity: number;
@@ -98,7 +117,13 @@ export default function OrdersTable() {
     try {
       setLoading(true);
       const result = await getAllOrders();
-      setOrders(result);
+      const normalized = result.map((order: any) => ({
+  ...order,
+  status: uiStatusMap[order.status] || "PENDING",
+}));
+
+setOrders(normalized);
+      // setOrders(result);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load orders");
@@ -199,7 +224,11 @@ export default function OrdersTable() {
       setUpdatingStatus(orderId);
       // await updateOrderStatus(orderId, newStatus);
 
-      await updateOrderStatus(orderId, { status: newStatus });
+      // await updateOrderStatus(orderId, { status: newStatus });
+      await updateOrderStatus(orderId, {
+  status: backendStatusMap[newStatus],
+});
+
 
       setOrders((prev) =>
         prev.map((order) =>
@@ -225,7 +254,11 @@ export default function OrdersTable() {
     try {
       await Promise.all(
        selectedOrders.map((id) =>
-  updateOrderStatus(id, { status: newStatus })
+  // updateOrderStatus(id, { status: newStatus })
+       updateOrderStatus(id, {
+  status: backendStatusMap[newStatus],
+})
+
 )
 
       );
@@ -850,7 +883,8 @@ const ordersWithItems = paginatedOrders.map((order) => ({
 
                         <TableCell>
                           <div className="flex items-center justify-end gap-2">
-                           {["SHIPPED", "DELIVERED"].includes(order.status) && (
+                           {order.status === "DELIVERED" && (
+
   <button
     onClick={() => downloadInvoice(order.id)}
     className="p-2 hover:bg-green-50 rounded-lg"

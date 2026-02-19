@@ -1,5 +1,5 @@
 "use client";
-
+import { toast } from "react-toastify";
 import React, { useState, useEffect } from "react";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
@@ -7,20 +7,22 @@ import TextArea from "@/components/form/input/TextArea";
 import Select from "@/components/form/Select";
 import ChipInput from "@/components/form/input/ChipInput";
 import { HiChevronDown, HiPlus, HiUpload, HiX } from 'react-icons/hi';
-
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
 import { SubCategory, CategoryOption } from "@/components/types/category";
-import { BASE_URL } from "@/services/apis";
 import { apiConnector } from "@/services/apiConnector";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-// import { createProductThunk } from "@/services/product/productThunks";
-
+import {calculateFinalPrice} from "@/utils/priceUtils"
 type Variant = {
   sku: string;
-  price: string;
-  sellingPrice: string;
-  stock: string;
+  // price: string;
+  // offer:string;
+  // sellingPrice: string;
+  // stock: string;
+   price: number;
+  sellingPrice: number;
+  stock: number;
+  offer?: number;
   attributes: { key: string; value: string }[];
 };
 export default function AddNewProduct() {
@@ -30,9 +32,11 @@ export default function AddNewProduct() {
   const [filteredSubCategory, setFilteredSubCategory] = useState<SubCategory[]>([]);
   const [showVariants, setShowVariants] = useState(false);
   const [subCategoryChildren, setSubCategoryChildren] = useState<SubCategory[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const dispatch = useDispatch<any>();
   const router = useRouter();
-  const [isActive, setIsActive] = useState(true);
+  const [isActive, setIsActive] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -56,24 +60,29 @@ export default function AddNewProduct() {
     variants: [
       {
         sku: "",
-        price: "",
-        sellingPrice: "",
-        stock: "",
+        price: 0,
+        sellingPrice: 0,
+        stock: 0,
         attributes: [{ key: "", value: "" }],
       },
     ] as Variant[],
   });
+//   const calculateFinalPrice = (
+//   originalPrice: number,
+//   offer: number
+// ): number => {
+//   const price = Number(originalPrice) || 0;
+//   const discount = Number(offer) || 0;
 
-  const calculateFinalPrice = () => {
-    const originalPrice = parseFloat(formData.originalPrice);
-    const offer = parseFloat(formData.offer);
+//   if (price <= 0) return 0;
 
-    if (!isNaN(originalPrice) && !isNaN(offer)) {
-      return originalPrice - (originalPrice * offer) / 100;
-    }
-    return 0;
-  };
+//   const safeOffer = Math.min(Math.max(discount, 0), 100);
 
+//   const finalPrice = price - (price * safeOffer) / 100;
+
+//   // ✅ ecommerce safe — no decimal
+//   return Math.max(0, Math.round(finalPrice));
+// };
   const returnPolicyOptions = [
     { value: "7-day return", label: "7-day return" },
     { value: "30-day return", label: "30-day return" },
@@ -160,65 +169,157 @@ export default function AddNewProduct() {
       return { ...prev, variants: updatedVariants };
     });
   };
+const computeSellingPrice = (price: number, discount: number): number => {
+  const final = price - (price * discount) / 100;
+  return Math.max(0, Math.round(final));
+};
+
+
+  // const handleChange = (
+  //   e: React.ChangeEvent<
+  //     HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  //   >,
+  //   options?: {
+  //     variantIndex?: number;
+  //     attrIndex?: number;
+  //     attrField?: "key" | "value";
+  //   }
+  // ) => {
+  //   const { name, value, type } = e.target;
+  //   const checked = type === "checkbox" ? (e.target as HTMLInputElement).checked : undefined;
+
+  //   if (options?.variantIndex !== undefined) {
+  //     const variantIndex = options.variantIndex;
+  //     const attrIndex = options.attrIndex;
+  //     const attrField = options.attrField;
+
+  //     setFormData((prev) => {
+  //       const updatedVariants = [...prev.variants];
+
+  //       if (
+  //         attrIndex !== undefined &&
+  //         attrField &&
+  //         updatedVariants[variantIndex]?.attributes[attrIndex]
+  //       ) {
+  //         updatedVariants[variantIndex].attributes[attrIndex][attrField] = value;
+  //       } else {
+  //         if (name !== "attributes") {
+  //           updatedVariants[variantIndex][name as Exclude<keyof Variant, "attributes">] = value;
+  //         }
+  //       }
+
+  //       return { ...prev, variants: updatedVariants };
+  //     });
+
+  //     return;
+  //   }
+
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [name]: type === "checkbox" ? checked : value,
+  //   }));
+    
+  // };
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
-    options?: {
-      variantIndex?: number;
-      attrIndex?: number;
-      attrField?: "key" | "value";
-    }
-  ) => {
-    const { name, value, type } = e.target;
-    const checked = type === "checkbox" ? (e.target as HTMLInputElement).checked : undefined;
+  e: React.ChangeEvent<
+    HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+  >,
+  options?: {
+    variantIndex?: number;
+    attrIndex?: number;
+    attrField?: "key" | "value";
+  }
+) => {
+  const { name, value, type } = e.target;
+  const checked =
+    type === "checkbox"
+      ? (e.target as HTMLInputElement).checked
+      : undefined;
 
-    if (options?.variantIndex !== undefined) {
-      const variantIndex = options.variantIndex;
-      const attrIndex = options.attrIndex;
-      const attrField = options.attrField;
+  // ================= VARIANT HANDLING =================
+  if (options?.variantIndex !== undefined) {
+    const variantIndex = options.variantIndex;
+    const attrIndex = options.attrIndex;
+    const attrField = options.attrField;
 
-      setFormData((prev) => {
-        const updatedVariants = [...prev.variants];
+    setFormData((prev) => {
+      const updatedVariants = [...prev.variants];
 
-        if (
-          attrIndex !== undefined &&
-          attrField &&
-          updatedVariants[variantIndex]?.attributes[attrIndex]
-        ) {
-          updatedVariants[variantIndex].attributes[attrIndex][attrField] = value;
-        } else {
-          if (name !== "attributes") {
-            updatedVariants[variantIndex][name as Exclude<keyof Variant, "attributes">] = value;
+      // ✅ attribute update
+      if (
+        attrIndex !== undefined &&
+        attrField &&
+        updatedVariants[variantIndex]?.attributes[attrIndex]
+      ) {
+        updatedVariants[variantIndex].attributes[attrIndex][attrField] =
+          value;
+      } else {
+        // ✅ normal field update
+        if (name !== "attributes") {
+          (updatedVariants[variantIndex] as any)[name] = value;
+
+          // 🔥 AUTO RECALCULATE (PRODUCTION MUST)
+          if (name === "price" || name === "offer") {
+            const price =
+              name === "price"
+                ? Number(value)
+                : Number(updatedVariants[variantIndex].price);
+
+            const offer =
+              name === "offer"
+                ? Number(value)
+                : Number(updatedVariants[variantIndex].offer || 0);
+
+            updatedVariants[variantIndex].sellingPrice =
+              computeSellingPrice(price, offer);
           }
         }
+      }
 
-        return { ...prev, variants: updatedVariants };
-      });
+      return { ...prev, variants: updatedVariants };
+    });
 
-      return;
-    }
+    return;
+  }
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  // ================= NORMAL FIELD =================
+  setFormData((prev) => ({
+    ...prev,
+    [name]: type === "checkbox" ? checked : value,
+  }));
+};
+
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const createEmptyVariant = (): Variant => ({
+  sku: "",
+  price: 0,
+  sellingPrice: 0,
+  stock: 0,
+  offer: 0,
+  attributes: [{ key: "", value: "" }],
+});
+
+  // const addVariant = () => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     variants: [
+  //       ...prev.variants,
+  //       { sku: "", price:0, sellingPrice:0, stock:0,offer:0, attributes: [{ key: "", value: "" }] },
+  //     ],
+  //   }));
+  // };
   const addVariant = () => {
-    setFormData((prev) => ({
-      ...prev,
-      variants: [
-        ...prev.variants,
-        { sku: "", price: "", sellingPrice: "", stock: "", attributes: [{ key: "", value: "" }] },
-      ],
-    }));
-  };
+  setFormData((prev) => ({
+    ...prev,
+    variants: [...prev.variants, createEmptyVariant()],
+  }));
+};
+
 
   const addAttribute = (variantIndex: number) => {
     setFormData((prev) => {
@@ -228,13 +329,85 @@ export default function AddNewProduct() {
     });
   };
   //sumbit function
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.originalPrice && !showVariants) {
-      alert("Original price is required.");
-      return;
-    }
+//   const handleSubmit = async (e: React.FormEvent) => {
+//     e.preventDefault();
+//     if (isSubmitting) return;
+//     if (!formData.originalPrice && !showVariants) {
+//       toast.error("Original price is required");  
+//       return;
+//     }
+// setIsSubmitting(true);
+//   const toastId = toast.loading("Creating product...");
+//     const variants = formData.variants
+//       .filter(v => v.sku || v.price || v.stock)
+//       .map(v => ({
+//         ...v,
+//         price: Number(v.price) || 0,
+//         stock: Number(v.stock) || 0,
+//         attributes: v.attributes.filter(a => a.key || a.value),
+//       }));
 
+//     const payload = {
+//       ...formData,
+//       isActive: isActive,
+//       //  hasVariants: showVariants && variants.length > 0, 
+//       hasVariants: showVariants && variants.length > 0,
+//       originalPrice: Number(formData.originalPrice),
+//       price: Number(formData.price) || (variants.length ? 0 : Number(formData.originalPrice)),
+//       offer: Number(formData.offer) || 0,
+//       stock: Number(formData.stock) || (variants.length ? 0 : Number(formData.stock)),
+//       variants: showVariants && variants.length > 0 ? JSON.stringify(variants) : undefined,
+//       shippingAvailable: String(formData.shippingAvailable),
+//       keywords: JSON.stringify(formData.keywords),
+//     };
+//     console.log("showVariants:", showVariants);
+//     console.log("variants after filtering:", variants);
+//     console.log("hasVariants value:", showVariants && variants.length > 0);
+//     console.log("variants length:", variants.length);
+//     console.log("showVariants:", showVariants);
+//     console.log("hasVariants to send:", variants.length > 0);
+
+//     const form = new FormData();
+//     Object.entries(payload).forEach(([key, value]) => {
+//       form.append(key, value !== undefined && value !== null ? value.toString() : "");
+//     });
+//     productImages.forEach((file) => form.append("imageUrl", file));
+//     try {
+//       const res = await apiConnector("POST", "/product"
+//         , form
+//       );
+//       //  dispatch(createProductThunk(payload, router));
+//       if (res.status === 201 || res.status === 200) {
+//        toast.success("✅ Product created successfully!");
+//        router.push("/");
+//       }
+//     } catch (error: any) {
+//       // console.error("Error submitting form:", error.response?.data || error.message);
+//       toast.error("Failed to create product");
+//     }catch (error: any) {
+//     toast.dismiss(toastId);
+//     console.error("Error submitting form:", error);
+//     toast.error(
+//       error?.response?.data?.message || "❌ Submission failed"
+//     );
+//   } finally {
+//     setIsSubmitting(false);
+//   }
+//   };
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+
+  if (isSubmitting) return;
+
+  if (!formData.originalPrice && !showVariants) {
+    toast.error("Original price is required");
+    return;
+  }
+
+  setIsSubmitting(true);
+  const toastId = toast.loading("Creating product...");
+
+  try {
     const variants = formData.variants
       .filter(v => v.sku || v.price || v.stock)
       .map(v => ({
@@ -247,41 +420,54 @@ export default function AddNewProduct() {
     const payload = {
       ...formData,
       isActive: isActive,
-      //  hasVariants: showVariants && variants.length > 0, 
       hasVariants: showVariants && variants.length > 0,
       originalPrice: Number(formData.originalPrice),
-      price: Number(formData.price) || (variants.length ? 0 : Number(formData.originalPrice)),
+      price:
+        Number(formData.price) ||
+        (variants.length ? 0 : Number(formData.originalPrice)),
       offer: Number(formData.offer) || 0,
-      stock: Number(formData.stock) || (variants.length ? 0 : Number(formData.stock)),
-      variants: showVariants && variants.length > 0 ? JSON.stringify(variants) : undefined,
+      stock:
+        Number(formData.stock) ||
+        (variants.length ? 0 : Number(formData.stock)),
+      variants:
+        showVariants && variants.length > 0
+          ? JSON.stringify(variants)
+          : undefined,
       shippingAvailable: String(formData.shippingAvailable),
       keywords: JSON.stringify(formData.keywords),
     };
-    console.log("showVariants:", showVariants);
-    console.log("variants after filtering:", variants);
-    console.log("hasVariants value:", showVariants && variants.length > 0);
-    console.log("variants length:", variants.length);
-    console.log("showVariants:", showVariants);
-    console.log("hasVariants to send:", variants.length > 0);
 
     const form = new FormData();
     Object.entries(payload).forEach(([key, value]) => {
-      form.append(key, value !== undefined && value !== null ? value.toString() : "");
-    });
-    productImages.forEach((file) => form.append("imageUrl", file));
-    try {
-      const res = await apiConnector("POST", "/product"
-        , form
+      form.append(
+        key,
+        value !== undefined && value !== null ? value.toString() : ""
       );
-      //  dispatch(createProductThunk(payload, router));
-      if (res.status === 201 || res.status === 200) {
-        alert("Product created successfully!");
-      }
-    } catch (error: any) {
-      console.error("Error submitting form:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Submission failed");
+    });
+
+    productImages.forEach(file => form.append("imageUrl", file));
+
+    const res = await apiConnector("POST", "/product", form);
+
+    toast.dismiss(toastId);
+
+    if (res.status === 201 || res.status === 200) {
+      toast.success("✅ Product created successfully!");
+      router.push("/");
+    } else {
+      toast.error("Failed to create product");
     }
-  };
+  } catch (error: any) {
+    toast.dismiss(toastId);
+    console.error("Error submitting form:", error);
+    toast.error(
+      error?.response?.data?.message || "❌ Submission failed"
+    );
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
   return (
     <div className="flex flex-col flex-1 lg:w-11/12 w-full mx-auto items-center">
       <div className="flex flex-col justify-center w-full p-4 bg-white rounded-lg shadow-sm">
@@ -289,11 +475,27 @@ export default function AddNewProduct() {
           <h1 className="text-2xl font-bold">Add Product</h1>
           <div className="flex items-center">
             <span className="mr-2 text-sm font-medium text-gray-700">Status:</span>
-            <button
+            {/* <button
               type="button"
               onClick={() => setIsActive(!isActive)}
               className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${isActive ? 'bg-green-500' : 'bg-gray-300'}`}
-            >
+            > */}
+            {/* <button
+  type="button"
+  onClick={() => setIsActive(prev => !prev)}
+  className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+    isActive ? "bg-green-500" : "bg-gray-300"
+  }`}
+> */}
+<button
+  type="button"
+  onClick={() => setIsActive(prev => !prev)}
+  className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+    isActive ? "bg-green-500" : "bg-gray-300"
+  }`}
+>
+
+
               <span className="sr-only">Toggle Status</span>
               <span
                 className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`}
@@ -539,21 +741,20 @@ export default function AddNewProduct() {
                           name="price"
                           placeholder="Final Price"
                           type="number"
-                          value={calculateFinalPrice().toFixed(2)}
+                          // value={calculateFinalPrice().toFixed(2)}
+                         value={calculateFinalPrice(
+  Number(formData.originalPrice),
+  Number(formData.offer)
+)}
+
+
                           {...({ readOnly: true } as any)}
                           className="bg-gray-100 cursor-not-allowed"
                         />
                       </div>
-
                     </div>
-                  )
-
-                  }
-
-
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-
                     {!showVariants && (
                       <div>
                         <Label>Stock<span className="text-red-500">*</span></Label>
@@ -579,12 +780,9 @@ export default function AddNewProduct() {
                         Free Shipping Available
                       </label>
                     </div>
-
                   </div>
-
                 </div>
               </div>
-
               {/* Tags */}
               <div className="border border-gray-200 rounded-lg">
                 <div className="bg-gray-100 p-3 border-b border-gray-200">
@@ -728,10 +926,21 @@ export default function AddNewProduct() {
                           type="number"
                           value={variant.price}
                           onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+                           
                         />
                       </div>
+                      
+<div>
+  <Label>Offer %</Label>
+  <Input
+    name="offer"
+    type="number"
+    value={variant.offer || 0}
+    onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+  />
+</div>
 
-                      <div>
+                      {/* <div>
                         <Label>Selling Price<span className="text-red-500">*</span></Label>
                         <Input
                           name="sellingPrice"
@@ -739,7 +948,17 @@ export default function AddNewProduct() {
                           value={variant.sellingPrice}
                           onChange={(e) => handleChange(e, { variantIndex: vIndex })}
                         />
-                      </div>
+                      </div> */}
+                      <div>
+  <Label>Selling Price<span className="text-red-500">*</span></Label>
+  <Input
+    name="sellingPrice"
+    type="number"
+    value={variant.sellingPrice}
+    onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+  />
+</div>
+
                     </div>
 
                     <div className="mt-5">
@@ -808,12 +1027,31 @@ export default function AddNewProduct() {
           </div>
 
           <div className="mt-8 text-center">
-            <button
+            {/* <button
               type="submit"
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
             >
               Submit
-            </button>
+            </button> */}
+            <button
+  type="submit"
+  disabled={isSubmitting}
+  className={`px-6 py-3 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2
+    ${isSubmitting
+      ? "bg-blue-400 cursor-not-allowed"
+      : "bg-blue-600 hover:bg-blue-700"
+    }`}
+>
+  {isSubmitting ? (
+    <>
+      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+      Creating...
+    </>
+  ) : (
+    "Submit"
+  )}
+</button>
+
           </div>
         </form>
       </div>

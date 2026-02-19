@@ -72,10 +72,10 @@ const OfferSliderForm = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!form.title.trim()) {
-      toast.error("Title is required");
-      return;
-    }
+    // if (!form.title.trim()) {
+    //   toast.error("Title is required");
+    //   return;
+    // }
 
     if (!form.image) {
       toast.error("Banner image is required");

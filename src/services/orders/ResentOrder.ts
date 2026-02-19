@@ -8,7 +8,7 @@ export const getAllOrders = async () => {
   } catch (error) {
     console.error("Error fetching orders", error);
     throw error;
-  }
+  } 
 };
 
 
@@ -23,7 +23,7 @@ export const getAllOrders = async () => {
 // };
 
 export const downloadInvoice = (orderId: string) => {
-  const url = `http://localhost:8000/orders/${orderId}/invoice`;
+  const url = `http://localhost:8000/api/orders/${orderId}/invoice`;
 
   // browser me PDF open / download
   window.open(url, "_blank");

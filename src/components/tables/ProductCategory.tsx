@@ -368,13 +368,13 @@ export interface Category {
                         >
                           <FaEdit size={16} />
                         </button> */}
-                        <button
-  onClick={() => router.push(`/edit-category/${item.id}`)}
-  className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
-  title="Edit"
->
-  <FaEdit size={16} />
-</button>
+                          <button
+    onClick={() => router.push(`/edit-category/${item.id}`)}
+    className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
+    title="Edit"
+  >
+    <FaEdit size={16} />
+  </button>
 
                         <button
                           onClick={() => handleDeleteClick(item.id)}

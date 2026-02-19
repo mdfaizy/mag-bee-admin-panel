@@ -17,7 +17,7 @@ import { fetchProductCategory } from "@/services/product-category/categoryServic
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
 import { Product, Variant } from "@/components/types/product";
 import { apiConnector } from "@/services/apiConnector";
-
+import {calculateFinalPrice} from "@/utils/priceUtils"
 
 type SubCategoryOption = {
   value: string;
@@ -452,14 +452,14 @@ const EditProductPage: React.FC = () => {
   };
 
   // ✅ Calculate final price for base product
-  const calculateFinalPrice = (): number => {
-    if (!formState.data) return 0;
+  // const calculateFinalPrice = (): number => {
+  //   if (!formState.data) return 0;
 
-    const originalPrice = safeNum(formState.data.originalPrice, 0);
-    const offer = safeNum(formState.data.offer, 0);
+  //   const originalPrice = safeNum(formState.data.originalPrice, 0);
+  //   const offer = safeNum(formState.data.offer, 0);
 
-    return computeSellingPrice(originalPrice, offer);
-  };
+  //   return computeSellingPrice(originalPrice, offer);
+  // };
 
   // ✅ Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -535,7 +535,18 @@ const EditProductPage: React.FC = () => {
       productData.append("childSubCategoryId", String(formState.data.childSubCategoryId || ""));
       productData.append("originalPrice", String(formState.data.originalPrice ?? 0));
       productData.append("offer", String(formState.data.offer ?? 0));
-      productData.append("price", String(hasVariants ? 0 : calculateFinalPrice()));
+      // productData.append("price", String(hasVariants ? 0 : calculateFinalPrice()));
+      productData.append(
+  "price",
+  String(
+    hasVariants
+      ? 0
+      : calculateFinalPrice(
+          Number(formState.data?.originalPrice || 0),
+          Number(formState.data?.offer || 0)
+        )
+  )
+);
       productData.append("material", formState.data.material?.trim() || "");
       productData.append("stock", String(hasVariants ? 0 : formState.data.stock ?? 0));
       productData.append("length", String(formState.data.length ?? 0));
@@ -864,7 +875,13 @@ const EditProductPage: React.FC = () => {
                           name="price"
                           placeholder="Final Price"
                           type="number"
-                          value={calculateFinalPrice().toFixed(2)}
+                          // value={calculateFinalPrice().toFixed(2)}
+                          value={calculateFinalPrice(
+  Number(formState.data?.originalPrice || 0),
+  Number(formState.data?.offer || 0)
+)}
+
+{...({ readOnly: true } as any)}
 
                           className="bg-gray-100 cursor-not-allowed "
                         />
