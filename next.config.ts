@@ -16,7 +16,8 @@ const nextConfig: NextConfig = {
       },
       
     ],
-    domains: ["res.cloudinary.com"],
+    // domains: ["res.cloudinary.com"],
+    domains: ["magbee-ecommerce.s3.ap-south-1.amazonaws.com"],
   },
   webpack(config) {
     config.module.rules.push({

@@ -1,6 +1,7 @@
 // src/services/apis.ts
-export const BASE_URL = "https://ecommerce.magaritatech.com/api";
-// export const BASE_URL = "http://localhost:8000/api";
+// export const BASE_URL = "https://ecommerce.magaritatech.com/api";
+// export const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+export const BASE_URL = "http://localhost:8000/api";
 export const endpoints = {
   SIGNUP_API: `${BASE_URL}/register`,
   LOGIN_API: `${BASE_URL}/login`,
@@ -20,10 +21,17 @@ export const endpointsCategory={
    PRODUCT_CATEGORY_GET_ALL:`${BASE_URL}/category`
 }
 
-export const endpointsProduct={
-  PRODUCT_GELL_ALL:`${BASE_URL}/products`,
-  PRODUCT_BY_ID: `${BASE_URL}/products/id`,
-}
+// export const endpointsProduct={
+//   PRODUCT_GELL_ALL:`${BASE_URL}/products`,
+//   PRODUCT_BY_ID: `${BASE_URL}/products/id`,
+// }
+
+export const endpointsProduct = {
+  CREATE_PRODUCT: `${BASE_URL}/products`,
+  PRODUCT_GET_ALL: `${BASE_URL}/products`,
+  PRODUCT_BY_ID: `${BASE_URL}/products`,
+  PRODUCT_PAGINATION: `${BASE_URL}/pagination-products`,
+};
 
 
 export const endpointsOrder = {
@@ -54,3 +62,6 @@ export const endPointBanner={
   TOGGLE_BANNER_STATUS: (id: number) =>
     `${BASE_URL}/banners/toggle/${id}`,
 }
+
+
+

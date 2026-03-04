@@ -3,6 +3,7 @@
 import {
   Table, TableHeader, TableBody, TableRow, TableCell
 } from "../ui/table";
+import { getSocket } from "@/services/lib/socket";
 import Image from "next/image";
 import { useEffect, useState, useMemo } from "react";
 import { downloadInvoice, getAllOrders, updateOrderStatus } from "../../services/orders/ResentOrder";
@@ -112,7 +113,38 @@ export default function OrdersTable() {
   useEffect(() => {
     fetchOrders();
   }, []);
+useEffect(() => {
+  const socket = getSocket();
 
+  // 🆕 ADMIN → new order listener
+  socket.on("new_order", (data) => {
+    console.log("🔥 New order received:", data);
+
+    // ✅ realtime refresh
+    fetchOrders();
+
+    toast.info("🛒 New order received");
+  });
+
+  // 🔄 user order status update (optional but pro)
+  socket.on("order_status_updated", (data) => {
+    console.log("📦 Order status updated:", data);
+
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === data.orderId
+          ? { ...order, status: data.status }
+          : order
+      )
+    );
+  });
+
+  // 🧹 cleanup (VERY IMPORTANT)
+  return () => {
+    socket.off("new_order");
+    socket.off("order_status_updated");
+  };
+}, []);   
   const fetchOrders = async () => {
     try {
       setLoading(true);

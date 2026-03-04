@@ -2,6 +2,7 @@
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { getSocket } from "@/services/lib/socket";
 import { RootState } from "@/redux/store";
 import Link from "next/link";
 import {
@@ -60,17 +61,29 @@ const ProductTable = () => {
   const [stockFilter, setStockFilter] = useState<"all" | "lowStock" | "outOfStock" | "allInactive" | "shouldBeOut">("all");
 
 
+  // const handleToggleActive = async (product: any) => {
+  //   try {
+  //     const data = await toggleProductStatus(product.id);
+  //     setTableData(prev =>
+  //       prev.map(p => (p.id === product.id ? { ...p, isActive: data.isActive } : p))
+  //     );
+  //     toast.success(`Product is now ${data.isActive ? "active" : "inactive"}`);
+  //   } catch (error) {
+  //     toast.error("Error updating status");
+  //   }
+  // };
+
   const handleToggleActive = async (product: any) => {
-    try {
-      const data = await toggleProductStatus(product.id);
-      setTableData(prev =>
-        prev.map(p => (p.id === product.id ? { ...p, isActive: data.isActive } : p))
-      );
-      toast.success(`Product is now ${data.isActive ? "active" : "inactive"}`);
-    } catch (error) {
-      toast.error("Error updating status");
-    }
-  };
+  try {
+    const data = await toggleProductStatus(product.id);
+
+    fetchProducts(currentPage); // refresh table
+
+    toast.success(`Product is now ${data.isActive ? "active" : "inactive"}`);
+  } catch (error) {
+    toast.error("Error updating status");
+  }
+};
 
   const handleStockChange = async (product: any, newStock: number) => {
     try {
@@ -199,8 +212,48 @@ const ProductTable = () => {
     return filtered;
   }, [tableData, searchTerm, statusFilter, stockFilter, categoryFilter, sortConfig]);
 
+// useEffect(() => {
+//   const socket = getSocket();
 
+//   socket.on("product_created", (data) => {
+//     console.log("🔥 New product:", data);
 
+//     // ✅ realtime refresh
+//     fetchProducts(currentPage);
+
+//     toast.info("🆕 New product added");
+//   });
+  
+
+//   return () => {
+//     socket.off("product_created");
+//   };
+// }, [currentPage]);
+
+useEffect(() => {
+  const socket = getSocket();
+
+  const handleProductCreated = (data: any) => {
+    console.log("🔥 New product:", data);
+
+    fetchProducts(currentPage);
+    toast.info("🆕 New product added");
+  };
+
+  const handleStatusUpdate = (data: any) => {
+    console.log("⚡ Product status updated:", data);
+
+    fetchProducts(currentPage);
+  };
+
+  socket.on("product_created", handleProductCreated);
+  socket.on("product_status_updated", handleStatusUpdate);
+
+  return () => {
+    socket.off("product_created", handleProductCreated);
+    socket.off("product_status_updated", handleStatusUpdate);
+  };
+}, []);
   const totalProducts = tableData.length;
   const lowStockProducts = tableData.filter(product => {
     const totalStock = product.hasVariants
