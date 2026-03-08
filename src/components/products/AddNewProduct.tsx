@@ -16,6 +16,7 @@ import { calculateFinalPrice } from "@/utils/priceUtils"
 import { productSchema ,ProductFormData} from "@/validations/product.schema";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 type Variant = {
   sku: string;
   // price: string;
@@ -69,14 +70,27 @@ export default function AddNewProduct() {
 // });
 
 
+// const {
+//   register,
+//   handleSubmit,
+//   formState: { errors },
+//   setValue,
+//   watch
+// } = useForm<ProductFormData>({
+//   // resolver: zodResolver(productSchema),
+//   resolver: zodResolver(productSchema) as any,
+//   defaultValues: {
+//     variants: []
+//   }
+// });
+
 const {
   register,
   handleSubmit,
   formState: { errors },
   setValue,
   watch
-} = useForm<ProductFormData>({
-  // resolver: zodResolver(productSchema),
+} = useForm<z.infer<typeof productSchema>>({
   resolver: zodResolver(productSchema) as any,
   defaultValues: {
     variants: []
@@ -1318,7 +1332,7 @@ value={calculateFinalPrice(
                               <Label>Selling Price</Label>
                               <Input
                                 type="number"
-                                {...({ readOnly: true } as any)}
+                                
                                 // readOnly
                                 value={calculateFinalPrice(price, offer)}
                                 {...register(`variants.${vIndex}.sellingPrice`, { valueAsNumber: true })}
