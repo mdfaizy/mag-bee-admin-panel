@@ -170,6 +170,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           step={step}
           disabled={disabled}
           className={inputClasses}
+          
         />
 
         {hint && (

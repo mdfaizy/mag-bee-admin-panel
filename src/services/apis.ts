@@ -21,17 +21,17 @@ export const endpointsCategory={
    PRODUCT_CATEGORY_GET_ALL:`${BASE_URL}/category`
 }
 
-// export const endpointsProduct={
-//   PRODUCT_GELL_ALL:`${BASE_URL}/products`,
-//   PRODUCT_BY_ID: `${BASE_URL}/products/id`,
-// }
+export const endpointsProduct={
+  PRODUCT_GELL_ALL:`${BASE_URL}/products`,
+  PRODUCT_BY_ID: `${BASE_URL}/products/id`,
+}
 
-export const endpointsProduct = {
-  CREATE_PRODUCT: `${BASE_URL}/products`,
-  PRODUCT_GET_ALL: `${BASE_URL}/products`,
-  PRODUCT_BY_ID: `${BASE_URL}/products`,
-  PRODUCT_PAGINATION: `${BASE_URL}/pagination-products`,
-};
+// export const endpointsProduct = {
+//   CREATE_PRODUCT: `${BASE_URL}/products`,
+//   PRODUCT_GET_ALL: `${BASE_URL}/products`,
+//   PRODUCT_BY_ID: `${BASE_URL}/products/id`,
+//   PRODUCT_PAGINATION: `${BASE_URL}/pagination-products`,
+// };
 
 
 export const endpointsOrder = {
