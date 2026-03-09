@@ -24,7 +24,7 @@ export const getSocket = (): Socket => {
   if (!socket) {
     socket = io(process.env.NEXT_PUBLIC_SOCKET_URL!, {
       withCredentials: true,
-      transports: ["websocket", "polling"], // ✅ correct
+        transports: ["polling", "websocket"],
     });
   }
   return socket;
