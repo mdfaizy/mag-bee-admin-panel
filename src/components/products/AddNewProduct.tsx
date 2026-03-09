@@ -13,10 +13,6 @@ import { apiConnector } from "@/services/apiConnector";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { calculateFinalPrice } from "@/utils/priceUtils"
-import { productSchema ,ProductFormData} from "@/validations/product.schema";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 type Variant = {
   sku: string;
   // price: string;
@@ -43,103 +39,37 @@ export default function AddNewProduct() {
   const [isActive, setIsActive] = useState(false);
 
 
-  // const {
-  //   register,
-  //   handleSubmit,
-  //   formState: { errors },
-  //   setValue,
-  //   watch
-  // } = useForm<ProductFormData>({
-  //   resolver: zodResolver(productSchema),
-  //   defaultValues: {
-  //     variants: []   // ⭐ IMPORTANT
-  //   }
-  // });
-
-//   const {
-//   register,
-//   handleSubmit,
-//   formState: { errors },
-//   setValue,
-//   watch
-// } = useForm<ProductFormData>({
-//   resolver: zodResolver(productSchema),
-//   defaultValues: {
-//     variants: []
-//   }
-// });
-
-
-// const {
-//   register,
-//   handleSubmit,
-//   formState: { errors },
-//   setValue,
-//   watch
-// } = useForm<ProductFormData>({
-//   // resolver: zodResolver(productSchema),
-//   resolver: zodResolver(productSchema) as any,
-//   defaultValues: {
-//     variants: []
-//   }
-// });
-
-const {
-  register,
-  handleSubmit,
-  formState: { errors },
-  setValue,
-  watch
-} = useForm<z.infer<typeof productSchema>>({
-  resolver: zodResolver(productSchema) as any,
-  defaultValues: {
-    variants: []
-  }
-});
-
-  // const [formData, setFormData] = useState({
-  //   name: "",
-  //   categoryId: "",
-  //   description: "",
-  //   material: "",
-  //   keywords: [] as string[],
-  //   price: "",
-  //   originalPrice: "",
-  //   offer: "",
-  //   length: "",
-  //   width: "",
-  //   height: "",
-  //   weight: "",
-  //   weightUnit: "kg",
-  //   stock: "",
-  //   shippingAvailable: false,
-  //   skuCode: "",
-  //   returnPolicy: "",
-  //   warrantyInfo: "",
-  //   variants: [
-  //     {
-  //       sku: "",
-  //       price: 0,
-  //       sellingPrice: 0,
-  //       stock: 0,
-  //       attributes: [{ key: "", value: "" }],
-  //     },
-  //   ] as Variant[],
-  // });
-
   const [formData, setFormData] = useState({
+    name: "",
+    categoryId: "",
+    description: "",
+    material: "",
     keywords: [] as string[],
+    price: "",
+    originalPrice: "",
+    offer: "",
+    length: "",
+    width: "",
+    height: "",
+    weight: "",
+    weightUnit: "kg",
+    stock: "",
+    shippingAvailable: false,
+    skuCode: "",
+    returnPolicy: "",
+    warrantyInfo: "",
     variants: [
       {
         sku: "",
         price: 0,
         sellingPrice: 0,
         stock: 0,
-        offer: 0,
         attributes: [{ key: "", value: "" }],
       },
     ] as Variant[],
   });
+
+
   const returnPolicyOptions = [
     { value: "7-day return", label: "7-day return" },
     { value: "30-day return", label: "30-day return" },
@@ -298,12 +228,6 @@ const {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
-  const originalPrice = watch("originalPrice");
-  const offer = watch("offer");
-
-
-  const variants = watch("variants");
-
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -332,7 +256,7 @@ const {
       return { ...prev, variants: updatedVariants };
     });
   };
-  //sumbit function
+  // const sumbit function
   //   const handleSubmit = async (e: React.FormEvent) => {
   //     e.preventDefault();
   //     if (isSubmitting) return;
@@ -398,199 +322,83 @@ const {
   //     setIsSubmitting(false);
   //   }
   //   };
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  //   if (isSubmitting) return;
+    if (isSubmitting) return;
 
-  //   if (!formData.originalPrice && !showVariants) {
-  //     toast.error("Original price is required");
-  //     return;
-  //   }
-
-  //   setIsSubmitting(true);
-  //   const toastId = toast.loading("Creating product...");
-
-  //   try {
-  //     const variants = formData.variants
-  //       .filter(v => v.sku || v.price || v.stock)
-  //       .map(v => ({
-  //         ...v,
-  //         price: Number(v.price) || 0,
-  //         stock: Number(v.stock) || 0,
-  //         attributes: v.attributes.filter(a => a.key || a.value),
-  //       }));
-
-  //     const payload = {
-  //       ...formData,
-  //       isActive: isActive,
-  //       hasVariants: showVariants && variants.length > 0,
-  //       originalPrice: Number(formData.originalPrice),
-  //       price:
-  //         Number(formData.price) ||
-  //         (variants.length ? 0 : Number(formData.originalPrice)),
-  //       offer: Number(formData.offer) || 0,
-  //       stock:
-  //         Number(formData.stock) ||
-  //         (variants.length ? 0 : Number(formData.stock)),
-  //       variants:
-  //         showVariants && variants.length > 0
-  //           ? JSON.stringify(variants)
-  //           : undefined,
-  //       shippingAvailable: String(formData.shippingAvailable),
-  //       keywords: JSON.stringify(formData.keywords),
-  //     };
-
-  //     const form = new FormData();
-  //     Object.entries(payload).forEach(([key, value]) => {
-  //       form.append(
-  //         key,
-  //         value !== undefined && value !== null ? value.toString() : ""
-  //       );
-  //     });
-
-  //     productImages.forEach(file => form.append("imageUrl", file));
-
-  //     const res = await apiConnector("POST", "/product", form);
-
-  //     toast.dismiss(toastId);
-
-  //     if (res.status === 201 || res.status === 200) {
-  //       toast.success("✅ Product created successfully!");
-  //       router.push("/");
-  //     } else {
-  //       toast.error("Failed to create product");
-  //     }
-  //   } catch (error: any) {
-  //     toast.dismiss(toastId);
-  //     console.error("Error submitting form:", error);
-  //     toast.error(
-  //       error?.response?.data?.message || "❌ Submission failed"
-  //     );
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-
-  // const onSubmit = async (data: ProductFormData) => {
-  //   try {
-
-  //     const form = new FormData();
-
-  //     Object.entries(data).forEach(([key, value]) => {
-  //       form.append(key, JSON.stringify(value));
-  //     });
-
-  //     productImages.forEach(img => {
-  //       form.append("imageUrl", img);
-  //     });
-
-  //     await apiConnector("POST", "/product", form);
-
-  //     toast.success("Product created");
-
-  //   } catch (error) {
-  //     toast.error("Error creating product");
-  //   }
-  // };
-
-
-  // const onSubmit = async (data: ProductFormData) => {
-
-  //   try {
-
-  //     // ✅ add this
-  //     data.variantEnabled = showVariants;
-
-  //     if (!showVariants) {
-  //       delete data.variants;
-  //     }
-
-  //     const form = new FormData();
-
-  //     Object.entries(data).forEach(([key, value]) => {
-
-  //       if (value === undefined || value === null) return;
-
-  //       if (Array.isArray(value)) {
-  //         form.append(key, JSON.stringify(value));
-  //       } else {
-  //         form.append(key, String(value));
-  //       }
-
-  //     });
-
-  //     productImages.forEach(img => {
-  //       form.append("imageUrl", img);
-  //     });
-
-  //     await apiConnector("POST", "/product", form);
-
-  //     toast.success("Product created successfully");
-
-  //   } catch (error) {
-
-  //     console.error(error);
-  //     toast.error("Error creating product");
-
-  //   }
-
-  // };
-
-  const onSubmit = async (data: ProductFormData) => {
-
-    try {
-
-      setIsSubmitting(true);
-
-      (data as any).hasVariants = showVariants;
-      (data as any).isActive = isActive;
-      if (!showVariants) {
-        delete data.variants;
-      }
-
-      const form = new FormData();
-
-      Object.entries(data).forEach(([key, value]) => {
-
-        if (value === undefined || value === null) return;
-
-        if (typeof value === "object") {
-          form.append(key, JSON.stringify(value));
-        } else {
-          form.append(key, value.toString());
-        }
-
-      });
-
-      productImages.forEach((img) => {
-        form.append("imageUrl", img);
-      });
-
-      await apiConnector(
-        "POST",
-        "/product",
-        form,
-        {
-          "Content-Type": "multipart/form-data",
-        }
-      );
-
-      toast.success("Product created successfully");
-
-    } catch (error) {
-
-      console.error(error);
-      toast.error("Error creating product");
-
-    } finally {
-
-      setIsSubmitting(false);
-
+    if (!formData.originalPrice && !showVariants) {
+      toast.error("Original price is required");
+      return;
     }
 
+    setIsSubmitting(true);
+    const toastId = toast.loading("Creating product...");
+
+    try {
+      const variants = formData.variants
+        .filter(v => v.sku || v.price || v.stock)
+        .map(v => ({
+          ...v,
+          price: Number(v.price) || 0,
+          stock: Number(v.stock) || 0,
+          attributes: v.attributes.filter(a => a.key || a.value),
+        }));
+
+      const payload = {
+        ...formData,
+        isActive: isActive,
+        hasVariants: showVariants && variants.length > 0,
+        originalPrice: Number(formData.originalPrice),
+        price:
+          Number(formData.price) ||
+          (variants.length ? 0 : Number(formData.originalPrice)),
+        offer: Number(formData.offer) || 0,
+        stock:
+          Number(formData.stock) ||
+          (variants.length ? 0 : Number(formData.stock)),
+        variants:
+          showVariants && variants.length > 0
+            ? JSON.stringify(variants)
+            : undefined,
+        shippingAvailable: String(formData.shippingAvailable),
+        keywords: JSON.stringify(formData.keywords),
+      };
+
+      const form = new FormData();
+      Object.entries(payload).forEach(([key, value]) => {
+        form.append(
+          key,
+          value !== undefined && value !== null ? value.toString() : ""
+        );
+      });
+
+      productImages.forEach(file => form.append("imageUrl", file));
+
+      const res = await apiConnector("POST", "/product", form);
+
+      toast.dismiss(toastId);
+
+      if (res.status === 201 || res.status === 200) {
+        toast.success("✅ Product created successfully!");
+        router.push("/");
+      } else {
+        toast.error("Failed to create product");
+      }
+    } catch (error: any) {
+      toast.dismiss(toastId);
+      console.error("Error submitting form:", error);
+      toast.error(
+        error?.response?.data?.message || "❌ Submission failed"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+
+
+
 
   return (
     <div className="flex flex-col flex-1 lg:w-11/12 w-full mx-auto items-center">
@@ -630,21 +438,7 @@ const {
           </div>
         </div>
 
-        {/* <form onSubmit={handleSubmit}> */}
-        {/* <form onSubmit={handleSubmit(onSubmit)}> */}
-        <form
-          onSubmit={handleSubmit(
-            onSubmit,
-            (errors) => {
-              console.log("VALIDATION ERRORS", errors);
-            }
-          )}
-        >
-          <input
-            type="hidden"
-            {...register("hasVariants")}
-            value={showVariants ? "true" : "false"}
-          />
+        <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
             {/* Left Column */}
             <div className="space-y-6">
@@ -658,49 +452,35 @@ const {
                     <Label>Product Name<span className="text-red-500">*</span></Label>
                     <Input
                       type="text"
-                      // name="name"
+                      name="name"
                       placeholder="Enter your product name"
-                      // value={formData.name}
-                      {...register("name")}
-                    // onChange={handleChange}
+                      value={formData.name}
+                      onChange={handleChange}
                     />
-                    {errors.name && (
-                      <p className="text-red-500 text-sm">
-                        {errors.name.message}
-                      </p>
-                    )}
                   </div>
                   <div>
                     <Label>SKU Code<span className="text-red-500">*</span></Label>
                     <Input
                       type="text"
-                      // name="skuCode"
+                      name="skuCode"
                       placeholder="Enter SKU code"
-                      // value={formData.skuCode}
-                      // onChange={handleChange}
-                      {...register("skuCode")}
+                      value={formData.skuCode}
+                      onChange={handleChange}
+
                     />
-                    {errors.skuCode && (
-                      <p className="text-red-500 text-sm">
-                        {errors.skuCode.message}
-                      </p>
-                    )}
+
                   </div>
                   <div>
                     <Label>Material<span className="text-red-500">*</span></Label>
                     <Input
                       type="text"
-                      // name="material"
+                      name="material"
                       placeholder="Enter material"
-                      // value={formData.material}
-                      // onChange={handleChange}
-                      {...register("material")}
+                      value={formData.material}
+                      onChange={handleChange}
+
                     />
-                    {errors.material && (
-                      <p className="text-red-500 text-sm">
-                        {errors.material.message}
-                      </p>
-                    )}
+
                   </div>
                 </div>
               </div>
@@ -716,49 +496,37 @@ const {
                       <Label>Length<span className="text-red-500">*</span></Label>
                       <Input
                         type="text"
-                        // name="length"
+                        name="length"
                         placeholder="Enter length"
-                        // value={formData.length}
-                        // onChange={handleChange}
-                        {...register("length")}
+                        value={formData.length}
+                        onChange={handleChange}
+
                       />
-                      {errors.length && (
-                        <p className="text-red-500 text-sm">
-                          {errors.length.message}
-                        </p>
-                      )}
+
                     </div>
                     <div>
                       <Label>Width<span className="text-red-500">*</span></Label>
                       <Input
                         type="text"
-                        // name="width"
+                        name="width"
                         placeholder="Enter width"
-                        // value={formData.width}
-                        // onChange={handleChange}
-                        {...register("width")}
+                        value={formData.width}
+                        onChange={handleChange}
+
                       />
-                      {errors.width && (
-                        <p className="text-red-500 text-sm">
-                          {errors.width.message}
-                        </p>
-                      )}
+
                     </div>
                     <div>
                       <Label>Height<span className="text-red-500">*</span></Label>
                       <Input
                         type="text"
-                        // name="height"
+                        name="height"
                         placeholder="Enter height"
-                        // value={formData.height}
-                        // onChange={handleChange}
-                        {...register("height")}
+                        value={formData.height}
+                        onChange={handleChange}
+
                       />
-                      {errors.height && (
-                        <p className="text-red-500 text-sm">
-                          {errors.height.message}
-                        </p>
-                      )}
+
                     </div>
                   </div>
                   <div>
@@ -766,19 +534,19 @@ const {
                     <div className="flex items-center gap-2">
                       <Input
                         type="number"
-                        // name="weight"
+                        name="weight"
                         placeholder="Enter weight"
-                        // value={formData.weight}
-                        // onChange={handleChange}
-                        {...register("weight")}
+                        value={formData.weight}
                         onChange={handleChange}
+
+                        // onChange={handleChange}
                         className="w-full"
                         min="0"
                       />
                       <select
-                        // name="weightUnit"
-                        // value={formData.weightUnit}
-                        {...register("weightUnit")}
+                        name="weightUnit"
+                        value={formData.weightUnit}
+
                         onChange={handleChange}
                         className="border rounded px-2 py-3 text-sm"
                       >
@@ -787,11 +555,7 @@ const {
                       </select>
 
                     </div>
-                    {errors.weight && (
-                      <p className="text-red-500 text-sm">
-                        {errors.weight.message}
-                      </p>
-                    )}
+
                   </div>
                 </div>
               </div>
@@ -802,7 +566,7 @@ const {
                   <h2 className="font-semibold text-gray-700">Policies</h2>
                 </div>
                 <div className="p-4 space-y-4">
-                  {/* <div className="relative">
+                  <div className="relative">
                     <Label>Return Policy</Label>
                     <Select
                       options={returnPolicyOptions}
@@ -812,44 +576,19 @@ const {
                     <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500 top-7">
                       <HiChevronDown className="w-4 h-4" />
                     </span>
-                  </div> */}
-                  <div className="relative">
-                    <Label>
-                      Return Policy<span className="text-red-500">*</span>
-                    </Label>
-
-                    <Select
-                      options={returnPolicyOptions}
-                      placeholder="Select Return Policy"
-                      value={watch("returnPolicy")}
-                      onChange={(value) => setValue("returnPolicy", value)}
-                    />
-
-                    {errors.returnPolicy && (
-                      <p className="text-red-500 text-sm">
-                        {errors.returnPolicy.message}
-                      </p>
-                    )}
-
-                    <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500 top-7">
-                      <HiChevronDown className="w-4 h-4" />
-                    </span>
                   </div>
+
                   <div>
                     <Label>Warranty Info</Label>
                     <TextArea
-                      // name="warrantyInfo"
+                      name="warrantyInfo"
                       placeholder="e.g., 1-year replacement warranty"
-                      // value={formData.warrantyInfo}
-                      // onChange={handleChange}
-                      {...register("warrantyInfo")}
+                      value={formData.warrantyInfo}
+                      onChange={handleChange}
+
                       rows={2}
                     />
-                    {errors.warrantyInfo && (
-                      <p className="text-red-500 text-sm">
-                        {errors.warrantyInfo.message}
-                      </p>
-                    )}
+
                   </div>
                 </div>
               </div>
@@ -865,34 +604,13 @@ const {
                 <div className="p-4 space-y-4">
                   <div className="relative">
                     <Label>Select category:<span className="ml-2 text-red-500">*</span></Label>
-                    {/* <Select
+                    <Select
                       options={category}
                       placeholder="Select Category"
                       onChange={handleCategoryChange}
                       className="appearance-none pr-10"
-                    /> */}
-                    <Select
-                      // name="categoryId"
-                      options={category}
-                      placeholder="Select Category"
-                      // value={watch("categoryId")}
-
-value={watch("categoryId")?.toString()}                      // onChange={(value) => {
-                      //   setValue("categoryId", value);
-                      //   // setValue("categoryId", Number(value));
-                      //   handleCategoryChange(value);
-                      // }}
-                      onChange={(value) => {
-                        setValue("categoryId", Number(value));
-                        handleCategoryChange(value);
-                      }}
                     />
 
-                    {errors.categoryId && (
-                      <p className="text-red-500 text-sm">
-                        {errors.categoryId.message}
-                      </p>
-                    )}
                     <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500 top-7">
                       <HiChevronDown className="w-4 h-4" />
                     </span>
@@ -901,7 +619,7 @@ value={watch("categoryId")?.toString()}                      // onChange={(value
                   {filteredSubCategory.length > 0 && (
                     <div className="relative">
                       <Label>Select sub-category:<span className="ml-2 text-red-500">*</span></Label>
-                      {/* <Select
+                      <Select
                         options={filteredSubCategory}
                         placeholder="Select SubCategory"
                         // onChange={(value: string) => setFormData(prev => ({ ...prev, subCategoryId: value }))}
@@ -910,24 +628,9 @@ value={watch("categoryId")?.toString()}                      // onChange={(value
                           fetchChildren(value); // fetch children on subcategory select
                         }}
                         className="appearance-none pr-10"
-                      /> */}
-                      <Select
-                        // name="subCategoryId"
-                        options={filteredSubCategory}
-                        placeholder="Select SubCategory"
-                        value={watch("subCategoryId")?.toString()}
-                        // onChange={(value) => {
-                        //   setValue("subCategoryId", value);
-                        //   fetchChildren(value);
-                        // }}
-                        onChange={(value) => {
-                          setValue("subCategoryId", Number(value));
-                          fetchChildren(value);
-                        }}
                       />
-                      <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500 top-7">
-                        <HiChevronDown className="w-4 h-4" />
-                      </span>
+
+
                     </div>
                   )}
 
@@ -936,26 +639,15 @@ value={watch("categoryId")?.toString()}                      // onChange={(value
                   {subCategoryChildren.length > 0 && (
                     <div className="relative">
                       <Label>Select Sub Category Child:<span className="ml-2 text-red-500">*</span></Label>
-                      {/* <Select
+                      <Select
                         options={subCategoryChildren}
                         placeholder="Select Child SubCategory"
                         onChange={(value: string) =>
                           setFormData((prev) => ({ ...prev, childSubCategoryId: value }))
                         }
 
-                      /> */}
-                      <Select
-                        // name="childSubCategoryId"
-                        options={subCategoryChildren}
-                        placeholder="Select Child SubCategory"
-                        value={watch("childSubCategoryId")?.toString()}
-                        // onChange={(value) =>
-                        //   setValue("childSubCategoryId", value)
-                        // }
-                        onChange={(value) =>
-                          setValue("childSubCategoryId", Number(value))
-                        }
                       />
+
                       <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500 top-7">
                         <HiChevronDown className="w-4 h-4" />
                       </span>
@@ -974,78 +666,45 @@ value={watch("categoryId")?.toString()}                      // onChange={(value
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <Label>Original Price<span className="text-red-500">*</span></Label>
-                        {/* <Input
+                        <Input
                           name="originalPrice"
                           placeholder="Original Price"
                           type="number"
                           value={formData.originalPrice}
                           onChange={handleChange}
-                        /> */}
-                        <Input
-                          type="number"
-                          placeholder="Original Price"
-                          {...register("originalPrice", { valueAsNumber: true })}
                         />
 
-                        {errors.originalPrice && (
-                          <p className="text-red-500 text-sm">
-                            {errors.originalPrice.message}
-                          </p>
-                        )}
                       </div>
 
                       <div>
                         <Label>Offer %<span className="text-red-500">*</span></Label>
-                        {/* <Input
+                        <Input
                           name="offer"
                           placeholder="Offer %"
                           type="number"
                           value={formData.offer}
                           onChange={handleChange}
-                        /> */}
-                        <Input
-                          type="number"
-                          placeholder="Offer %"
-                          {...register("offer", { valueAsNumber: true })}
                         />
 
-                        {errors.offer && (
-                          <p className="text-red-500 text-sm">
-                            {errors.offer.message}
-                          </p>
-                        )}
                       </div>
                       <div>
                         <Label>Final Price<span className="text-red-500">*</span></Label>
-                        {/* <Input
+                        <Input
                           name="price"
                           placeholder="Final Price"
                           type="number"
                           // value={calculateFinalPrice().toFixed(2)}
-//                          value={calculateFinalPrice(
-//   Number(formData.originalPrice),
-//   Number(formData.offer)
-// )}
-value={calculateFinalPrice(
-  Number(originalPrice || 0),
-  Number(offer || 0)
-)}
+                          value={calculateFinalPrice(
+                            Number(formData.originalPrice),
+                            Number(formData.offer)
+                          )}
+
 
 
                           // {...({ readOnly: true } as any)}
                           className="bg-gray-100 cursor-not-allowed"
-                        /> */}
-                        <Input
-                          type="number"
-                          // readOnly
-
-{...({ readOnly: true } as any)}                          
-value={calculateFinalPrice(
-                            Number(originalPrice || 0),
-                            Number(offer || 0)
-                          )}
-                          className="bg-gray-100"
                         />
+
                       </div>
                     </div>
                   )}
@@ -1053,41 +712,27 @@ value={calculateFinalPrice(
                     {!showVariants && (
                       <div>
                         <Label>Stock<span className="text-red-500">*</span></Label>
-                        {/* <Input
-                          type="number"
-                          // name="stock"
-                          placeholder="Enter Stock"
-                          // value={formData.stock}
-                          // onChange={handleChange}
-                          {...register("stock")}
-                        />
-                        {errors.stock && (
-<p className="text-red-500 text-sm">
- {errors.stock.message}
-</p>
-)} */}
                         <Input
                           type="number"
+                          name="stock"
                           placeholder="Enter Stock"
-                          {...register("stock", { valueAsNumber: true })}
+                          value={formData.stock}
+                          onChange={handleChange}
+
                         />
 
-                        {errors.stock && (
-                          <p className="text-red-500 text-sm">
-                            {errors.stock.message}
-                          </p>
-                        )}
+
                       </div>
                     )}
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        // name="shippingAvailable"
-                        // id="shippingAvailable"
-                        // checked={formData.shippingAvailable}
+                        name="shippingAvailable"
                         id="shippingAvailable"
-                        {...register("shippingAvailable")}
-                        // onChange={handleChange}
+                        checked={formData.shippingAvailable}
+                        // id="shippingAvailable"
+
+                        onChange={handleChange}
                         className="w-4 h-4"
                       />
                       <label htmlFor="shippingAvailable" className="text-sm">
@@ -1121,23 +766,36 @@ value={calculateFinalPrice(
             <div className="bg-gray-100 p-3 border-b border-gray-200">
               <h2 className="font-semibold text-gray-700">Details</h2>
             </div>
-            <div className="p-4">
+            {/* <div className="p-4">
               <Label>Product Description</Label>
               <TextArea
-                // name="description"
+                name="description"
                 placeholder="Enter description"
-                // value={formData.description}
-                // onChange={handleChange}
-
-                {...register("description")}
+                value={formData.description}
+                onChange={handleChange}
                 rows={4}
               />
-              {errors.description && (
-                <p className="text-red-500 text-sm">
-                  {errors.description.message}
-                </p>
-              )}
-            </div>
+            </div> */}
+            <div className="p-4 space-y-2">
+  <Label className="text-sm font-medium text-gray-700">
+    Product Description <span className="text-red-500">*</span>
+  </Label>
+
+  <TextArea
+    name="description"
+    placeholder="Write detailed product description (features, specifications, warranty, etc.)"
+    value={formData.description}
+    onChange={handleChange}
+    rows={6}
+    className="w-full rounded-lg border border-gray-300 p-3 text-sm 
+               focus:border-blue-500 focus:ring-1 focus:ring-blue-500
+               resize-y min-h-[140px]"
+  />
+
+  <p className="text-xs text-gray-500">
+    Add full product details like features, specifications, material, warranty etc.
+  </p>
+</div>
           </div>
 
           {/* Product Images - Full Width */}
@@ -1165,7 +823,6 @@ value={calculateFinalPrice(
                     </button>
                   </div>
                 ))}
-
                 <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 transition-colors">
                   <HiUpload className="w-8 h-8 text-gray-400 mb-2" />
                   <span className="text-sm text-gray-500 text-center">Upload Image</span>
@@ -1182,9 +839,11 @@ value={calculateFinalPrice(
                   />
                 </label>
               </div>
+              {productImages.length === 0 && (
+                <p className="text-red-500 text-sm mt-2">Please upload at least one image</p>
+              )}
             </div>
           </div>
-
           {/* Variants - Full Width */}
           <div className="mt-6 border border-gray-200 rounded-lg">
             <div className="bg-gray-100 p-3 border-b border-gray-200 flex justify-between items-center">
@@ -1205,7 +864,6 @@ value={calculateFinalPrice(
                 )}
               </button>
             </div>
-
             {showVariants && (
               <div className="p-4">
                 {formData.variants.map((variant, vIndex) => (
@@ -1220,198 +878,81 @@ value={calculateFinalPrice(
                         <HiX className="w-5 h-5" />
                       </button>
                     )}
-
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                       <div>
                         <Label>SKU<span className="text-red-500">*</span></Label>
                         <Input
-                          // name="sku"
-                          // value={variant.sku}
-                          // onChange={(e) => handleChange(e, { variantIndex: vIndex })}
-                          {...register(`variants.${vIndex}.sku`)}
+                          name="sku"
+                          value={variant.sku}
+                          onChange={(e) => handleChange(e, { variantIndex: vIndex })}
                         />
-                        {errors.variants?.[vIndex]?.sku && (
-                          <p className="text-red-500 text-sm">
-                            {errors.variants[vIndex].sku.message}
-                          </p>
-                        )}
                       </div>
-
                       <div>
                         <Label>Stock<span className="text-red-500">*</span></Label>
                         <Input
-                          // name="stock"
-                          // value={variant.stock}
-                          // onChange={(e) => handleChange(e, { variantIndex: vIndex })}
-                          {...register(`variants.${vIndex}.stock`, { valueAsNumber: true })}
-                        />
-                        {errors.variants?.[vIndex]?.stock && (
-                          <p className="text-red-500 text-sm">
-                            {errors.variants[vIndex].stock.message}
-                          </p>
-                        )}
-                      </div>
-
-                      {/* <div className='flex grid grid-cols-1 md:grid-cols-3 gap-5 mb-5'>
-                         <div>
-                        <Label>Price<span className="text-red-500">*</span></Label>
-                        <Input
-                          // name="price"
-                          type="number"
-                          // value={variant.price}
-                          // onChange={(e) => handleChange(e, { variantIndex: vIndex })}
-                          {...register(`variants.${vIndex}.price`, { valueAsNumber: true })}
-                           
-                        />
-                        {errors.variants?.[vIndex]?.price && (
-<p className="text-red-500 text-sm">
- {errors.variants[vIndex].price.message}
-</p>
-)}
-                      </div>
-                      
-<div>
-  <Label>Offer %</Label>
-  <Input
-    // name="offer"
-    type="number"
-    // value={variant.offer || 0}
-    // onChange={(e) => handleChange(e, { variantIndex: vIndex })}
-    {...register(`variants.${vIndex}.offer`, { valueAsNumber: true })}
-  />
-  {errors.variants?.[vIndex]?.offer && (
-    <p className="text-red-500 text-sm">
-      {errors.variants[vIndex].offer.message}
-    </p>
-  )}
-</div>
-  <div>
-  <Label>Selling Price<span className="text-red-500">*</span></Label>
-  <Input
-    // name="sellingPrice"
-    type="number"
-    // value={variant.sellingPrice}
-    // onChange={(e) => handleChange(e, { variantIndex: vIndex })}
-    {...register(`variants.${vIndex}.sellingPrice`, { valueAsNumber: true })}
-  />
-  {errors.variants?.[vIndex]?.sellingPrice && (
-    <p className="text-red-500 text-sm">
-      {errors.variants[vIndex].sellingPrice.message}
-    </p>
-  )}
-</div>
-                        </div> */}
-
-
-
-                      {formData.variants.map((variant, vIndex) => {
-
-                        const price = variants?.[vIndex]?.price || 0;
-                        const offer = variants?.[vIndex]?.offer || 0;
-
-                        return (
-                          <div key={vIndex} className="grid grid-cols-2 md:grid-cols-3 gap-5 mb-5">
-
-                            <div>
-                              <Label>Price</Label>
-                              <Input
-                                type="number"
-                                {...register(`variants.${vIndex}.price`, { valueAsNumber: true })}
-                              />
-                            </div>
-
-                            <div>
-                              <Label>Offer %</Label>
-                              <Input
-                                type="number"
-                                {...register(`variants.${vIndex}.offer`, { valueAsNumber: true })}
-                              />
-                            </div>
-
-                            <div>
-                              <Label>Selling Price</Label>
-                              <Input
-                                type="number"
-                                
-                                // readOnly
-                                value={calculateFinalPrice(price, offer)}
-                                {...register(`variants.${vIndex}.sellingPrice`, { valueAsNumber: true })}
-                                className="bg-gray-100"
-                              />
-
-
-                            </div>
-
-                          </div>
-                        );
-
-                      })}
-
-
-
-
-                      {/* <div>
-                        <Label>Selling Price<span className="text-red-500">*</span></Label>
-                        <Input
-                          name="sellingPrice"
-                          type="number"
-                          value={variant.sellingPrice}
+                          name="stock"
+                          value={variant.stock}
                           onChange={(e) => handleChange(e, { variantIndex: vIndex })}
                         />
-                      </div> */}
-
-
+                      </div>
+                      <div className='flex grid grid-cols-1 md:grid-cols-3 gap-5 mb-5'>
+                        <div>
+                          <Label>Price<span className="text-red-500">*</span></Label>
+                          <Input
+                            name="price"
+                            type="number"
+                            value={variant.price}
+                            onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+                          />
+                        </div>
+                        <div>
+                          <Label>Offer %</Label>
+                          <Input
+                            name="offer"
+                            type="number"
+                            value={variant.offer || 0}
+                            onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+                          />
+                        </div>
+                        <div>
+                          <Label>Selling Price<span className="text-red-500">*</span></Label>
+                          <Input
+                            name="sellingPrice"
+                            type="number"
+                            value={variant.sellingPrice}
+                            onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+                          />
+                        </div>
+                      </div>
                     </div>
-
                     <div className="mt-5">
                       <h4 className="font-medium text-gray-700 mb-3">Attributes</h4>
-
                       {variant.attributes.map((attr, aIndex) => (
                         <div key={aIndex} className="flex gap-3 mb-3 items-end">
                           <div className="flex-1">
                             <Label>Key</Label>
                             <Input
-                              // value={attr.key}
-                              // onChange={(e) => handleChange(e, {
-                              //   variantIndex: vIndex,
-                              //   attrIndex: aIndex,
-                              //   attrField: "key",
-                              // })}
-                              {...register(`variants.${vIndex}.attributes.${aIndex}.key`)}
+                              value={attr.key}
+                              onChange={(e) => handleChange(e, {
+                                variantIndex: vIndex,
+                                attrIndex: aIndex,
+                                attrField: "key",
+                              })}
                               placeholder="e.g., Color"
                             />
-                            {errors.variants?.[vIndex]?.attributes?.[aIndex]?.key && (
-                              <p className="text-red-500 text-sm">
-                                {errors.variants[vIndex].attributes[aIndex].key.message}
-                              </p>
-                            )}
                           </div>
-                          {/* <div className="flex-1">
-                            <Label>Value</Label>
-                            <Input
-                              // value={attr.value}
-                              // onChange={(e) => handleChange(e, {
-                              //   variantIndex: vIndex,
-                              //   attrIndex: aIndex,
-                              //   attrField: "value",
-                              // })}
-                              placeholder="e.g., Red"
-                            />
-                          </div> */}
                           <div className="flex-1">
                             <Label>Value</Label>
                             <Input
+                              value={attr.value}
+                              onChange={(e) => handleChange(e, {
+                                variantIndex: vIndex,
+                                attrIndex: aIndex,
+                                attrField: "value",
+                              })}
                               placeholder="e.g., Red"
-                              {...register(`variants.${vIndex}.attributes.${aIndex}.value`)}
                             />
-
-                            {errors?.variants?.[vIndex]?.attributes?.[aIndex]?.value && (
-                              <p className="text-red-500 text-sm">
-                                {errors.variants[vIndex].attributes[aIndex].value?.message}
-                              </p>
-                            )}
                           </div>
-
                           {variant.attributes.length > 1 && (
                             <button
                               type="button"
@@ -1435,7 +976,6 @@ value={calculateFinalPrice(
                     </div>
                   </div>
                 ))}
-
                 <button
                   type="button"
                   onClick={addVariant}
@@ -1446,14 +986,7 @@ value={calculateFinalPrice(
               </div>
             )}
           </div>
-
           <div className="mt-8 text-center">
-            {/* <button
-              type="submit"
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
-            >
-              Submit
-            </button> */}
             <button
               type="submit"
               disabled={isSubmitting}
@@ -1479,5 +1012,3 @@ value={calculateFinalPrice(
     </div>
   );
 }
-
-
