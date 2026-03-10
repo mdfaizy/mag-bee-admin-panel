@@ -36,6 +36,7 @@
   import { toast } from "react-toastify";
   import Pagination from "./Pagination";
   import { useRouter } from "next/navigation";
+import { apiConnector } from "@/services/apiConnector";
 export interface Category {
   id: number;
   name: string;
@@ -166,18 +167,33 @@ export interface Category {
       setDeleteModalOpen(true);
     };
 
+    // const confirmDelete = async () => {
+    //   if (selectedDeleteId) {
+    //     try {
+    //       await dispatch<any>(deleteCategory(selectedDeleteId));
+    //       toast.success("Category deleted successfully");
+    //       setDeleteModalOpen(false);
+    //       setSelectedDeleteId(null);
+    //     } catch (error) {
+    //       toast.error("Failed to delete category");
+    //     }
+    //   }
+    // };
+
     const confirmDelete = async () => {
-      if (selectedDeleteId) {
-        try {
-          await dispatch<any>(deleteCategory(selectedDeleteId));
-          toast.success("Category deleted successfully");
-          setDeleteModalOpen(false);
-          setSelectedDeleteId(null);
-        } catch (error) {
-          toast.error("Failed to delete category");
-        }
-      }
-    };
+  if (selectedDeleteId) {
+    try {
+
+      await dispatch<any>(deleteCategory(selectedDeleteId));
+
+      setDeleteModalOpen(false);
+      setSelectedDeleteId(null);
+
+    } catch (error) {
+      toast.error("Failed to delete category");
+    }
+  }
+};
 
     const formatDate = (dateString: string) => {
       const date = new Date(dateString);
@@ -187,6 +203,33 @@ export interface Category {
         day: 'numeric'
       });
     };
+
+    const toggleCategory = async (id: number) => {
+  try {
+
+    const res = await apiConnector(
+      "PATCH",
+      `/category/${id}/toggle-status`
+    );
+
+    if (res?.data?.success) {
+
+      toast.success("Category status updated");
+
+      // updated categories reload
+      const updatedList = await fetchProductCategory();
+      dispatch(setCategories(updatedList));
+
+    }
+
+  } catch (error: any) {
+
+    toast.error(
+      error?.response?.data?.message || "Failed to update category status"
+    );
+
+  }
+};
 
     return (
       // <div className="bg-white rounded-xl shadow-sm p-4 text-gray-800 md:p-6 border dark:border-gray-800 dark:bg-gray-900 dark:hover:border-gray-700 dark:text-white  ">
@@ -335,12 +378,17 @@ export interface Category {
                     <TableCell>
                       {item.imageUrl ? (
                         <div className="relative w-10 h-10">
-                          <Image
+                          {/* <Image
                             src={item.imageUrl}
                             alt={item.name || "Category image"}
                             fill
                             className="object-cover rounded-md"
-                          />
+                          /> */}
+                          <img
+  src={item.imageUrl}
+  alt={item.name || "Category image"}
+  className="w-10 h-10 object-cover rounded-md"
+/>
                         </div>
                       ) : (
                         <span className="text-gray-400">—</span>
@@ -352,6 +400,12 @@ export interface Category {
                     <TableCell className="hidden xl:table-cell">
                       <span className="text-sm text-gray-600 dark:text-white">{formatDate(item.updatedAt)}</span>
                     </TableCell>
+                    <button
+  onClick={() => toggleCategory(item.id)}
+  className="p-2 text-gray-600 hover:bg-gray-100 rounded"
+>
+  {item.isActive ? "Disable" : "Enable"}
+</button>
                     <TableCell>
                       <div className="flex gap-2">
                         <button
