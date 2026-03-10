@@ -135,7 +135,7 @@
       // 🚫 guard clauses
       if (!selectedProduct) return;
       if (formState.initialized) return;
-      if (!options.subCategories.length) return;
+      // if (!options.subCategories.length) return;
 
       try {
         // =========================
