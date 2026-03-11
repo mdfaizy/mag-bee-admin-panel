@@ -1,14 +1,17 @@
 "use client";
 
+
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "@/redux/store";
 import Link from "next/link";
 import Image from "next/image";
 import { toast } from "react-toastify";
-
-import { setBanners, setSelectedBanner } from "@/redux/bannerSlice";
-import { fetchBanner, fetchBannerById, toggleBannerStatus } from "@/services/bannerServices/BannerService";
+import { getSocket } from "@/services/lib/socket";
+import { setBanners, setSelectedBanner,addBanner,
+  updateBanner,
+  removeBanner } from "@/redux/bannerSlice";
+import { fetchBanner, fetchBannerById, toggleBannerStatus,deleteOfferBanner} from "@/services/bannerServices/BannerService";
 
 import {
   Table, TableHeader, TableBody, TableRow, TableCell
@@ -57,18 +60,49 @@ const BannerTable = () => {
     try {
       setLoading(true);
       const res = await fetchBanner();
+      console.log("API banners:", res); 
       dispatch(setBanners(res));
     } catch {
       toast.error("Failed to load banners");
     } finally {
       setLoading(false);
-    }
+    } 
   };
 
   useEffect(() => {
     loadBanners();
   }, []);
 
+ useEffect(() => {
+
+  const socket = getSocket();
+
+  console.log("🔌 Socket connected:", socket.id);
+
+  socket.on("bannerCreated", (banner) => {
+    dispatch(addBanner(banner));
+  });
+
+  socket.on("bannerUpdated", (banner) => {
+    dispatch(updateBanner(banner));
+  });
+
+  socket.on("bannerDeleted", (id) => {
+    dispatch(removeBanner(id));
+  });
+
+  socket.on("bannerStatusChanged", (banner) => {
+    dispatch(updateBanner(banner));
+  });
+
+  return () => {
+    socket.off("bannerCreated");
+    socket.off("bannerUpdated");
+    socket.off("bannerDeleted");
+    socket.off("bannerStatusChanged");
+  };
+
+}, [dispatch]);
   /* ---------------- FILTER ---------------- */
   const filteredData = useMemo(() => {
     return banners.filter((b: Banner) =>
@@ -84,6 +118,29 @@ const BannerTable = () => {
   const visibleData = filteredData.slice(startIndex, startIndex + itemsPerPage);
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
+  const handleDelete = async (id: number) => {
+
+  const confirmDelete = window.confirm(
+    "Are you sure you want to delete this banner?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    setLoading(true);
+
+    await dispatch(deleteOfferBanner(id));
+
+    toast.success("Banner deleted successfully");
+
+    loadBanners(); // refresh table
+
+  } catch (error) {
+    toast.error("Failed to delete banner");
+  } finally {
+    setLoading(false);
+  }
+};
   /* ---------------- EDIT (FIXED) ---------------- */
   const handleEdit = async (banner: Banner) => {
     try {
@@ -212,9 +269,12 @@ const BannerTable = () => {
                     >
                       <FaEdit />
                     </button>
-                    <button className="p-2 text-red-600">
-                      <MdDeleteForever />
-                    </button>
+                    <button
+  onClick={() => handleDelete(item.id)}
+  className="p-2 text-red-600 hover:text-red-800"
+>
+  <MdDeleteForever />
+</button>
                   </TableCell>
                 </TableRow>
               ))

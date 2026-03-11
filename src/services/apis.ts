@@ -58,7 +58,7 @@ export const endPointBanner={
  // ✅
 
   UPDATE_BANNER: (id: number) => `${BASE_URL}/offerBanners/${id}`,
-  DELETE_BANNER: (id: number) => `${BASE_URL}/banners/${id}`,
+  DELETE_BANNER: (id: number) => `${BASE_URL}/offerBanners/${id}`,
   TOGGLE_BANNER_STATUS: (id: number) =>
     `${BASE_URL}/banners/toggle/${id}`,
 }

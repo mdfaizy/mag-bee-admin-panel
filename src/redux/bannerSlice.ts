@@ -74,7 +74,11 @@ const bannerSlice = createSlice({
     b.id === updated.id ? updated : b
   );
 },
-
+removeBanner: (state, action: PayloadAction<number>) => {
+      state.banners = state.banners.filter(
+        (banner) => banner.id !== action.payload
+      );
+    },
 
     /* LOADING */
     setLoading: (state, action: PayloadAction<boolean>) => {
@@ -89,6 +93,7 @@ export const {
   addBanner,
   setSelectedBanner,
   updateBanner,
+  removeBanner,
   setLoading,
 } = bannerSlice.actions;
 

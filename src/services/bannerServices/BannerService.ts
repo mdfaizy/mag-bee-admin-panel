@@ -3,9 +3,9 @@ import { endPointBanner } from "../apis";
 import { apiConnector } from "@/services/apiConnector";
 import { addBanner } from "@/redux/bannerSlice";
 import { toast } from "react-toastify";
-import { updateBanner ,setSelectedBanner} from "@/redux/bannerSlice";
+import { updateBanner ,setSelectedBanner,removeBanner,} from "@/redux/bannerSlice";
 
-const { CREATE_BANNER, BANNER_GELL_ALL,UPDATE_BANNER,GET_BANNER_BY_ID,DELETE_BANNER} = endPointBanner;
+const { CREATE_BANNER, BANNER_GELL_ALL,UPDATE_BANNER,GET_BANNER_BY_ID,DELETE_BANNER,TOGGLE_BANNER_STATUS,} = endPointBanner;
 export const createOfferBanner =
   ({ formData, router }: { formData: FormData; router: any }) =>
   async (dispatch: AppDispatch) => {
@@ -45,36 +45,104 @@ export const fetchBannerById =
 
 
 /* ---------------- UPDATE BANNER ---------------- */
+// export const updateOfferBanner =
+//   ({ id, formData, onSuccess }: { id: number; formData: FormData; onSuccess: () => void }) =>
+//   async (dispatch: AppDispatch) => {
+//     try {
+//       const res = await apiConnector(
+//         "PUT",
+//         endPointBanner.UPDATE_BANNER(id));
+
+//       dispatch(updateBanner(res.data));
+//       toast.success("Banner updated successfully");
+//       onSuccess();
+//     } catch (error: any) {
+//       toast.error(error?.message || "Banner update failed");
+//     }
+//   };
+
 export const updateOfferBanner =
-  ({ id, formData, onSuccess }: { id: number; formData: FormData; onSuccess: () => void }) =>
+  ({
+    id,
+    formData,
+    onSuccess,
+  }: {
+    id: number;
+    formData: FormData;
+    onSuccess: () => void;
+  }) =>
   async (dispatch: AppDispatch) => {
     try {
       const res = await apiConnector(
         "PUT",
-        endPointBanner.UPDATE_BANNER(id));
+        UPDATE_BANNER(id),
+        formData
+      );
 
-      dispatch(updateBanner(res.data));
+      dispatch(updateBanner(res.data.banner));
+
       toast.success("Banner updated successfully");
+
       onSuccess();
     } catch (error: any) {
       toast.error(error?.message || "Banner update failed");
     }
   };
 
+
+  export const deleteOfferBanner =
+  (id: number) => async (dispatch: AppDispatch) => {
+    try {
+      await apiConnector("DELETE", DELETE_BANNER(id));
+
+      dispatch(removeBanner(id));
+
+      toast.success("Banner deleted successfully");
+    } catch (error: any) {
+      toast.error("Failed to delete banner");
+      throw error;
+    }
+  };
+
+// export const toggleBannerStatus =
+//   (id: number) => async (dispatch: AppDispatch) => {
+//     try {
+//       const res = await apiConnector(
+//         "PATCH",
+//         endPointBanner.TOGGLE_BANNER_STATUS(id));
+
+//       dispatch(updateBanner(res.data));
+
+//       toast.success(
+//         `Banner is now ${res.data.isActive ? "Active" : "Inactive"}`
+//       );
+
+//       return res.data;
+//     } catch (error: any) {
+//       toast.error("Failed to update banner status");
+//       throw error;
+//     }
+//   };
+
+/* ---------------- TOGGLE STATUS ---------------- */
+
 export const toggleBannerStatus =
   (id: number) => async (dispatch: AppDispatch) => {
     try {
       const res = await apiConnector(
         "PATCH",
-        endPointBanner.TOGGLE_BANNER_STATUS(id));
-
-      dispatch(updateBanner(res.data));
-
-      toast.success(
-        `Banner is now ${res.data.isActive ? "Active" : "Inactive"}`
+        TOGGLE_BANNER_STATUS(id)
       );
 
-      return res.data;
+      dispatch(updateBanner(res.data.banner));
+
+      toast.success(
+        `Banner is now ${
+          res.data.banner.isActive ? "Active" : "Inactive"
+        }`
+      );
+
+      return res.data.banner;
     } catch (error: any) {
       toast.error("Failed to update banner status");
       throw error;
