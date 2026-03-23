@@ -6,9 +6,10 @@ import {
 } from "@/components/ui/table";
 import Pagination from "@/components/tables/Pagination";
 import { toast } from "react-toastify";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit ,FaEye } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
 import { apiConnector } from "@/services/apiConnector";
+import Link from "next/link";
 
 interface Privilege {
   id: number;
@@ -100,9 +101,21 @@ export default function RoleTable() {
                 </TableCell>
 
                 <TableCell className="flex gap-3">
-                  <button className="text-blue-600 hover:underline">
+                  {/* <button className="text-blue-600 hover:underline">
                     <FaEdit />
-                  </button>
+                  </button> */}
+                  <Link
+                    href={`/created-role/edit/${role.id}`}
+                    className="text-blue-600"
+                  >
+                    <FaEdit />
+                  </Link>
+                  <Link
+                    href={`/created-role/view/${role.id}`}
+                    className="text-green-600"
+                  >
+                    <FaEye />
+                  </Link>
                   <button className="text-red-600 hover:underline">
                     <MdDeleteForever />
                   </button>

@@ -303,3 +303,23 @@ export const resetPassword = (
     }
   };
 };
+
+
+export const fetchUserById = async (id: string | number) => {
+  try {
+
+    const res = await apiConnector(
+      "GET",
+      `/users/${id}`
+    );
+
+    console.log(res);
+    return res.data.user;
+
+  } catch (error) {
+
+    console.error("Error fetching user", error);
+    throw error;
+
+  }
+};

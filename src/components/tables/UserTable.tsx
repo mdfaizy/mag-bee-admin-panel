@@ -8,9 +8,10 @@ import { fetchAllUsers, toggleUserStatus,deleteUserById ,updateUserById} from ".
 import { toast } from "react-toastify";
 import EditUserModal from "../auth/EditUserModal";
 import DeleteUserModal from "../auth/DeleteUserModal";
-import {  FaEdit } from "react-icons/fa";
+import {  FaEdit,FaEye } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
-
+import Link from "next/link";
+// import  from 'react-dom'
 interface Role {
   id: number;
   name: string;
@@ -179,7 +180,7 @@ const handleDeleteUser = async () => {
 <TableCell className="dark:text-white">
   {user.createdAt ? new Date(user.createdAt).toLocaleString() : '—'}
 </TableCell>
-               <TableCell className="flex gap-3">
+               {/* <TableCell className="flex gap-3">
   <button
     onClick={() => {
       setSelectedUser(user);
@@ -198,6 +199,37 @@ const handleDeleteUser = async () => {
   >
    <MdDeleteForever/>
   </button>
+</TableCell> */}
+
+<TableCell className="flex gap-3 items-center">
+
+  {/* View User */}
+  <Link
+    href={`/users/view/${user.id}`}
+    className="text-green-600 hover:underline"
+  >
+    <FaEye />
+  </Link>
+
+  {/* Edit User */}
+ <Link
+  href={`/users/edit/${user.id}`}
+  className="text-blue-600"
+>
+  <FaEdit />
+</Link>
+
+  {/* Delete User */}
+  <button
+    onClick={() => {
+      setSelectedUser(user);
+      setDeleteModalOpen(true);
+    }}
+    className="text-red-600 hover:underline"
+  >
+    <MdDeleteForever />
+  </button>
+
 </TableCell>
 
               </TableRow>
