@@ -55,7 +55,8 @@ const ProductTable = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [sortConfig, setSortConfig] = useState({ key: "", direction: "asc" });
-  const [categories, setCategories] = useState<string[]>([]);
+  // const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [totalItems, setTotalItems] = useState(0);
   const [statusFilter, setStatusFilter] = useState<"active" | "inactive" | "all">("active");
   const [stockFilter, setStockFilter] = useState<"all" | "lowStock" | "outOfStock" | "allInactive" | "shouldBeOut">("all");
@@ -159,12 +160,25 @@ const ProductTable = () => {
     setSortConfig({ key: "", direction: "asc" });
   };
 
+useEffect(() => {
+  const uniqueCategories = Array.from(
+    new Map(
+      tableData
+        .filter(p => p.category)
+        .map(p => [p.category.id, p.category])
+    ).values()
+  );
+
+  setCategories(uniqueCategories);
+}, [tableData]);
 
   const filteredAndSortedData = React.useMemo(() => {
     let filtered = tableData.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category?.name.toLowerCase().includes(searchTerm.toLowerCase())
+      product.category?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.skuCode?.toLowerCase().includes()
+  
     );
 
     // ✅ Apply status filter (sirf ek baar)
@@ -190,6 +204,7 @@ const ProductTable = () => {
     }
 
     // ✅ Apply category filter
+    console.log(categories);
     if (categoryFilter !== "all") {
       filtered = filtered.filter(product =>
         product.category?.name === categoryFilter
@@ -452,9 +467,14 @@ useEffect(() => {
                 onChange={(e) => setCategoryFilter(e.target.value)}
               >
                 <option value="all">All Categories</option>
-                {categories.map((category, index) => (
+                {/* {categories.map((category, index) => (
                   <option key={index} value={category}>{category}</option>
-                ))}
+                ))} */}
+                {categories.map((category) => (
+  <option key={category.id} value={category.name}>
+    {category.name}
+  </option>
+))}
               </select>
             </div>
 
@@ -490,7 +510,7 @@ useEffect(() => {
                     Name
                   </div>
                 </TableCell>
-
+<TableCell isHeader className="hidden md:table-cell">Sku-Code</TableCell>
                 <TableCell isHeader className="cursor-pointer">
                   <div className="flex items-center gap-1">
                     Price
@@ -500,7 +520,7 @@ useEffect(() => {
                         : <FaChevronDown size={10} />)}
                   </div>
                 </TableCell>
-
+      
                 <TableCell isHeader className="hidden md:table-cell">Offer</TableCell>
                 <TableCell isHeader className="hidden lg:table-cell">Category</TableCell>
                 <TableCell isHeader className="hidden lg:table-cell">Image</TableCell>
@@ -515,6 +535,7 @@ useEffect(() => {
                 Array.from({ length: itemsPerPage }).map((_, index) => (
                   <TableRow key={index} className="animate-pulse dark:text-white">
                     <TableCell><div className="h-4 bg-gray-200 rounded dark:text-white"></div></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
                     <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
                     <TableCell><div className="h-4 bg-gray-200 rounded"></div></TableCell>
                     <TableCell className="hidden md:table-cell"><div className="h-4 bg-gray-200 rounded"></div></TableCell>
@@ -544,7 +565,7 @@ useEffect(() => {
                         </span>
                       </div>
                     </TableCell>
-
+                     <TableCell className="font-medium dark:text-white">{item.skuCode}</TableCell>
                     <TableCell>
 
 

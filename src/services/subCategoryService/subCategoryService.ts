@@ -10,7 +10,7 @@ interface CreateCategoryParams {
 }
 
 //Create a Sub Category new 
-export const createCategory = async ({ formData, router }: CreateCategoryParams) => {
+export const createSubCategory  = async ({ formData, router }: CreateCategoryParams) => {
   const toastId = toast.loading("Creating Category...");
 
   try {

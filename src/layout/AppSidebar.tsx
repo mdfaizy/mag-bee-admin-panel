@@ -128,7 +128,7 @@ const navItems: NavItem[] = [
   icon: <IoLayersSharp />,
   //  permissions:["VIEW-SUB-CATEGORY"],
   subItems: [
-     {name: "Add Sub Category",path:'/create-sub-category',permissions:["CREACTE-SUB-CATEGORY"],},
+     {name: "Add Sub Category",path:'/create-sub-category',permissions:["CREATE_SUBCATEGORY"],},
     {name:'Sub Category Table',path:'/subCategoryTable',pro:false},
   ],
 },
