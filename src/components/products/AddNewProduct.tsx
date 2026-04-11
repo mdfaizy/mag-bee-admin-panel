@@ -1340,7 +1340,6 @@
 
 
 "use client";
-import { z } from "zod";
 import { toast } from "react-toastify";
 import React, { useState, useEffect } from "react";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
@@ -1369,9 +1368,12 @@ export default function AddNewProduct() {
   const [category, setCategory] = useState<CategoryOption[]>([]);
   const [productImages, setProductImages] = useState<File[]>([]);
   const [subCategory, setSubCategory] = useState<SubCategory[]>([]);
+
+  const [nestedLevels, setNestedLevels] = useState<SubCategory[][]>([]);
+const [selectedNestedIds, setSelectedNestedIds] = useState<string[]>([]);
   const [filteredSubCategory, setFilteredSubCategory] = useState<SubCategory[]>([]);
   const [showVariants, setShowVariants] = useState(false);
-  const [subCategoryChildren, setSubCategoryChildren] = useState<SubCategory[]>([]);
+  // const [subCategoryChildren, setSubCategoryChildren] = useState<SubCategory[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isActive, setIsActive] = useState(false);
 
@@ -1543,32 +1545,106 @@ export default function AddNewProduct() {
   }, []);
 
   // Filter subcategories when category changes
+  // const handleCategoryChange = (value: string) => {
+  //   setValue("categoryId", value);
+  //   setValue("subCategoryId", "");
+  //   setValue("childSubCategoryId", "");
+  //   const filtered = subCategory.filter(sc => sc.categoryId === value);
+  //   setFilteredSubCategory(filtered);
+  //   setSubCategoryChildren([]);
+  //   trigger("categoryId");
+  // };
+
+
   const handleCategoryChange = (value: string) => {
-    setValue("categoryId", value);
-    setValue("subCategoryId", "");
-    setValue("childSubCategoryId", "");
-    const filtered = subCategory.filter(sc => sc.categoryId === value);
-    setFilteredSubCategory(filtered);
-    setSubCategoryChildren([]);
-    trigger("categoryId");
-  };
+  setValue("categoryId", value);
+  setValue("subCategoryId", "");
+  setFilteredSubCategory(
+    subCategory.filter(
+      (sc) => sc.categoryId === value
+    )
+  );
+
+  setNestedLevels([]);
+  setSelectedNestedIds([]);
+
+  trigger("categoryId");
+};
 
   // Fetch children subcategories
-  const fetchChildren = async (parentId: string) => {
-    try {
-      const res = await apiConnector("GET", `/subcategories/${parentId}/children`);
-      const children = Array.isArray(res.data.children) ? res.data.children : res.data;
-      const formatted = children.map((item: any) => ({
+  // const fetchChildren = async (parentId: string) => {
+  //   try {
+  //     const res = await apiConnector("GET", `/subcategories/${parentId}/children`);
+  //     const children = Array.isArray(res.data.children) ? res.data.children : res.data;
+  //     const formatted = children.map((item: any) => ({
+  //       value: String(item.id),
+  //       label: item.name,
+  //       parentId: String(parentId),
+  //     }));
+  //     setSubCategoryChildren(formatted);
+  //   } catch (error) {
+  //     console.error("Failed to fetch subcategory children:", error);
+  //     setSubCategoryChildren([]);
+  //   }
+  // };
+
+  const fetchNestedChildren = async (
+  parentId: string,
+  level: number
+) => {
+  try {
+    const res = await apiConnector(
+      "GET",
+      `/subcategories/${parentId}/children`
+    );
+
+    const children = Array.isArray(
+      res.data.children
+    )
+      ? res.data.children
+      : [];
+
+    const formatted = children.map(
+      (item: any) => ({
         value: String(item.id),
         label: item.name,
-        parentId: String(parentId),
-      }));
-      setSubCategoryChildren(formatted);
-    } catch (error) {
-      console.error("Failed to fetch subcategory children:", error);
-      setSubCategoryChildren([]);
+      })
+    );
+
+    const updatedLevels = [
+      ...nestedLevels.slice(0, level),
+    ];
+
+    if (formatted.length > 0) {
+      updatedLevels.push(formatted);
     }
-  };
+
+    setNestedLevels(updatedLevels);
+
+    const updatedSelected = [
+      ...selectedNestedIds.slice(
+        0,
+        level
+      ),
+    ];
+
+    setSelectedNestedIds(
+      updatedSelected
+    );
+
+    if (
+      formatted.length === 0
+    ) {
+      setValue(
+        "subCategoryId",
+        parentId
+      );
+    }
+
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   // Toggle variants
   const toggleVariants = () => {
@@ -2121,10 +2197,17 @@ export default function AddNewProduct() {
                           <Select
                             options={filteredSubCategory}
                             placeholder="Select SubCategory"
+                            // onChange={(value) => {
+                            //   field.onChange(value);
+                            //   fetchChildren(value);
+                            // }}
                             onChange={(value) => {
-                              field.onChange(value);
-                              fetchChildren(value);
-                            }}
+  field.onChange(value);
+
+  setValue("subCategoryId", value);
+
+  fetchNestedChildren(value, 0);
+}}
                             value={field.value}
                             className="appearance-none pr-10"
                           />
@@ -2136,7 +2219,7 @@ export default function AddNewProduct() {
                     </div>
                   )}
 
-                  {subCategoryChildren.length > 0 && (
+                  {/* {subCategoryChildren.length > 0 && (
                     <div className="relative">
                       <Label>Select Sub Category Child:</Label>
                       <Controller
@@ -2155,7 +2238,57 @@ export default function AddNewProduct() {
                         <HiChevronDown className="w-4 h-4" />
                       </span>
                     </div>
-                  )}
+                  )} */}
+
+                  {nestedLevels.map(
+  (levelOptions, levelIndex) => (
+    <div
+      key={levelIndex}
+      className="relative"
+    >
+      <Label>
+        Select Child SubCategory Level{" "}
+        {levelIndex + 1}
+      </Label>
+
+      <Select
+        options={levelOptions}
+        placeholder={`Select Child Level ${
+          levelIndex + 1
+        }`}
+        value={
+          selectedNestedIds[
+            levelIndex
+          ] || ""
+        }
+        onChange={(value) => {
+          const updated =
+            [
+              ...selectedNestedIds.slice(
+                0,
+                levelIndex
+              ),
+              value,
+            ];
+
+          setSelectedNestedIds(
+            updated
+          );
+
+          setValue(
+            "subCategoryId",
+            value
+          );
+
+          fetchNestedChildren(
+            value,
+            levelIndex + 1
+          );
+        }}
+      />
+    </div>
+  )
+)}  
                 </div>
               </div>
 

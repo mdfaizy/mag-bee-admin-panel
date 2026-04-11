@@ -130,6 +130,8 @@ const navItems: NavItem[] = [
   subItems: [
      {name: "Add Sub Category",path:'/create-sub-category',permissions:["CREATE_SUBCATEGORY"],},
     {name:'Sub Category Table',path:'/subCategoryTable',pro:false},
+    {name:'Child Sub Category Table',path:'/childSubcategory/list',pro:false},
+    // 
   ],
 },
 

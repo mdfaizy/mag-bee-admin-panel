@@ -82,7 +82,26 @@ export const updateSubCategoryById = async ({ id, formData }: UpdateSubCategoryP
 };
 
 
+export const getSubCategoriesByCategory = async (
+  categoryId: string | number
+) => {
+  const res = await apiConnector(
+    "GET",
+    `/subcategories/category/${categoryId}`
+  );
 
+  return res.data.subCategories;
+};
+
+export const getAllSubCategories =
+  async () => {
+    const res = await apiConnector(
+      "GET",
+      "/subcategories"
+    );
+
+    return res.data;
+  };
 // Fetch all child subcategories of a parent subcategory
 export async function fetchChildSubCategories(parentId: number) {
   try {

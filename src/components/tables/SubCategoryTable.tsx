@@ -184,6 +184,7 @@ const handleEdit = (subCategory: any) => {
               <TableCell className="hidden md:table-cell">Description</TableCell>
               <TableCell className="hidden lg:table-cell">Slug</TableCell>
               <TableCell>Category</TableCell>
+              <TableCell>Child SubCategories</TableCell>
               <TableCell>Image</TableCell>
               <TableCell className="hidden lg:table-cell">Created</TableCell>
               <TableCell className="hidden xl:table-cell">Updated</TableCell>
@@ -212,6 +213,22 @@ const handleEdit = (subCategory: any) => {
                   <TableCell className="hidden lg:table-cell">{item.slug || "—"}</TableCell>
                   {/* <TableCell>{item.category?.name || "—"}</TableCell> */}
                    <TableCell>{item.category?.name || "—"}</TableCell>
+                   <TableCell>
+  {item.children?.length > 0 ? (
+    <div className="flex flex-wrap gap-1">
+      {item.children.map((child: any) => (
+        <span
+          key={child.id}
+          className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-md"
+        >
+          {child.name}
+        </span>
+      ))}
+    </div>
+  ) : (
+    <span className="text-gray-400">—</span>
+  )}
+</TableCell>
                   <TableCell>
                     {item.imageUrl ? (
                       <div className="relative w-10 h-10">
