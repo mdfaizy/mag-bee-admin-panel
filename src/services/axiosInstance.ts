@@ -3,8 +3,8 @@ import axios from "axios";
 // export const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 const axiosInstance = axios.create({
   // baseURL: "https://ecommerce.magaritatech.com/api",
-  // baseURL: process.env.NEXT_PUBLIC_API_URL,
-  baseURL:'http://localhost:8000/api',
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  // baseURL:'http://localhost:8000/api',
   withCredentials: true,
 });
 
