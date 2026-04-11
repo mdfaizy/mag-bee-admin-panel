@@ -16,6 +16,9 @@ cd /var/www/magbeeadmin.magaritatech.com
 git checkout $BRANCH
 git pull origin $BRANCH
 
+rm -rf .next
+rm -rf node_modules/.cache
+
 npm install
 npm run build
 
