@@ -1,0 +1,32 @@
+name: Deploy Admin Next.js
+
+on:
+  push:
+    branches:
+      - next-faizy   # 👈 तुम्हारा current branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            export PATH=$PATH:/usr/bin:/usr/local/bin:/root/.nvm/versions/node/v20.20.2/bin
+
+            cd /var/www/magbeeadmin.magaritatech.com
+
+            git fetch origin
+            git checkout next-faizy
+            git pull origin next-faizy
+
+            npm install
+            npm run build
+
+            pm2 restart admin-next || pm2 start npm --name "admin-next" -- start
+            pm2 save
