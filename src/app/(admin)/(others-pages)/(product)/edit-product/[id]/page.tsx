@@ -1,5 +1,8 @@
   "use client";
-
+import {
+  fetchProductsByGroup,
+  updateProductGroup
+} from "@/services/product/productService";
   import { toast } from "react-toastify";
   import { useParams, useRouter } from "next/navigation";
   import React, { useEffect, useState } from "react";
@@ -13,17 +16,24 @@
   import { RootState } from "@/redux/store";
   import { setSelectedProduct, setProducts } from "@/redux/productSlice";
   import { fetchProductById, updateProductById } from "@/services/product/productService";
-  import { fetchProductCategory } from "@/services/product-category/categoryService";
+  // import { fetchProductCategory } from "@/services/product-category/categoryService";
   import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
   import { Product, Variant } from "@/components/types/product";
   import { apiConnector } from "@/services/apiConnector";
-  import {calculateFinalPrice} from "@/utils/priceUtils"
+  // import {calculateFinalPrice} from "@/utils/priceUtils"
 
   type SubCategoryOption = {
     value: string;
     label: string;
     categoryId: string;
   };
+  type ProductLite = {
+  id: number;
+  name: string;
+  skuCode: string;
+   variantGroupId?: number;
+  images?: { imageUrl: string }[];
+};
 
   // ✅ Utility functions
   const safeNum = (v: any, fallback = 0): number => {
@@ -60,7 +70,12 @@
       subCategoryChildren: [] as { value: string; label: string }[],
       loading: true,
     });
+const [skuSearch, setSkuSearch] = useState("");
+    const [searchResults, setSearchResults] = useState<ProductLite[]>([]);
+// const [selectedVariants, setSelectedVariants] = useState<ProductLite[]>([]);
 
+// const [selectedVariants, setSelectedVariants] = useState<any[]>([]);
+const [selectedVariants, setSelectedVariants] = useState<ProductLite[]>([]);
     const [showVariants, setShowVariants] = useState(false);
     const [isActive, setIsActive] = useState(true);
     const [filteredSubCategory, setFilteredSubCategory] = useState<{ value: string; label: string }[]>([]);
@@ -89,6 +104,39 @@
 
       loadProduct();
     }, [id, dispatch]);
+
+const handleSkuSearch = async (value: string) => {
+  setSkuSearch(value);
+
+  if (value.length < 2) {
+    setSearchResults([]);
+    return;
+  }
+
+  try {
+    const res = await apiConnector("GET", `/search?sku=${value}`);
+
+    setSearchResults(res.data?.products || []);
+  } catch (err) {
+    console.error(err);
+    setSearchResults([]);
+  }
+};
+const handleAddVariant = (product: ProductLite) => {
+  if (selectedVariants.some(v => v.id === product.id)) {
+    toast.warning("Already added");
+    return;
+  }
+
+  setSelectedVariants(prev => [...prev, product]);
+
+  setSearchResults([]);
+  setSkuSearch("");
+};
+
+const handleRemoveVariant = (id: number) => {
+  setSelectedVariants(prev => prev.filter(p => p.id !== id));
+};
 
     // ✅ Fetch categories and subcategories
     useEffect(() => {
@@ -129,6 +177,32 @@
 
       fetchOptionsData();
     }, []);
+
+    useEffect(() => {
+  const loadGroupProducts = async () => {
+    if (!selectedProduct?.variantGroupId) {
+      setSelectedVariants([]);
+      return;
+    }
+
+    try {
+      const products = await fetchProductsByGroup(
+        selectedProduct.variantGroupId
+      );
+
+      const others = products.filter(
+        (p: any) => p.id !== selectedProduct.id
+      );
+
+      setSelectedVariants(others);
+
+    } catch (err) {
+      console.error("Group load error", err);
+    }
+  };
+
+  loadGroupProducts();
+}, [selectedProduct]);
 
     // ✅ Initialize form data when selectedProduct changes
     useEffect(() => {
@@ -323,11 +397,27 @@
               (updatedVariants[variantIndex] as any)[name] = value;
 
               // Recalculate selling price for variants
-              if (name === "price" || name === "offer") {
-                const price = name === "price" ? safeNum(value, 0) : updatedVariants[variantIndex].price;
-                const offer = name === "offer" ? safeNum(value, 0) : (updatedVariants[variantIndex].offer || 0);
-                updatedVariants[variantIndex].sellingPrice = computeSellingPrice(price, offer);
-              }
+              // if (name === "price" || name === "offer") {
+              //   const price = name === "price" ? safeNum(value, 0) : updatedVariants[variantIndex].price;
+              //   const offer = name === "offer" ? safeNum(value, 0) : (updatedVariants[variantIndex].offer || 0);
+              //   updatedVariants[variantIndex].sellingPrice = computeSellingPrice(price, offer);
+              // }
+              if (name === "price" || name === "sellingPrice") {
+  const price =
+    name === "price"
+      ? safeNum(value, 0)
+      : updatedVariants[variantIndex].price;
+
+  const sellingPrice =
+    name === "sellingPrice"
+      ? safeNum(value, 0)
+      : updatedVariants[variantIndex].sellingPrice;
+
+  updatedVariants[variantIndex].offer =
+    price > 0
+      ? Math.round(((price - sellingPrice) / price) * 100)
+      : 0;
+}
             }
           }
 
@@ -533,20 +623,26 @@
           productData.append("subCategoryId", formState.data.subCategoryId);
 
         productData.append("childSubCategoryId", String(formState.data.childSubCategoryId || ""));
-        productData.append("originalPrice", String(formState.data.originalPrice ?? 0));
-        productData.append("offer", String(formState.data.offer ?? 0));
+        // productData.append("originalPrice", String(formState.data.originalPrice ?? 0));
+        // productData.append("offer", String(formState.data.offer ?? 0));
+        productData.append("originalPrice", String(formState.data.originalPrice || 0));
+productData.append("finalPrice", String(formState.data.finalPrice || 0));
         // productData.append("price", String(hasVariants ? 0 : calculateFinalPrice()));
-        productData.append(
-    "price",
-    String(
-      hasVariants
-        ? 0
-        : calculateFinalPrice(
-            Number(formState.data?.originalPrice || 0),
-            Number(formState.data?.offer || 0)
-          )
-    )
-  );
+  //       productData.append(
+  //   "price",
+  //   String(
+  //     hasVariants
+  //       ? 0
+  //       : calculateFinalPrice(
+  //           Number(formState.data?.originalPrice || 0),
+  //           Number(formState.data?.offer || 0)
+  //         )
+  //   )
+  // );
+  productData.append(
+  "price",
+  String(hasVariants ? 0 : formState.data.finalPrice || 0)
+);
         productData.append("material", formState.data.material?.trim() || "");
         productData.append("stock", String(hasVariants ? 0 : formState.data.stock ?? 0));
         productData.append("length", String(formState.data.length ?? 0));
@@ -579,7 +675,16 @@
         });
 
         const updatedProduct = await updateProductById(formState.data.id, productData);
-
+// await updateProductGroup(
+//   formState.data.id,
+//   selectedVariants.map(v => v.id)
+// );
+if (selectedVariants.length > 0) {
+  await updateProductGroup(
+    formState.data.id,
+    selectedVariants.map(v => v.id)
+  );
+}
         // Update Redux
         const updatedList = products.map((p) =>
           p.id === formState.data.id ? updatedProduct : p
@@ -860,16 +965,24 @@
                         </div>
 
                         <div>
-                          <Label>Offer %<span className="text-red-500">*</span></Label>
+                          {/* <Label>Offer %<span className="text-red-500">*</span></Label>
                           <Input
                             name="offer"
                             placeholder="Offer %"
                             type="number"
                             value={formState.data?.offer || 0}
                             onChange={handleChange}
-                          />
+                          /> */}
+                           <Label>Final Price<span className="text-red-500">*</span></Label>
+<Input
+  name="finalPrice"
+  type="number"
+  value={formState.data?.finalPrice || 0}
+  onChange={handleChange}
+/>
                         </div>
-                        <div>
+                       
+                        {/* <div>
                           <Label>Final Price<span className="text-red-500">*</span></Label>
                           <Input
                             name="price"
@@ -885,7 +998,23 @@
 
                             className="bg-gray-100 cursor-not-allowed "
                           />
-                        </div>
+                        </div> */}
+
+                        <Label>Offer %</Label>
+<Input
+  type="number"
+  value={
+    formState.data?.originalPrice && formState.data?.finalPrice
+      ? Math.round(
+          ((formState.data.originalPrice - formState.data.finalPrice) /
+            formState.data.originalPrice) *
+            100
+        )
+      : 0
+  }
+ {...({ readOnly: true } as any)}
+  className="bg-gray-100 cursor-not-allowed"
+/>
                       </div>
                     )}
 
@@ -1087,7 +1216,9 @@
                           />
                         </div>
 
-                        <div>
+
+                          <div className="flex gap-2">
+<div>
                           <Label>Price<span className="text-red-500">*</span></Label>
                           <Input
                             name="price"
@@ -1096,8 +1227,46 @@
                             onChange={(e) => handleChange(e, { variantIndex: vIndex })}
                           />
                         </div>
+ <div>
+   <Label>Offer %</Label>
+<Input
+  type="number"
+  value={
+    variant.price && variant.sellingPrice
+      ? Math.round(
+          ((variant.price - variant.sellingPrice) / variant.price) * 100
+        )
+      : 0
+  }
+  {...({ readOnly: true } as any)}
+  className="bg-gray-100 cursor-not-allowed"
+/>
+ </div>
 
-                        <div>
+ {/* <div>
+   <Label>Final Price<span className="text-red-500">*</span></Label>
+<Input
+  name="finalPrice"
+  type="number"
+  value={formState.data?.finalPrice || 0}
+  onChange={handleChange}
+/>
+ </div> */}
+
+
+ <div>
+   <Label>Selling Price</Label>
+<Input
+  name="sellingPrice"
+  type="number"
+  value={variant.sellingPrice || 0}
+  onChange={(e) => handleChange(e, { variantIndex: vIndex })}
+/>
+ </div>
+                          </div>
+                        
+
+                        {/* <div>
                           <Label>Offer %</Label>
                           <Input
                             name="offer"
@@ -1105,9 +1274,12 @@
                             value={variant.offer || 0}
                             onChange={(e) => handleChange(e, { variantIndex: vIndex })}
                           />
-                        </div>
+                        </div> */}
 
-                        <div>
+                       
+                       
+
+                        {/* <div>
                           <Label>Selling Price<span className="text-red-500">*</span></Label>
                           <Input
                             name="sellingPrice"
@@ -1116,7 +1288,8 @@
 
                             className="bg-gray-100 cursor-not-allowed"
                           />
-                        </div>
+                        </div> */}
+                       
                       </div>
 
                       <div className="mt-5">
@@ -1173,6 +1346,9 @@
                     </div>
                   ))}
 
+
+
+
                   <button
                     type="button"
                     onClick={addVariant}
@@ -1184,6 +1360,64 @@
               )}
             </div>
 
+
+
+<div className="w-full max-w-4xl">
+  {/* 🔍 SEARCH */}
+  <Input
+    placeholder="Search SKU..."
+    value={skuSearch}
+    onChange={(e) => handleSkuSearch(e.target.value)}
+  />
+
+  {/* 🔽 DROPDOWN */}
+  {searchResults.length > 0 && (
+    <div className="border rounded mt-2 bg-white shadow max-h-60 overflow-y-auto">
+      {searchResults.map((p) => (
+        <div
+          key={p.id}
+          onClick={() => handleAddVariant(p)}
+          className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
+        >
+          <img
+            src={p.images?.[0]?.imageUrl || "/no-image.png"}
+            className="w-10 h-10 rounded"
+          />
+
+          <div className="flex-1">
+            <p className="text-sm font-medium">{p.name}</p>
+            <p className="text-xs text-gray-500">{p.skuCode}</p>
+          </div>
+
+          <span className="text-blue-600 text-sm">Add</span>
+        </div>
+      ))}
+    </div>
+  )}
+
+  {/* ✅ SELECTED */}
+  {selectedVariants.length > 0 && (
+    <div className="mt-4 grid grid-cols-2 gap-3">
+      {selectedVariants.map((v) => (
+        <div key={v.id} className="border p-2 rounded">
+          <img
+            src={v.images?.[0]?.imageUrl || "/no-image.png"}
+            className="h-24 w-full object-cover rounded"
+          />
+
+          <p className="text-sm font-medium mt-1">{v.name}</p>
+
+          <button
+            onClick={() => handleRemoveVariant(v.id)}
+            className="text-red-500 text-xs mt-1"
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
             <div className="mt-8 text-center">
               <button
                 type="submit"

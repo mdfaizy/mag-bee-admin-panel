@@ -61,6 +61,7 @@ export interface Product {
   weightUnit: string;
   // stock: string;
   shippingAvailable: boolean;
+  variantGroupId?: number;
   skuCode: string;
   returnPolicy: string;
   warrantyInfo: string;

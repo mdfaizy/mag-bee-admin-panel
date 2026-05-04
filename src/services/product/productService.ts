@@ -72,6 +72,38 @@ export const updateProductById = async (
   }
 };
 
+export const fetchProductsByGroup = async (groupId: number) => {
+  try {
+    const res = await apiConnector(
+      "GET",
+      `/product/group/${groupId}`
+    );
+
+    return res.data.products || []; // ✅ ONLY products return
+
+  } catch (error: any) {
+    console.error("❌ Error fetching group products:", error);
+    throw error;
+  }
+};
+
+export const updateProductGroup = async (
+  mainProductId: number,
+  variantIds: number[]
+) => {
+  try {
+    const res = await apiConnector("POST", "/group", {
+      mainProductId,
+      variantIds,
+    });
+
+    return res.data;
+
+  } catch (error: any) {
+    console.error("❌ Error updating product group:", error);
+    throw error;
+  }
+};
 export const deleteProductById = async (id: number): Promise<string> => {
   try{
     const res = await apiConnector('DELETE',`/products/${id}`);
