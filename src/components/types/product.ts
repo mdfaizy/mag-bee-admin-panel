@@ -41,6 +41,10 @@ export interface Product {
     id: number;
     name: string;
   };
+  childSubCategory?: {
+  id: number;
+  name: string;
+};
   description: string;
   material: string;
    isActive?: boolean;

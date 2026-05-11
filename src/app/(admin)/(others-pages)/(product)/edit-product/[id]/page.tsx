@@ -266,6 +266,29 @@ const EditProductPage: React.FC = () => {
       }
 
       setFilteredSubCategory(filtered);
+//       if (selectedProduct.subCategory?.id) {
+//   fetchChildren(
+//     String(selectedProduct.subCategory.id)
+//   );
+// }
+
+if (selectedProduct.subCategory?.id) {
+
+  fetchChildren(
+    String(selectedProduct.subCategory.id)
+  );
+
+  setFormState((prev) => ({
+    ...prev,
+    data: {
+      ...prev.data,
+      childSubCategoryId:
+        selectedProduct.childSubCategory?.id
+          ? String(selectedProduct.childSubCategory.id)
+          : "",
+    },
+  }));
+}
 
       // =========================
       // ✅ Set form state (FULL)
@@ -279,7 +302,12 @@ const EditProductPage: React.FC = () => {
           subCategoryId: selectedProduct.subCategory
             ? String(selectedProduct.subCategory.id)
             : "",
+            childSubCategoryId:
+  selectedProduct.childSubCategory?.id
+    ? String(selectedProduct.childSubCategory.id)
+    : "",
           originalPrice: safeNum(selectedProduct.originalPrice, 0),
+          finalPrice: safeNum(selectedProduct.price, 0),
           offer: safeNum(selectedProduct.offer, 0),
           stock: safeNum(selectedProduct.stock, 0),
           shippingAvailable: selectedProduct.shippingAvailable ?? false,
@@ -402,22 +430,58 @@ const EditProductPage: React.FC = () => {
             //   const offer = name === "offer" ? safeNum(value, 0) : (updatedVariants[variantIndex].offer || 0);
             //   updatedVariants[variantIndex].sellingPrice = computeSellingPrice(price, offer);
             // }
+            // if (name === "price" || name === "sellingPrice") {
+            //   const price =
+            //     name === "price"
+            //       ? safeNum(value, 0)
+            //       : updatedVariants[variantIndex].price;
+
+            //   const sellingPrice =
+            //     name === "sellingPrice"
+            //       ? safeNum(value, 0)
+            //       : updatedVariants[variantIndex].sellingPrice;
+
+            //   updatedVariants[variantIndex].offer =
+            //     price > 0
+            //       ? Math.round(((price - sellingPrice) / price) * 100)
+            //       : 0;
+            // }
+
             if (name === "price" || name === "sellingPrice") {
-              const price =
-                name === "price"
-                  ? safeNum(value, 0)
-                  : updatedVariants[variantIndex].price;
 
-              const sellingPrice =
-                name === "sellingPrice"
-                  ? safeNum(value, 0)
-                  : updatedVariants[variantIndex].sellingPrice;
+  const price =
+    name === "price"
+      ? safeNum(value, 0)
+      : safeNum(updatedVariants[variantIndex].price, 0);
 
-              updatedVariants[variantIndex].offer =
-                price > 0
-                  ? Math.round(((price - sellingPrice) / price) * 100)
-                  : 0;
-            }
+  let sellingPrice =
+    name === "sellingPrice"
+      ? safeNum(value, 0)
+      : safeNum(
+          updatedVariants[variantIndex].sellingPrice,
+          0
+        );
+
+  // ✅ Prevent negative value
+  if (sellingPrice < 0) {
+    sellingPrice = 0;
+  }
+
+  // ✅ Selling price cannot exceed price
+  if (sellingPrice > price) {
+    sellingPrice = price;
+  }
+
+  updatedVariants[variantIndex].sellingPrice =
+    sellingPrice;
+
+  updatedVariants[variantIndex].offer =
+    price > 0
+      ? Math.round(
+          ((price - sellingPrice) / price) * 100
+        )
+      : 0;
+}
           }
         }
 
@@ -957,6 +1021,31 @@ const EditProductPage: React.FC = () => {
                       </select>
                     </div>
                   )}
+                  {options.subCategoryChildren.length > 0 && (
+  <div>
+    <Label>Child Category</Label>
+
+    <select
+      name="childSubCategoryId"
+      value={formState.data?.childSubCategoryId || ""}
+      onChange={handleChange}
+      className="w-full border rounded-lg p-3"
+    >
+      <option value="">
+        Select Child Category
+      </option>
+
+      {options.subCategoryChildren.map((child) => (
+        <option
+          key={child.value}
+          value={child.value}
+        >
+          {child.label}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
 
                 </div>
               </div>
@@ -975,6 +1064,7 @@ const EditProductPage: React.FC = () => {
                           name="originalPrice"
                           placeholder="Original Price"
                           type="number"
+                          min="0"
                           value={formState.data?.originalPrice || 0}
                           onChange={handleChange}
                         />
@@ -984,7 +1074,9 @@ const EditProductPage: React.FC = () => {
                         <Input
                           name="finalPrice"
                           type="number"
-                          value={formState.data?.price || 0}
+                          min="0"
+                          // value={formState.data?.price || 0}
+                          value={formState.data?.finalPrice || ""}
                           onChange={handleChange}
                         />
                       </div>
@@ -994,7 +1086,8 @@ const EditProductPage: React.FC = () => {
                           type="number"
                           value={calculateOfferPercentage(
                             Number(formState.data?.originalPrice),
-                            Number(formState.data?.price)
+                            // Number(formState.data?.price)
+                            Number(formState.data?.finalPrice)
                           )}
                           {...({ readOnly: true } as any)}
                           className="bg-gray-100 cursor-not-allowed"
