@@ -1,9 +1,44 @@
+# name: Deploy Admin Next.js
+
+# on:
+#   push:
+#     branches:
+#       - next-faizy   # 👈 तुम्हारा current branch
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Deploy to Server via SSH
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.HOST }}
+#           username: ${{ secrets.USERNAME }}
+#           password: ${{ secrets.PASSWORD }}
+#           script: |
+#             export PATH=$PATH:/usr/bin:/usr/local/bin:/root/.nvm/versions/node/v22.22.2/bin
+
+#             cd /var/www/magbeeadmin.magaritatech.com
+
+#             git fetch origin
+#             git checkout next-faizy
+#             git pull origin next-faizy
+
+#             npm install
+#             npm run build
+
+#             pm2 restart admin-next || pm2 start npm --name "admin-next" -- start
+#             pm2 save
+
+
+
 name: Deploy Admin Next.js
 
 on:
   push:
     branches:
-      - next-faizy   # 👈 तुम्हारा current branch
+      - next-faizy
 
 jobs:
   deploy:
@@ -16,17 +51,42 @@ jobs:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
+
           script: |
-            export PATH=$PATH:/usr/bin:/usr/local/bin:/root/.nvm/versions/node/v22.22.2/bin
+            set -e
+
+            echo "🚀 START NEXT.JS DEPLOY"
+
+            echo "✅ NODE CHECK"
+            node -v
+            npm -v
+            which node
 
             cd /var/www/magbeeadmin.magaritatech.com
 
+            echo "📥 Pull latest code"
             git fetch origin
-            git checkout next-faizy
-            git pull origin next-faizy
+            git reset --hard origin/next-faizy
 
+            echo "🧹 Clean old build"
+            rm -rf .next
+
+            echo "📦 Install dependencies"
             npm install
+
+            echo "🏗 Build Next.js app"
             npm run build
 
-            pm2 restart admin-next || pm2 start npm --name "admin-next" -- start
-            pm2 save
+            echo "🔄 Restart PM2"
+
+            if pm2 describe admin-next > /dev/null; then
+              pm2 restart admin-next --update-env
+            else
+              pm2 start npm --name "admin-next" -- start
+            fi
+
+            echo "💾 Save PM2"
+            pm2 save --force
+
+            echo "✅ NEXT.JS DEPLOY DONE"
+
