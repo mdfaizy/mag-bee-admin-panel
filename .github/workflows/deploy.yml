@@ -70,13 +70,14 @@ jobs:
 
             echo "🧹 Clean old build"
             rm -rf .next
-
+            rm -rf node_modules/.cache
             echo "📦 Install dependencies"
             npm install
-
+  
             echo "🏗 Build Next.js app"
             npm run build
-
+            echo "🏗 Build Next.js app"
+            NODE_OPTIONS="--max-old-space-size=4096" npm run build
             echo "🔄 Restart PM2"
 
             if pm2 describe admin-next > /dev/null; then
