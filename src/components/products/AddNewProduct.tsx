@@ -108,12 +108,39 @@ export default function AddNewProduct() {
 
   const [selectedVariants, setSelectedVariants] = useState<any[]>([]);
 
-  const handleAddVariant = (product: any) => {
-    // ❌ duplicate avoid
-    if (selectedVariants.some(v => v.id === product.id)) return;
+  const handleAddVariant = (
+  product: any
+) => {
 
-    setSelectedVariants(prev => [...prev, product]);
-  };
+  // ❌ duplicate avoid
+  if (
+    selectedVariants.some(
+      (v) => v.id === product.id
+    )
+  ) {
+    return;
+  }
+
+  // ✅ add variant
+  setSelectedVariants(
+    (prev) => [
+      ...prev,
+      product,
+    ]
+  );
+
+  // ✅ clear input
+  setSkuSearch("");
+
+  // ✅ close dropdown
+  setSearchResults([]);
+};
+  // const handleAddVariant = (product: any) => {
+  //   // ❌ duplicate avoid
+  //   if (selectedVariants.some(v => v.id === product.id)) return;
+
+  //   setSelectedVariants(prev => [...prev, product]);
+  // };
   // Initialize variants when toggling on
   useEffect(() => {
     if (watchHasVariants && (!watchVariants || watchVariants.length === 0)) {
@@ -1609,9 +1636,10 @@ export default function AddNewProduct() {
   </div>
 )} */}
 
-          <div className="w-full max-w-4xl">
+          <div className="w-full max-w-4xl mt-4">
             {/* 🔍 Search Input */}
             <div className="relative">
+              <Label>Variant Group Map</Label>
               <Input
                 placeholder="Search SKU (e.g. MBSR)"
                 value={skuSearch}
@@ -1641,9 +1669,20 @@ export default function AddNewProduct() {
                         <p className="text-xs text-gray-500">{p.skuCode}</p>
                       </div>
 
-                      <span className="text-blue-600 text-sm font-medium">
+                      {/* <span className="text-blue-600 text-sm font-medium">
                         Add
-                      </span>
+                      </span> */}
+                      {selectedVariants.some(
+  (item: any) => item.id === p.id
+) ? (
+  <span className="text-green-600 text-sm font-medium">
+    Added
+  </span>
+) : (
+  <span className="text-blue-600 text-sm font-medium">
+    Add
+  </span>
+)}
                     </div>
                   ))}
                 </div>

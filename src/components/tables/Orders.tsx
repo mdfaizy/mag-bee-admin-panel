@@ -9,6 +9,7 @@ import { useEffect, useState, useMemo } from "react";
 import { downloadInvoice, getAllOrders, updateOrderStatus } from "../../services/orders/ResentOrder";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
+import OrderViewModal from "@/components/orders/OrderViewModal";
 import {
   FiSearch,
   FiDownload,
@@ -95,6 +96,7 @@ const statusMap = {
 };
 
 export default function OrdersTable() {
+  const [selectedOrder, setSelectedOrder] =useState<any>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
@@ -929,11 +931,7 @@ const ordersWithItems = paginatedOrders.map((order) => ({
 
 
                             <button
-                              onClick={() =>
-                                setExpandedOrder(
-                                  isExpanded ? null : order.id
-                                )
-                              }
+                             onClick={() => setSelectedOrder(order)}
                               className="p-2 hover:bg-blue-50 rounded-lg transition-colors group/btn"
                               title="View Details"
                             >
@@ -956,49 +954,11 @@ const ordersWithItems = paginatedOrders.map((order) => ({
                       </TableRow>
 
                       {/* Expanded Order Details */}
-                      {isExpanded && (
-                        <TableRow>
-                          <TableCell className="bg-slate-50">
-                            <div className="p-6 space-y-4">
-                              <h4 className="font-semibold text-gray-900 text-lg mb-4">
-                                Order Items
-                              </h4>
-                              <div className="grid gap-4">
-                                {order.orderItems.map((item) => (
-                                  <div
-                                    key={item.id}
-                                    className="flex items-center gap-4 bg-white p-4 rounded-lg border border-gray-200"
-                                  >
-                                    {item.product.images?.[0]?.imageUrl && (
-                                      <div className="relative w-16 h-16">
-                                        <Image
-                                          src={item.product.images[0].imageUrl}
-                                          alt={item.product.name}
-                                          fill
-                                          className="rounded-lg object-cover"
-                                        />
-                                      </div>
-                                    )}
-                                    <div className="flex-1">
-                                      <div className="font-medium text-gray-900">
-                                        {item.product.name}
-                                      </div>
-                                      <div className="text-sm text-gray-500">
-                                        Product ID: {item.product.id}
-                                      </div>
-                                    </div>
-                                    <div className="text-right">
-                                      <div className="font-semibold text-gray-900">
-                                        Qty: {item.quantity}
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      )}
+                     <OrderViewModal
+  isOpen={!!selectedOrder}
+  order={selectedOrder}
+  onClose={() => setSelectedOrder(null)}
+/>
                     </>
                   );
                 })
