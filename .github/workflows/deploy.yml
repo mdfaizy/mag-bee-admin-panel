@@ -33,6 +33,67 @@
 
 
 
+# name: Deploy Admin Next.js
+
+# on:
+#   push:
+#     branches:
+#       - next-faizy
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Deploy to Server via SSH
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.HOST }}
+#           username: ${{ secrets.USERNAME }}
+#           password: ${{ secrets.PASSWORD }}
+
+#           script: |
+#             set -e
+
+#             echo "🚀 START NEXT.JS DEPLOY"
+
+#             echo "✅ NODE CHECK"
+#             node -v
+#             npm -v
+#             which node
+
+#             cd /var/www/magbeeadmin.magaritatech.com
+
+#             echo "📥 Pull latest code"
+#             git fetch origin
+#             git reset --hard origin/next-faizy
+
+#             echo "🧹 Clean old build"
+#             rm -rf .next
+#             rm -rf node_modules/.cache
+#             echo "📦 Install dependencies"
+#             npm install
+  
+#             echo "🏗 Build Next.js app"
+#             npm run build
+#             echo "🏗 Build Next.js app"
+#             NODE_OPTIONS="--max-old-space-size=4096" npm run build
+#             echo "🔄 Restart PM2"
+
+#             if pm2 describe admin-next > /dev/null; then
+#               pm2 restart admin-next --update-env
+#             else
+#               pm2 start npm --name "admin-next" -- start
+#             fi
+
+#             echo "💾 Save PM2"
+#             pm2 save --force
+
+#             echo "✅ NEXT.JS DEPLOY DONE"
+
+
+
+
 name: Deploy Admin Next.js
 
 on:
@@ -47,13 +108,20 @@ jobs:
     steps:
       - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v0.1.10
+
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
 
           script: |
+
             set -e
+
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            nvm use 22
 
             echo "🚀 START NEXT.JS DEPLOY"
 
@@ -71,13 +139,13 @@ jobs:
             echo "🧹 Clean old build"
             rm -rf .next
             rm -rf node_modules/.cache
+
             echo "📦 Install dependencies"
             npm install
-  
-            echo "🏗 Build Next.js app"
-            npm run build
+
             echo "🏗 Build Next.js app"
             NODE_OPTIONS="--max-old-space-size=4096" npm run build
+
             echo "🔄 Restart PM2"
 
             if pm2 describe admin-next > /dev/null; then
@@ -90,4 +158,3 @@ jobs:
             pm2 save --force
 
             echo "✅ NEXT.JS DEPLOY DONE"
-
