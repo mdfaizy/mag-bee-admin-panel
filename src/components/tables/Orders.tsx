@@ -1,5 +1,5 @@
 "use client";
-
+import React from "react";
 import {
   Table, TableHeader, TableBody, TableRow, TableCell
 } from "../ui/table";
@@ -755,7 +755,7 @@ const ordersWithItems = paginatedOrders.map((order) => ({
                   const isExpanded = expandedOrder === order.id;
 
                   return (
-                    <>
+                    < >
                       <TableRow
                         key={order.id}
                         className="hover:bg-slate-50 transition-colors group"

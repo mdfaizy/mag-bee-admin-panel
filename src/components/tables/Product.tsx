@@ -633,7 +633,12 @@ useEffect(() => {
                       {item.images && item.images.length > 0 ? (
                         <div className="relative w-12 h-12">
                           <Image
-                            src={item.images[0].imageUrl}
+                            // src={item.images[0].imageUrl}
+                            src={
+  item.images?.[0]?.imageUrl
+    ? encodeURI(item.images[0].imageUrl)
+    : "/no-image.png"
+}
                             alt={item.name}
                             fill
                             className="object-cover rounded-md"

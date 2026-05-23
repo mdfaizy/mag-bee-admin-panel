@@ -21,7 +21,13 @@ import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategorySe
 import { Product, Variant } from "@/components/types/product";
 import { apiConnector } from "@/services/apiConnector";
 import { calculateOfferPercentage } from "@/utils/priceUtils"
-
+type ProductImageType = {
+  id: number;
+  imageUrl: string;
+  thumbnail?: string;
+  medium?: string;
+  large?: string;
+};
 type SubCategoryOption = {
   value: string;
   label: string;
@@ -32,7 +38,8 @@ type ProductLite = {
   name: string;
   skuCode: string;
   variantGroupId?: number;
-  images?: { imageUrl: string }[];
+  // images?: { imageUrl: string }[];
+  images?: ProductImageType[];
 };
 
 // ✅ Utility functions
@@ -58,7 +65,8 @@ const EditProductPage: React.FC = () => {
   const [formState, setFormState] = useState({
     data: null as any,
     variants: [] as Variant[],
-    images: [] as string[],
+    // images: [] as string[],
+   images: [] as ProductImageType[],
     newImages: [] as File[],
     removedImageIds: [] as number[],
     loading: false,
@@ -317,7 +325,14 @@ if (selectedProduct.subCategory?.id) {
           returnPolicy: selectedProduct.returnPolicy ?? "",
           manufactureDetails:
             selectedProduct.manufactureDetails ?? "",
-          keywords: selectedProduct.keywords || [],
+          // keywords: selectedProduct.keywords || [],
+        keywords:
+  (selectedProduct.keywords || [])
+    .filter(
+      (k) =>
+        typeof k === "string"
+    )
+    .map((k) => k.trim()),
           length: selectedProduct.length ?? "",
           width: selectedProduct.width ?? "",
           height: selectedProduct.height ?? "",
@@ -551,23 +566,54 @@ if (selectedProduct.subCategory?.id) {
   };
 
   // ✅ Image management
-  const handleRemoveImage = (index: number) => {
-    if (!formState.images[index] || !selectedProduct?.images) return;
+  // const handleRemoveImage = (index: number) => {
+  //   if (!formState.images[index] || !selectedProduct?.images) return;
 
-    const imgObj = selectedProduct.images[index];
-    if (imgObj && typeof imgObj === 'object' && "id" in imgObj) {
-      setFormState(prev => ({
-        ...prev,
-        removedImageIds: [...prev.removedImageIds, (imgObj as { id: number }).id],
-        images: prev.images.filter((_, i) => i !== index),
-      }));
-    } else {
-      setFormState(prev => ({
-        ...prev,
-        images: prev.images.filter((_, i) => i !== index),
-      }));
-    }
-  };
+  //   const imgObj = selectedProduct.images[index];
+  //   if (imgObj && typeof imgObj === 'object' && "id" in imgObj) {
+  //     setFormState(prev => ({
+  //       ...prev,
+  //       removedImageIds: [...prev.removedImageIds, (imgObj as { id: number }).id],
+  //       images: prev.images.filter((_, i) => i !== index),
+  //     }));
+  //   } else {
+  //     setFormState(prev => ({
+  //       ...prev,
+  //       images: prev.images.filter((_, i) => i !== index),
+  //     }));
+  //   }
+  // };
+
+  const handleRemoveImage = (index: number) => {
+
+  setFormState(prev => {
+
+    const imageToRemove =
+      prev.images[index];
+
+    if (!imageToRemove) return prev;
+
+    return {
+
+      ...prev,
+
+      removedImageIds:
+        imageToRemove.id
+          ? [
+              ...prev.removedImageIds,
+              imageToRemove.id
+            ]
+          : prev.removedImageIds,
+
+      images: prev.images.filter(
+        (_, i) => i !== index
+      ),
+
+    };
+
+  });
+
+};
 
   const handleRemoveNewImage = (index: number) => {
     setFormState(prev => ({
@@ -1204,12 +1250,26 @@ if (selectedProduct.subCategory?.id) {
                 {/* Existing Images */}
                 {formState.images.map((img, index) => (
                   <div key={`existing-${index}`} className="relative w-32 h-32 border rounded-lg overflow-hidden group">
-                    <img
+                    {/* <img
                       // src={img}
-                      src={img.trim()}
+                      // src={img.trim()}
+                     
                       alt={`product-${index}`}
                       className="w-full h-full object-cover"
-                    />
+                    /> */}
+                    <img
+  src={
+    typeof img === "string"
+      ? img
+      : img?.imageUrl ||
+        img?.large ||
+        img?.medium ||
+        img?.thumbnail ||
+        "/no-image.png"
+  }
+  alt={`product-${index}`}
+  className="w-full h-full object-cover"
+/>
                     <button
                       type="button"
                       onClick={() => handleRemoveImage(index)}
@@ -1444,10 +1504,15 @@ if (selectedProduct.subCategory?.id) {
                     onClick={() => handleAddVariant(p)}
                     className="flex items-center gap-3 px-3 py-2 hover:bg-gray-100 cursor-pointer"
                   >
-                    <img
+                    {/* <img
                       src={p.images?.[0]?.imageUrl || "/no-image.png"}
                       className="w-10 h-10 rounded"
-                    />
+                    /> */}
+                    <img
+  src={p.images?.[0]?.imageUrl || "/no-image.png"}
+  alt={p.name || "Product"}
+  className="w-10 h-10 rounded"
+/>
 
                     <div className="flex-1">
                       <p className="text-sm font-medium">{p.name}</p>
@@ -1465,10 +1530,21 @@ if (selectedProduct.subCategory?.id) {
               <div className="mt-4 grid grid-cols-2 gap-3">
                 {selectedVariants.map((v) => (
                   <div key={v.id} className="border p-2 rounded">
-                    <img
+                    {/* <img
                       src={v.images?.[0]?.imageUrl || "/no-image.png"}
                       className="h-24 w-full object-cover rounded"
-                    />
+                    /> */}
+                   <img
+  src={
+    v.images?.[0]?.large ||
+    v.images?.[0]?.medium ||
+    v.images?.[0]?.thumbnail ||
+    v.images?.[0]?.imageUrl ||
+    "/no-image.png"
+  }
+  alt={v.name || "Variant Product"}
+  className="h-24 w-full object-cover rounded"
+/>
 
                     <p className="text-sm font-medium mt-1">{v.name}</p>
 

@@ -163,13 +163,38 @@ const BannerTable = () => {
       })
       : "—";
 
-  const handleToggleActive = async (id: number) => {
-    try {
-      await dispatch(toggleBannerStatus(id));
-    } catch {
-      toast.error("Error updating status");
-    }
-  };
+  // const handleToggleActive = async (id: number) => {
+  //   try {
+  //     await dispatch(toggleBannerStatus(id));
+  //   } catch {
+  //     toast.error("Error updating status");
+  //   }
+  // };
+
+  const handleToggleActive = async (
+  id: number
+) => {
+
+  try {
+
+    await dispatch(
+      toggleBannerStatus(id)
+    );
+
+    // ✅ REFRESH ALL BANNERS
+    await loadBanners();
+
+    // toast.success(
+    //   "Banner status updated"
+    // );
+
+  } catch {
+
+    toast.error(
+      "Error updating status"
+    );
+  }
+};
 
 
   /* ---------------- UI ---------------- */
