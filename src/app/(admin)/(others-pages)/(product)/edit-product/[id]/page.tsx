@@ -358,22 +358,176 @@ const EditProductPage: React.FC = () => {
 //     }
 //   }, [selectedProduct, options.subCategories, formState.initialized]);
 
+// useEffect(() => {
+//   if (!selectedProduct) return;
+//   if (formState.initialized) return;
+//   if (!options.subCategories.length) return;
+
+//   try {
+
+//     // your existing code
+
+//   } catch (error) {
+//     console.error("Error initializing form data:", error);
+//   }
+// }, [
+//   selectedProduct,
+//   options.subCategories,
+//   formState.initialized
+// ]);
+
 useEffect(() => {
   if (!selectedProduct) return;
   if (formState.initialized) return;
-  if (!options.subCategories.length) return;
 
   try {
 
-    // your existing code
+    // =========================
+    // ✅ Prepare variants
+    // =========================
+    const initialVariants: Variant[] =
+      (selectedProduct.variants || []).map(
+        (v: any) => {
+
+          const price = safeNum(v.price, 0);
+
+          const offer = safeNum(v.offer, 0);
+
+          const sellingPrice = safeNum(
+            v.sellingPrice,
+            computeSellingPrice(price, offer)
+          );
+
+          return {
+            id: v.id,
+            sku: v.sku ?? "",
+            price,
+            sellingPrice,
+            stock: safeNum(v.stock, 0),
+            offer,
+            attributes:
+              (v.attributes || []).length > 0
+                ? v.attributes.map((a: any) => ({
+                    key: a.key ?? "",
+                    value: a.value ?? "",
+                  }))
+                : [{ key: "", value: "" }],
+          };
+        }
+      );
+
+    // =========================
+    // ✅ Filter subcategories
+    // =========================
+    let filtered: any[] = [];
+
+    const categoryId =
+      selectedProduct.category?.id;
+
+    if (categoryId) {
+      filtered =
+        options.subCategories.filter(
+          (sc: any) =>
+            sc.categoryId ===
+            String(categoryId)
+        );
+    }
+
+    setFilteredSubCategory(filtered);
+
+    // =========================
+    // ✅ Fetch child category
+    // =========================
+    if (selectedProduct.subCategory?.id) {
+
+      fetchChildren(
+        String(selectedProduct.subCategory.id)
+      );
+
+    }
+
+    // =========================
+    // ✅ Set form state
+    // =========================
+    setFormState({
+      data: {
+        ...selectedProduct,
+
+        categoryId:
+          selectedProduct.category
+            ? String(
+                selectedProduct.category.id
+              )
+            : "",
+
+        subCategoryId:
+          selectedProduct.subCategory
+            ? String(
+                selectedProduct.subCategory.id
+              )
+            : "",
+
+        childSubCategoryId:
+          selectedProduct.childSubCategory?.id
+            ? String(
+                selectedProduct.childSubCategory.id
+              )
+            : "",
+
+        originalPrice: safeNum(
+          selectedProduct.originalPrice,
+          0
+        ),
+
+        finalPrice: safeNum(
+          selectedProduct.price,
+          0
+        ),
+      },
+
+      variants: initialVariants,
+
+      images:
+        selectedProduct.images || [],
+
+      newImages: [],
+      removedImageIds: [],
+      loading: false,
+      initialized: true,
+    });
 
   } catch (error) {
-    console.error("Error initializing form data:", error);
+    console.error(
+      "Error initializing form data:",
+      error
+    );
   }
+
 }, [
   selectedProduct,
-  options.subCategories,
   formState.initialized
+]);
+
+useEffect(() => {
+
+  if (
+    formState.data?.categoryId &&
+    options.subCategories.length > 0
+  ) {
+
+    const filtered =
+      options.subCategories.filter(
+        (sc) =>
+          sc.categoryId ===
+          String(formState.data.categoryId)
+      );
+
+    setFilteredSubCategory(filtered);
+  }
+
+}, [
+  formState.data?.categoryId,
+  options.subCategories
 ]);
 
   // ✅ Fetch subcategory children
