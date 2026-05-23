@@ -213,151 +213,168 @@ const EditProductPage: React.FC = () => {
   }, [selectedProduct]);
 
   // ✅ Initialize form data when selectedProduct changes
-  useEffect(() => {
-    // 🚫 guard clauses
-    if (!selectedProduct) return;
-    if (formState.initialized) return;
-    // if (!options.subCategories.length) return;
+//   useEffect(() => {
+//     // 🚫 guard clauses
+//     if (!selectedProduct) return;
+//     if (formState.initialized) return;
+//     // if (!options.subCategories.length) return;
 
-    try {
-      // =========================
-      // ✅ Prepare variants
-      // =========================
-      const initialVariants: Variant[] = (selectedProduct.variants || []).map(
-        (v: any) => {
-          const price = safeNum(v.price, 0);
-          const offer = safeNum(v.offer, 0);
-          const sellingPrice = safeNum(
-            v.sellingPrice,
-            computeSellingPrice(price, offer)
-          );
+//     try {
+//       // =========================
+//       // ✅ Prepare variants
+//       // =========================
+//       const initialVariants: Variant[] = (selectedProduct.variants || []).map(
+//         (v: any) => {
+//           const price = safeNum(v.price, 0);
+//           const offer = safeNum(v.offer, 0);
+//           const sellingPrice = safeNum(
+//             v.sellingPrice,
+//             computeSellingPrice(price, offer)
+//           );
 
-          return {
-            id: v.id,
-            sku: v.sku ?? "",
-            price,
-            sellingPrice,
-            stock: safeNum(v.stock, 0),
-            offer,
-            attributes:
-              (v.attributes || []).length > 0
-                ? v.attributes.map((a: any) => ({
-                  key: a.key ?? "",
-                  value: a.value ?? "",
-                }))
-                : [{ key: "", value: "" }],
-          };
-        }
-      );
+//           return {
+//             id: v.id,
+//             sku: v.sku ?? "",
+//             price,
+//             sellingPrice,
+//             stock: safeNum(v.stock, 0),
+//             offer,
+//             attributes:
+//               (v.attributes || []).length > 0
+//                 ? v.attributes.map((a: any) => ({
+//                   key: a.key ?? "",
+//                   value: a.value ?? "",
+//                 }))
+//                 : [{ key: "", value: "" }],
+//           };
+//         }
+//       );
 
-      // =========================
-      // ✅ Prepare images
-      // =========================
-      const typedProduct = selectedProduct as unknown as Product;
+//       // =========================
+//       // ✅ Prepare images
+//       // =========================
+//       const typedProduct = selectedProduct as unknown as Product;
 
-      const imageUrls =
-        typedProduct.images?.map((img: any) =>
-          typeof img === "string" ? img : img.imageUrl
-        ) || [];
+//       const imageUrls =
+//         typedProduct.images?.map((img: any) =>
+//           typeof img === "string" ? img : img.imageUrl
+//         ) || [];
 
-      // =========================
-      // ✅ Filter subcategories
-      // =========================
-      let filtered: any[] = [];
+//       // =========================
+//       // ✅ Filter subcategories
+//       // =========================
+//       let filtered: any[] = [];
 
-      const categoryId = selectedProduct.category?.id;
+//       const categoryId = selectedProduct.category?.id;
 
-      if (categoryId) {
-        filtered = options.subCategories.filter(
-          (sc: any) => sc.categoryId === String(categoryId)
-        );
-      }
+//       if (categoryId) {
+//         filtered = options.subCategories.filter(
+//           (sc: any) => sc.categoryId === String(categoryId)
+//         );
+//       }
 
-      setFilteredSubCategory(filtered);
-//       if (selectedProduct.subCategory?.id) {
+//       setFilteredSubCategory(filtered);
+// //       if (selectedProduct.subCategory?.id) {
+// //   fetchChildren(
+// //     String(selectedProduct.subCategory.id)
+// //   );
+// // }
+
+// if (selectedProduct.subCategory?.id) {
+
 //   fetchChildren(
 //     String(selectedProduct.subCategory.id)
 //   );
+
+//   setFormState((prev) => ({
+//     ...prev,
+//     data: {
+//       ...prev.data,
+//       childSubCategoryId:
+//         selectedProduct.childSubCategory?.id
+//           ? String(selectedProduct.childSubCategory.id)
+//           : "",
+//     },
+//   }));
 // }
 
-if (selectedProduct.subCategory?.id) {
+//       // =========================
+//       // ✅ Set form state (FULL)
+//       // =========================
+//       setFormState({
+//         data: {
+//           ...selectedProduct,
+//           categoryId: selectedProduct.category
+//             ? String(selectedProduct.category.id)
+//             : "",
+//           subCategoryId: selectedProduct.subCategory
+//             ? String(selectedProduct.subCategory.id)
+//             : "",
+//             childSubCategoryId:
+//   selectedProduct.childSubCategory?.id
+//     ? String(selectedProduct.childSubCategory.id)
+//     : "",
+//           originalPrice: safeNum(selectedProduct.originalPrice, 0),
+//           finalPrice: safeNum(selectedProduct.price, 0),
+//           offer: safeNum(selectedProduct.offer, 0),
+//           stock: safeNum(selectedProduct.stock, 0),
+//           shippingAvailable: selectedProduct.shippingAvailable ?? false,
+//           warrantyInfo: selectedProduct.warrantyInfo ?? "",
+//           skuCode: selectedProduct.skuCode ?? "",
+//           material: selectedProduct.material ?? "",
+//           returnPolicy: selectedProduct.returnPolicy ?? "",
+//           manufactureDetails:
+//             selectedProduct.manufactureDetails ?? "",
+//           // keywords: selectedProduct.keywords || [],
+//         keywords:
+//   (selectedProduct.keywords || [])
+//     .filter(
+//       (k) =>
+//         typeof k === "string"
+//     )
+//     .map((k) => k.trim()),
+//           length: selectedProduct.length ?? "",
+//           width: selectedProduct.width ?? "",
+//           height: selectedProduct.height ?? "",
+//           weight: selectedProduct.weight ?? "",
+//           weightUnit: selectedProduct.weightUnit ?? "kg",
+//           hasVariants: initialVariants.length > 0,
+//         },
+//         variants: initialVariants,
+//         images: imageUrls,
+//         newImages: [],
+//         removedImageIds: [],
+//         loading: false,
+//         initialized: true,
+//       });
 
-  fetchChildren(
-    String(selectedProduct.subCategory.id)
-  );
+//       // =========================
+//       // ✅ Variant toggle
+//       // =========================
+//       setShowVariants(initialVariants.length > 0);
+//     } catch (error) {
+//       console.error("Error initializing form data:", error);
+//       toast.error("Failed to initialize form");
+//     }
+//   }, [selectedProduct, options.subCategories, formState.initialized]);
 
-  setFormState((prev) => ({
-    ...prev,
-    data: {
-      ...prev.data,
-      childSubCategoryId:
-        selectedProduct.childSubCategory?.id
-          ? String(selectedProduct.childSubCategory.id)
-          : "",
-    },
-  }));
-}
+useEffect(() => {
+  if (!selectedProduct) return;
+  if (formState.initialized) return;
+  if (!options.subCategories.length) return;
 
-      // =========================
-      // ✅ Set form state (FULL)
-      // =========================
-      setFormState({
-        data: {
-          ...selectedProduct,
-          categoryId: selectedProduct.category
-            ? String(selectedProduct.category.id)
-            : "",
-          subCategoryId: selectedProduct.subCategory
-            ? String(selectedProduct.subCategory.id)
-            : "",
-            childSubCategoryId:
-  selectedProduct.childSubCategory?.id
-    ? String(selectedProduct.childSubCategory.id)
-    : "",
-          originalPrice: safeNum(selectedProduct.originalPrice, 0),
-          finalPrice: safeNum(selectedProduct.price, 0),
-          offer: safeNum(selectedProduct.offer, 0),
-          stock: safeNum(selectedProduct.stock, 0),
-          shippingAvailable: selectedProduct.shippingAvailable ?? false,
-          warrantyInfo: selectedProduct.warrantyInfo ?? "",
-          skuCode: selectedProduct.skuCode ?? "",
-          material: selectedProduct.material ?? "",
-          returnPolicy: selectedProduct.returnPolicy ?? "",
-          manufactureDetails:
-            selectedProduct.manufactureDetails ?? "",
-          // keywords: selectedProduct.keywords || [],
-        keywords:
-  (selectedProduct.keywords || [])
-    .filter(
-      (k) =>
-        typeof k === "string"
-    )
-    .map((k) => k.trim()),
-          length: selectedProduct.length ?? "",
-          width: selectedProduct.width ?? "",
-          height: selectedProduct.height ?? "",
-          weight: selectedProduct.weight ?? "",
-          weightUnit: selectedProduct.weightUnit ?? "kg",
-          hasVariants: initialVariants.length > 0,
-        },
-        variants: initialVariants,
-        images: imageUrls,
-        newImages: [],
-        removedImageIds: [],
-        loading: false,
-        initialized: true,
-      });
+  try {
 
-      // =========================
-      // ✅ Variant toggle
-      // =========================
-      setShowVariants(initialVariants.length > 0);
-    } catch (error) {
-      console.error("Error initializing form data:", error);
-      toast.error("Failed to initialize form");
-    }
-  }, [selectedProduct, options.subCategories, formState.initialized]);
+    // your existing code
 
+  } catch (error) {
+    console.error("Error initializing form data:", error);
+  }
+}, [
+  selectedProduct,
+  options.subCategories,
+  formState.initialized
+]);
 
   // ✅ Fetch subcategory children
   const fetchChildren = async (parentId: string) => {
