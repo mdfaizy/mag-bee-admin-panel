@@ -3,41 +3,6 @@
 # on:
 #   push:
 #     branches:
-#       - next-faizy   # 👈 तुम्हारा current branch
-
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-
-#     steps:
-#       - name: Deploy to Server via SSH
-#         uses: appleboy/ssh-action@v0.1.10
-#         with:
-#           host: ${{ secrets.HOST }}
-#           username: ${{ secrets.USERNAME }}
-#           password: ${{ secrets.PASSWORD }}
-#           script: |
-#             export PATH=$PATH:/usr/bin:/usr/local/bin:/root/.nvm/versions/node/v22.22.2/bin
-
-#             cd /var/www/magbeeadmin.magaritatech.com
-
-#             git fetch origin
-#             git checkout next-faizy
-#             git pull origin next-faizy
-
-#             npm install
-#             npm run build
-
-#             pm2 restart admin-next || pm2 start npm --name "admin-next" -- start
-#             pm2 save
-
-
-
-# name: Deploy Admin Next.js
-
-# on:
-#   push:
-#     branches:
 #       - next-faizy
 
 # jobs:
@@ -47,13 +12,20 @@
 #     steps:
 #       - name: Deploy to Server via SSH
 #         uses: appleboy/ssh-action@v0.1.10
+
 #         with:
 #           host: ${{ secrets.HOST }}
 #           username: ${{ secrets.USERNAME }}
 #           password: ${{ secrets.PASSWORD }}
 
 #           script: |
+
 #             set -e
+
+#             export NVM_DIR="$HOME/.nvm"
+#             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+#             nvm use 22
 
 #             echo "🚀 START NEXT.JS DEPLOY"
 
@@ -71,13 +43,13 @@
 #             echo "🧹 Clean old build"
 #             rm -rf .next
 #             rm -rf node_modules/.cache
+
 #             echo "📦 Install dependencies"
 #             npm install
-  
-#             echo "🏗 Build Next.js app"
-#             npm run build
+
 #             echo "🏗 Build Next.js app"
 #             NODE_OPTIONS="--max-old-space-size=4096" npm run build
+
 #             echo "🔄 Restart PM2"
 
 #             if pm2 describe admin-next > /dev/null; then
@@ -90,9 +62,6 @@
 #             pm2 save --force
 
 #             echo "✅ NEXT.JS DEPLOY DONE"
-
-
-
 
 name: Deploy Admin Next.js
 
@@ -114,47 +83,155 @@ jobs:
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
 
-          script: |
+          command_timeout: 20m
 
+          script: |
             set -e
 
+            echo "========================================="
+            echo "🚀 START NEXT.JS ADMIN DEPLOY"
+            echo "========================================="
+
+            # =========================================
+            # NODE / NVM
+            # =========================================
+
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+            if [ -s "$NVM_DIR/nvm.sh" ]; then
+              . "$NVM_DIR/nvm.sh"
+            else
+              echo "❌ NVM not found"
+              exit 1
+            fi
 
             nvm use 22
 
-            echo "🚀 START NEXT.JS DEPLOY"
-
             echo "✅ NODE CHECK"
+
             node -v
             npm -v
             which node
+            which npm
 
-            cd /var/www/magbeeadmin.magaritatech.com
+            # =========================================
+            # PROJECT DIRECTORY
+            # =========================================
+
+            APP_DIR="/var/www/magbeeadmin.magaritatech.com"
+
+            cd "$APP_DIR"
+
+            echo "📂 Current directory:"
+            pwd
+
+            # =========================================
+            # GIT
+            # =========================================
 
             echo "📥 Pull latest code"
+
+            git config --global --add safe.directory "$APP_DIR"
+
             git fetch origin
+
             git reset --hard origin/next-faizy
 
-            echo "🧹 Clean old build"
-            rm -rf .next
-            rm -rf node_modules/.cache
+            echo "📌 Current commit:"
 
-            echo "📦 Install dependencies"
-            npm install
+            git log -1 --oneline
 
-            echo "🏗 Build Next.js app"
-            NODE_OPTIONS="--max-old-space-size=4096" npm run build
+            # =========================================
+            # ENV CHECK
+            # =========================================
 
-            echo "🔄 Restart PM2"
+            echo "🔐 Checking .env"
 
-            if pm2 describe admin-next > /dev/null; then
-              pm2 restart admin-next --update-env
-            else
-              pm2 start npm --name "admin-next" -- start
+            if [ ! -f ".env" ]; then
+              echo "❌ ERROR: .env file not found"
+              exit 1
             fi
 
-            echo "💾 Save PM2"
+            echo "✅ .env exists"
+
+            # =========================================
+            # CLEAN OLD BUILD
+            # =========================================
+
+            echo "🧹 Cleaning old Next.js build"
+
+            rm -rf .next
+
+            rm -rf node_modules/.cache
+
+            # =========================================
+            # INSTALL DEPENDENCIES
+            # =========================================
+
+            echo "📦 Installing dependencies"
+
+            if [ -f "package-lock.json" ]; then
+              npm ci
+            else
+              npm install
+            fi
+
+            echo "✅ Dependencies installed"
+
+            # =========================================
+            # BUILD
+            # =========================================
+
+            echo "🏗 Building Next.js app"
+
+            NODE_OPTIONS="--max-old-space-size=4096" npm run build
+
+            echo "✅ Next.js build completed"
+
+            # =========================================
+            # PM2
+            # =========================================
+
+            echo "🔄 Restarting PM2"
+
+            if pm2 describe admin-next > /dev/null 2>&1; then
+
+              echo "♻️ Existing PM2 process found"
+
+              pm2 restart admin-next --update-env
+
+            else
+
+              echo "🆕 PM2 process not found"
+
+              pm2 start npm \
+                --name "admin-next" \
+                --cwd "$APP_DIR" \
+                -- start
+
+            fi
+
+            # =========================================
+            # SAVE PM2
+            # =========================================
+
+            echo "💾 Saving PM2"
+
             pm2 save --force
 
-            echo "✅ NEXT.JS DEPLOY DONE"
+            # =========================================
+            # STATUS
+            # =========================================
+
+            echo "📋 PM2 STATUS"
+
+            pm2 status
+
+            # =========================================
+            # FINAL
+            # =========================================
+
+            echo ""
+            echo "========================================="
+            echo "✅ NEXT.JS ADMIN DEPLOY SUCCESSFUL"
+            echo "========================================="
