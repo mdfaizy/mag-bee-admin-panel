@@ -48,7 +48,7 @@ export const updateProductStock = async (
   newStock: number
 ) => {
   const res = await apiConnector(
-    "PATCH",
+    "PUT",
     `/products/${productId}`,
     { stock: newStock }
   );
