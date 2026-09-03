@@ -1,13 +1,91 @@
+//   "use client";
+
+//   import { useEffect, useState } from "react";
+//   import { useRouter } from "next/navigation";
+//   import { useSidebar } from "@/context/SidebarContext";
+//   import AppHeader from "@/layout/AppHeader";
+//   import AppSidebar from "@/layout/AppSidebar";
+//   import Backdrop from "@/layout/Backdrop";
+//   import { useSelector, useDispatch } from "react-redux";
+//   import { RootState } from "@/redux/store";
+//   import axiosInstance from "@/services/axiosInstance";
+//   import { setUser } from "@/redux/authSlice";
+
+//   export default function AdminLayout({ children }: { children: React.ReactNode }) {
+//     const router = useRouter();
+//     const dispatch = useDispatch();
+//     const { isExpanded, isHovered, isMobileOpen } = useSidebar();
+
+//     const user = useSelector((state: RootState) => state.auth.user);
+//     const [loading, setLoading] = useState(true);
+
+//     useEffect(() => {
+//       const restoreSession = async () => {
+//         try {
+//           const res = await axiosInstance.get("/auth/me");
+//           dispatch(setUser(res.data.user));
+//         } catch (err: any) {
+//   // ❗ only redirect if NOT already on signin
+//   if (window.location.pathname !== "/signin") {
+//     router.replace("/signin");
+//   }
+// }
+//         // catch {
+//         //   router.replace("/signin");
+//         // } 
+        
+//         finally {
+//           setLoading(false);
+//         }
+//       };
+
+//       restoreSession();
+//     }, [dispatch, router]);
+
+//     // 🔒 IMPORTANT GUARD
+//     if (loading) {
+//       return <div className="p-6 text-gray-500 text-center">Checking authentication…</div>;
+//     }
+
+//     // 🔒 EXTRA SAFETY
+//     if (!user) return null;
+
+//     const mainContentMargin = isMobileOpen
+//       ? "ml-0"
+//       : isExpanded || isHovered
+//       ? "lg:ml-[290px]"
+//       : "lg:ml-[90px]";
+
+//     return (
+//       // <div className="min-h-screen xl:flex">
+//       <div className="min-h-screen flex w-full">
+
+//         <AppSidebar />
+//         <Backdrop />
+//         <div className={`flex-1 transition-all duration-300 ${mainContentMargin}`}>
+//           <AppHeader />
+//           {/* <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6"> */}
+//           <div className="w-full p-4 md:p-6">
+//             {children}
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
 import { useSidebar } from "@/context/SidebarContext";
 import AppHeader from "@/layout/AppHeader";
 import AppSidebar from "@/layout/AppSidebar";
 import Backdrop from "@/layout/Backdrop";
-import React, { useState } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { RootState } from "@/redux/store";
+import axiosInstance from "@/services/axiosInstance";
+import { setUser } from "@/redux/authSlice";
 
 export default function AdminLayout({
   children,
@@ -15,20 +93,41 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 
+  const user = useSelector((state: RootState) => state.auth.user);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      router.push("/signin");
-    } else {
-      setLoading(false); // show content only after auth check
-    }
-  }, [router]);
+    const restoreSession = async () => {
+      try {
+        const res = await axiosInstance.get("/auth/me");
+        dispatch(setUser(res.data.user));
+      } catch (err: any) {
+        // ❗ only redirect if NOT already on signin
+        if (window.location.pathname !== "/signin") {
+          router.replace("/signin");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (loading) return <p>Checking auth...</p>;
+    restoreSession();
+  }, [dispatch, router]);
+
+  // 🔒 IMPORTANT GUARD
+  if (loading) {
+    return (
+       <div className="flex items-center justify-center h-64">
+        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // 🔒 EXTRA SAFETY
+  if (!user) return null;
 
   const mainContentMargin = isMobileOpen
     ? "ml-0"
@@ -37,15 +136,22 @@ export default function AdminLayout({
     : "lg:ml-[90px]";
 
   return (
-    <div className="min-h-screen xl:flex">
+    <div className="min-h-screen flex w-full">
+      {/* Sidebar */}
       <AppSidebar />
       <Backdrop />
-      <div className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin}`}>
+
+      {/* Main Content Area */}
+      <div
+        className={`flex-1 w-full min-w-0 transition-all duration-300 ${mainContentMargin}`}
+      >
         <AppHeader />
-        <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">{children}</div>
+
+        {/* Page Content — FULL WIDTH */}
+        <div className="w-full p-4 md:p-6">
+          {children}
+        </div>
       </div>
     </div>
   );
 }
-
-

@@ -41,6 +41,10 @@ export interface Product {
     id: number;
     name: string;
   };
+  childSubCategory?: {
+  id: number;
+  name: string;
+};
   description: string;
   material: string;
    isActive?: boolean;
@@ -61,6 +65,7 @@ export interface Product {
   weightUnit: string;
   // stock: string;
   shippingAvailable: boolean;
+  variantGroupId?: number;
   skuCode: string;
   returnPolicy: string;
   warrantyInfo: string;

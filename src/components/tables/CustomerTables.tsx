@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Table, TableHead, TableBody, TableRow, TableHeadCell, TableCell } from "../ui/table";
+import {
+  Table, TableHeader, TableBody, TableRow, TableCell
+} from "../ui/table";
 import Pagination from "./Pagination";
 import { fetchCustomer, toggleUserStatus } from "../../services/customerServices/CustomerServices";
 import { toast } from "react-toastify";
@@ -143,25 +145,25 @@ export default function CustomerTables() {
       {/* Table Container */}
       <div className="w-full overflow-x-auto">
         <Table className="w-full">
-          <TableHead className="bg-gray-50">
+          <TableHeader className="bg-gray-50">
             <TableRow>
-              <TableHeadCell className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <TableCell isHeader className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Customer
-              </TableHeadCell>
-              <TableHeadCell className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </TableCell>
+              <TableCell className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Contact
-              </TableHeadCell>
-              <TableHeadCell className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </TableCell>
+              <TableCell className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
-              </TableHeadCell>
-              <TableHeadCell className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </TableCell>
+              <TableCell className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Created
-              </TableHeadCell>
-              <TableHeadCell className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              </TableCell>
+              <TableCell className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
-              </TableHeadCell>
+              </TableCell>
             </TableRow>
-          </TableHead>
+          </TableHeader>
           <TableBody className="divide-y divide-gray-200">
             {visibleData.length > 0 ? (
               visibleData.map((user) => (

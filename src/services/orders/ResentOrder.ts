@@ -8,17 +8,32 @@ export const getAllOrders = async () => {
   } catch (error) {
     console.error("Error fetching orders", error);
     throw error;
-  }
+  } 
 };
 
 
-export const updateOrderStatus = async (orderId: string, status: string) => {
-  try {
-    const response = await apiConnector("PUT", `/orders/${orderId}/status`, { status });
-    return response.data;
-  } catch (error) {
-    console.error("Error updating order status", error);
-    throw error;
-  }
+// export const updateOrderStatus = async (orderId: string, status: string) => {
+//   try {
+//     const response = await apiConnector("PUT", `/orders/${orderId}/status`, { status });
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error updating order status", error);
+//     throw error;
+//   }
+// };
+
+export const downloadInvoice = (orderId: string) => {
+  const url = `http://localhost:8000/api/orders/${orderId}/invoice`;
+
+  // browser me PDF open / download
+  window.open(url, "_blank");
 };
+export const updateOrderStatus = async (
+  orderId: string,
+  data: { status: string }
+) => {
+  return apiConnector("PUT", `/orders/${orderId}`, data);
+};
+
+
 

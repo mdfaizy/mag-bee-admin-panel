@@ -3,5 +3,10 @@
 import SignUpForm from "@/components/auth/SignUpForm";
 
 export default function SignUpPage() {
-  return <SignUpForm />;
+  return (
+    <div className="w-full justify-center ">
+
+      <SignUpForm />
+    </div>
+  )
 }

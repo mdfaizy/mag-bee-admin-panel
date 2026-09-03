@@ -14,9 +14,19 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "api.dicebear.com",
       },
-      
+      {
+        protocol: "https",
+        hostname: "magbee-ecommerce.s3.ap-south-1.amazonaws.com",
+      },
+      {
+      protocol: "https",
+      hostname: "magbee-uat-database.s3.ap-south-1.amazonaws.com",
+    },
+   
     ],
-    domains: ["res.cloudinary.com"],
+    
+    // domains: ["res.cloudinary.com"],
+    // domains: ["magbee-ecommerce.s3.ap-south-1.amazonaws.com"],
   },
   webpack(config) {
     config.module.rules.push({

@@ -1,21 +1,17 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeadCell,
-  TableCell,
+  Table, TableHeader, TableBody, TableRow, TableCell
 } from "../ui/table";
 import Pagination from "./Pagination";
 import { fetchAllUsers, toggleUserStatus,deleteUserById ,updateUserById} from "../../services/authService";
 import { toast } from "react-toastify";
 import EditUserModal from "../auth/EditUserModal";
 import DeleteUserModal from "../auth/DeleteUserModal";
-import {  FaEdit } from "react-icons/fa";
+import {  FaEdit,FaEye } from "react-icons/fa";
 import { MdDeleteForever } from "react-icons/md";
-
+import Link from "next/link";
+// import  from 'react-dom'
 interface Role {
   id: number;
   name: string;
@@ -62,17 +58,37 @@ const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const visibleData = tableData.slice(startIndex, startIndex + itemsPerPage);
 
   // ✅ Toggle function
-  const handleToggle = async (id: number) => {
-    try {
-      await toggleUserStatus(id);
-      const result = await fetchAllUsers();
-      setTableData(result.users);
+  // const handleToggle = async (id: number) => {
+  //   try {
+  //     await toggleUserStatus(id);
+  //     const result = await fetchAllUsers();
+  //     setTableData(result.users);
 
       
-    } catch (error) {
-      console.error("Error toggling user status:", error);
-    }
-  };
+  //   } catch (error) {
+  //     console.error("Error toggling user status:", error);
+  //   }
+  // };
+  const handleToggle = async (id: number) => {
+  try {
+    const res = await toggleUserStatus(id);
+    const updatedUser = res.data.user;
+
+    setTableData((prev) =>
+      prev.map((u) =>
+        u.id === updatedUser.id
+          ? { ...u, is_active: updatedUser.is_active }
+          : u
+      )
+    );
+
+    toast.success(res.data.message);
+  } catch (error) {
+    console.error("Error toggling user status:", error);
+    toast.error("Failed to toggle status");
+  }
+};
+
 
   const handleSaveUser = async (updatedUser: User) => {
   try {
@@ -116,18 +132,18 @@ const handleDeleteUser = async () => {
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03] shadow-sm">
       <div className="w-full overflow-x-auto">
         <Table className="divide-y divide-gray-200 dark:divide-white/[0.05] text-sm dark:text-white">
-          <TableHead className="bg-gray-100 dark:bg-white/[0.05] dark:text-white">
+          <TableHeader className="bg-gray-100 dark:bg-white/[0.05] dark:text-white">
             <TableRow className="">
-              <TableHeadCell className="dark:text-white">Name</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Email</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Username</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Phone</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Role ID</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Status</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Created</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Actions</TableHeadCell>
+              <TableCell isHeader className="dark:text-white">Name</TableCell>
+              <TableCell className="dark:text-white">Email</TableCell>
+              <TableCell className="dark:text-white">Username</TableCell>
+              <TableCell className="dark:text-white">Phone</TableCell>
+              <TableCell className="dark:text-white">Role ID</TableCell>
+              <TableCell className="dark:text-white">Status</TableCell>
+              <TableCell className="dark:text-white">Created</TableCell>
+              <TableCell className="dark:text-white">Actions</TableCell>
             </TableRow>
-          </TableHead>
+          </TableHeader>
           <TableBody className="divide-y  divide-gray-200 dark:divide-white/[0.05]">
             {visibleData.map((user) => (
               <TableRow
@@ -164,7 +180,7 @@ const handleDeleteUser = async () => {
 <TableCell className="dark:text-white">
   {user.createdAt ? new Date(user.createdAt).toLocaleString() : '—'}
 </TableCell>
-               <TableCell className="flex gap-3">
+               {/* <TableCell className="flex gap-3">
   <button
     onClick={() => {
       setSelectedUser(user);
@@ -183,6 +199,37 @@ const handleDeleteUser = async () => {
   >
    <MdDeleteForever/>
   </button>
+</TableCell> */}
+
+<TableCell className="flex gap-3 items-center">
+
+  {/* View User */}
+  <Link
+    href={`/users/view/${user.id}`}
+    className="text-green-600 hover:underline"
+  >
+    <FaEye />
+  </Link>
+
+  {/* Edit User */}
+ <Link
+  href={`/users/edit/${user.id}`}
+  className="text-blue-600"
+>
+  <FaEdit />
+</Link>
+
+  {/* Delete User */}
+  <button
+    onClick={() => {
+      setSelectedUser(user);
+      setDeleteModalOpen(true);
+    }}
+    className="text-red-600 hover:underline"
+  >
+    <MdDeleteForever />
+  </button>
+
 </TableCell>
 
               </TableRow>
@@ -191,11 +238,6 @@ const handleDeleteUser = async () => {
         </Table>
       </div>
       <div className="flex justify-end px-4 py-3">
-        {/* <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={(page) => setCurrentPage(page)}
-        /> */}
         <Pagination
   currentPage={currentPage}
   totalPages={totalPages}
