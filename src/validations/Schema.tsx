@@ -8,6 +8,8 @@ export const roleSchema = z.object({
     .max(30, "Role name cannot exceed 30 characters")
     .regex(/^[a-zA-Z0-9 ]+$/, "Only letters, numbers and spaces allowed"),
 
+
+    
   description: z
     .string()
     .trim()
