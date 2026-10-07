@@ -1,13 +1,20 @@
 // src/services/apis.ts
-export const BASE_URL = "http://localhost:8000/api";
-
+// export const BASE_URL = "https://ecommerce.magaritatech.com/api";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+// export const BASE_URL = "http://localhost:8000/api";
 export const endpoints = {
   SIGNUP_API: `${BASE_URL}/register`,
   LOGIN_API: `${BASE_URL}/login`,
   USER_LIST_API:`${BASE_URL}/users`,
+  FORGOT_PASSWORD_API: `${BASE_URL}/forgot-password`,
+  RESET_PASSWORD_API: `${BASE_URL}/reset-password`,
  
 };
 
+export const endpointsRoles={
+    CREATE_ROLE_API:`${BASE_URL}/roles`,
+    GET_ROLES:`${BASE_URL}/roles`
+};
 
 export const endpointsCategory={
    CREATE_CATEGORY_API:`${BASE_URL}/category`,
@@ -18,6 +25,13 @@ export const endpointsProduct={
   PRODUCT_GELL_ALL:`${BASE_URL}/products`,
   PRODUCT_BY_ID: `${BASE_URL}/products/id`,
 }
+
+// export const endpointsProduct = {
+//   CREATE_PRODUCT: `${BASE_URL}/products`,
+//   PRODUCT_GET_ALL: `${BASE_URL}/products`,
+//   PRODUCT_BY_ID: `${BASE_URL}/products/id`,
+//   PRODUCT_PAGINATION: `${BASE_URL}/pagination-products`,
+// };
 
 
 export const endpointsOrder = {
@@ -44,7 +58,10 @@ export const endPointBanner={
  // ✅
 
   UPDATE_BANNER: (id: number) => `${BASE_URL}/offerBanners/${id}`,
-  DELETE_BANNER: (id: number) => `${BASE_URL}/banners/${id}`,
+  DELETE_BANNER: (id: number) => `${BASE_URL}/offerBanners/${id}`,
   TOGGLE_BANNER_STATUS: (id: number) =>
     `${BASE_URL}/banners/toggle/${id}`,
 }
+
+
+
