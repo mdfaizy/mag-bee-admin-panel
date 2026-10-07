@@ -10,7 +10,8 @@ import Input from "../../../../../../components/form/input/InputField";
 import { HiChevronDown, HiX, HiPlus, HiUpload } from 'react-icons/hi';
 import Label from "../../../../../../components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
-import Select from "@/components/form/Select";
+import RichTextEditor from "@/components/form/input/RichTextEditor";
+// import Select from "@/components/form/Select";
 import ChipInput from "@/components/form/input/ChipInput";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
@@ -453,12 +454,7 @@ useEffect(() => {
       data: {
         ...selectedProduct,
 
-        categoryId:
-          selectedProduct.category
-            ? String(
-                selectedProduct.category.id
-              )
-            : "",
+        categoryId:selectedProduct.category? String(selectedProduct.category.id) : "",
 
         subCategoryId:
           selectedProduct.subCategory
@@ -483,6 +479,34 @@ useEffect(() => {
           selectedProduct.price,
           0
         ),
+//         returnEligible:
+//   selectedProduct.returnEligible === true ||
+//   selectedProduct.returnEligible === "true",
+
+// returnWindowDays: Number(
+//   selectedProduct.returnWindowDays ?? 7
+// ),
+
+// replacementEligible:
+//   selectedProduct.replacementEligible === true ||
+//   selectedProduct.replacementEligible === "true",
+
+// replacementWindowDays: Number(
+//   selectedProduct.replacementWindowDays ?? 0
+// ),
+returnEligible:
+  selectedProduct.returnEligible ?? true,
+
+returnWindowDays:
+  Number(selectedProduct.returnWindowDays ?? 7),
+
+replacementEligible:
+  selectedProduct.replacementEligible ?? false,
+
+replacementWindowDays:
+  Number(selectedProduct.replacementWindowDays ?? 0),
+
+warrantyInfo: selectedProduct.warrantyInfo ?? "",
       },
 
       variants: initialVariants,
@@ -934,7 +958,39 @@ useEffect(() => {
       productData.append("weightUnit", formState.data.weightUnit?.trim() || "kg");
       productData.append("shippingAvailable", String(formState.data.shippingAvailable ?? false));
       productData.append("skuCode", formState.data.skuCode?.trim() || "");
-      productData.append("returnPolicy", formState.data.returnPolicy?.trim() || "");
+      // productData.append("returnPolicy", formState.data.returnPolicy?.trim() || "");
+      productData.append(
+  "returnEligible",
+  String(formState.data.returnEligible ?? false)
+);
+
+productData.append(
+  "returnWindowDays",
+  String(
+    formState.data.returnEligible
+      ? Number(formState.data.returnWindowDays || 0)
+      : 0
+  )
+);
+
+productData.append(
+  "replacementEligible",
+  String(formState.data.replacementEligible ?? false)
+);
+
+productData.append(
+  "replacementWindowDays",
+  String(
+    formState.data.replacementEligible
+      ? Number(formState.data.replacementWindowDays || 0)
+      : 0
+  )
+);
+
+productData.append(
+  "warrantyInfo",
+  formState.data.warrantyInfo?.trim() || ""
+);
       productData.append("warrantyInfo", formState.data.warrantyInfo?.trim() || "");
       productData.append("manufactureDetails", formState.data.manufactureDetails?.trim() || "");
       productData.append("hasVariants", String(hasVariants));
@@ -991,6 +1047,14 @@ useEffect(() => {
       setFormState(prev => ({ ...prev, loading: false }));
     }
   };
+
+  console.log("Return/Replacement Policy:", {
+  returnEligible: formState.data?.returnEligible,
+  returnWindowDays: formState.data?.returnWindowDays,
+  replacementEligible: formState.data?.replacementEligible,
+  replacementWindowDays: formState.data?.replacementWindowDays,
+  warrantyInfo: formState.data?.warrantyInfo,
+});
 
   // ✅ Loading state
   if (!formState.data || options.loading) {
@@ -1148,18 +1212,10 @@ useEffect(() => {
                 <div className="bg-gray-100 p-3 border-b border-gray-200">
                   <h2 className="font-semibold text-gray-700">Policies</h2>
                 </div>
-                <div className="p-4 space-y-4">
+                {/* <div className="p-4 space-y-4">
                   <div className="relative">
                     <Label>Return Policy</Label>
-                    {/* <Select
-                      options={returnPolicyOptions}
-                      placeholder="Select Return Policy"
-                      value={formState.data?.returnPolicy}
-                      onChange={(value) => setFormState(prev => ({
-                        ...prev,
-                        data: { ...prev.data, returnPolicy: value }
-                      }))}
-                    /> */}
+                    
                     <Select
                       key={formState.data?.returnPolicy}
                       options={returnPolicyOptions}
@@ -1189,7 +1245,162 @@ useEffect(() => {
                       rows={2}
                     />
                   </div>
-                </div>
+                </div> */}
+
+                {/* Return Available */}
+<div>
+  <Label>Return Available</Label>
+
+  <div className="flex items-center gap-6 mt-2">
+    <label className="flex items-center gap-2 cursor-pointer">
+      <input
+        type="radio"
+        name="returnEligible"
+        value="true"
+        checked={formState.data?.returnEligible === true}
+        onChange={() =>
+          setFormState((prev) => ({
+            ...prev,
+            data: {
+              ...prev.data,
+              returnEligible: true,
+            },
+          }))
+        }
+        className="w-4 h-4"
+      />
+      <span>Yes</span>
+    </label>
+
+    <label className="flex items-center gap-2 cursor-pointer">
+      <input
+        type="radio"
+        name="returnEligible"
+        value="false"
+        checked={formState.data?.returnEligible === false}
+        onChange={() =>
+          setFormState((prev) => ({
+            ...prev,
+            data: {
+              ...prev.data,
+              returnEligible: false,
+              returnWindowDays: 0,
+            },
+          }))
+        }
+        className="w-4 h-4"
+      />
+      <span>No</span>
+    </label>
+  </div>
+</div>
+
+{/* Return Window */}
+{formState.data?.returnEligible === true && (
+  <div>
+    <Label>Return Window (Days)</Label>
+
+    <Input
+      type="number"
+      name="returnWindowDays"
+      min="1"
+      value={formState.data?.returnWindowDays ?? 7}
+      onChange={handleChange}
+      placeholder="e.g. 7"
+    />
+
+    <p className="text-xs text-gray-500 mt-1">
+      Number of days after delivery in which the customer can
+      request a return.
+    </p>
+  </div>
+)}
+
+{/* Replacement Available */}
+<div>
+  <Label>Replacement Available</Label>
+
+  <div className="flex items-center gap-6 mt-2">
+    <label className="flex items-center gap-2 cursor-pointer">
+      <input
+        type="radio"
+        name="replacementEligible"
+        value="true"
+        checked={formState.data?.replacementEligible === true}
+        onChange={() =>
+          setFormState((prev) => ({
+            ...prev,
+            data: {
+              ...prev.data,
+              replacementEligible: true,
+            },
+          }))
+        }
+        className="w-4 h-4"
+      />
+      <span>Yes</span>
+    </label>
+
+    <label className="flex items-center gap-2 cursor-pointer">
+      <input
+        type="radio"
+        name="replacementEligible"
+        value="false"
+        checked={formState.data?.replacementEligible === false}
+        onChange={() =>
+          setFormState((prev) => ({
+            ...prev,
+            data: {
+              ...prev.data,
+              replacementEligible: false,
+              replacementWindowDays: 0,
+            },
+          }))
+        }
+        className="w-4 h-4"
+      />
+      <span>No</span>
+    </label>
+  </div>
+</div>
+
+{/* Replacement Window */}
+{formState.data?.replacementEligible === true && (
+  <div>
+    <Label>Replacement Window (Days)</Label>
+
+    <Input
+      type="number"
+      name="replacementWindowDays"
+      min="1"
+      value={formState.data?.replacementWindowDays ?? 0}
+      onChange={handleChange}
+      placeholder="e.g. 7"
+    />
+
+    <p className="text-xs text-gray-500 mt-1">
+      Number of days after delivery in which the customer can
+      request a replacement.
+    </p>
+  </div>
+)}
+
+{/* Warranty */}
+<div>
+  <Label>Warranty Info</Label>
+
+  <TextArea
+    name="warrantyInfo"
+    placeholder="e.g., 1-year manufacturer warranty"
+    value={formState.data?.warrantyInfo || ""}
+    onChange={handleChange}
+    rows={3}
+  />
+
+  <p className="text-xs text-gray-500 mt-1">
+    Enter warranty details if applicable.
+  </p>
+</div>
               </div>
             </div>
 
@@ -1327,7 +1538,7 @@ useEffect(() => {
                         />
                       </div>
                     )}
-                    <div className="flex items-center gap-2">
+                    {/* <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         name="shippingAvailable"
@@ -1339,7 +1550,28 @@ useEffect(() => {
                       <label htmlFor="shippingAvailable" className="text-sm">
                         Free Shipping Available
                       </label>
-                    </div>
+                    </div> */}
+
+                    <div className="flex items-center justify-between p-4 border rounded-xl shadow-sm">
+  <div>
+    <p className="text-sm font-semibold text-gray-800">
+      Shipping Available
+    </p>
+
+    <p className="text-xs text-gray-500">
+      Allow this product to be delivered to customers
+    </p>
+  </div>
+
+  <input
+    type="checkbox"
+    name="shippingAvailable"
+    id="shippingAvailable"
+    checked={formState.data?.shippingAvailable ?? false}
+    onChange={handleChange}
+    className="w-5 h-5 text-blue-600"
+  />
+</div>
                   </div>
                 </div>
               </div>
@@ -1399,13 +1631,25 @@ useEffect(() => {
             </div>
             <div className="p-4">
               <Label>Product Description</Label>
-              <TextArea
+              {/* <TextArea
                 name="description"
                 placeholder="Enter description"
                 value={formState.data?.description || ""}
                 onChange={handleChange}
                 rows={4}
-              />
+              /> */}
+              <RichTextEditor
+  value={formState.data?.description || ""}
+  onChange={(value) =>
+    setFormState((prev) => ({
+      ...prev,
+      data: {
+        ...prev.data,
+        description: value,
+      },
+    }))
+  }
+/>
             </div>
           </div>
 

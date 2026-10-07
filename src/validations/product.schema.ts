@@ -80,7 +80,32 @@ offer: z.preprocess(
   z.number().min(0).max(100).optional()  // <-- YEH CHANGE KARO
 ),
   /* Others */
-  returnPolicy: z.string().optional(),
+  // returnPolicy: z.string().optional(),
+  returnEligible: z.preprocess(
+  (val) => val === "true" || val === true,
+  z.boolean()
+),
+
+returnWindowDays: z.preprocess(
+  (val) => {
+    if (val === "" || val === undefined || val === null) return 0;
+    return Number(val);
+  },
+  z.number().min(0, "Return window cannot be negative")
+),
+
+replacementEligible: z.preprocess(
+  (val) => val === "true" || val === true,
+  z.boolean()
+),
+
+replacementWindowDays: z.preprocess(
+  (val) => {
+    if (val === "" || val === undefined || val === null) return 0;
+    return Number(val);
+  },
+  z.number().min(0, "Replacement window cannot be negative")
+),
   warrantyInfo: z.string().optional(),
   keywords: z.array(z.string()),
   

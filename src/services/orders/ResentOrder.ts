@@ -1,14 +1,30 @@
 import { apiConnector } from "../apiConnector";
 import { endpointsOrder } from "../apis";
 
-export const getAllOrders = async () => {
+// export const getAllOrders = async () => {
+//   try {
+//     const response = await apiConnector("GET", endpointsOrder.ORDER_GET_ALL);
+//     return response.data; // 👈 backend se jo bhi array aayega
+//   } catch (error) {
+//     console.error("Error fetching orders", error);
+//     throw error;
+//   } 
+// };
+export const getAllOrders = async (
+  page = 1,
+  limit = 20
+) => {
   try {
-    const response = await apiConnector("GET", endpointsOrder.ORDER_GET_ALL);
-    return response.data; // 👈 backend se jo bhi array aayega
+    const response = await apiConnector(
+      "GET",
+      `${endpointsOrder.ORDER_GET_ALL}?page=${page}&limit=${limit}`
+    );
+
+    return response.data;
   } catch (error) {
     console.error("Error fetching orders", error);
     throw error;
-  } 
+  }
 };
 
 

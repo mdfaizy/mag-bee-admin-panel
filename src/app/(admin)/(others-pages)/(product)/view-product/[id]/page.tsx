@@ -419,7 +419,7 @@ const ViewProductPage: React.FC = () => {
                     {/* Additional Info */}
                     {(selectedProduct.material ||
                       selectedProduct.warrantyInfo ||
-                      selectedProduct.returnPolicy ||
+                      // selectedProduct.returnPolicy ||
                       selectedProduct.manufactureDetails) && (
                       <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
                         <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -447,7 +447,7 @@ const ViewProductPage: React.FC = () => {
                               </span>
                             </div>
                           {/* )} */}
-                          {selectedProduct.returnPolicy && (
+                          {/* {selectedProduct.returnPolicy && (
                             <div className="flex justify-between py-2 border-b border-gray-200">
                               <span className="text-gray-600 font-medium">
                                 Return Policy:
@@ -456,7 +456,7 @@ const ViewProductPage: React.FC = () => {
                                 {selectedProduct.returnPolicy}
                               </span>
                             </div>
-                          )}
+                          )} */}
                           {selectedProduct.manufactureDetails && (
                             <div className="flex justify-between py-2">
                               <span className="text-gray-600 font-medium">

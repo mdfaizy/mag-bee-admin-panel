@@ -16,7 +16,7 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { calculateFinalPrice, calculateOfferPercentage } from "@/utils/priceUtils";
 import { ProductFormData, productSchema } from "@/validations/product.schema";
-
+import RichTextEditor from "@/components/form/input/RichTextEditor";
 const parseNumber = (v: any) => {
   if (v === "" || v === null || v === undefined) return undefined;
   const num = Number(v);
@@ -72,7 +72,11 @@ export default function AddNewProduct() {
       stock: undefined,
       shippingAvailable: false,
       skuCode: "",
-      returnPolicy: "",
+      // returnPolicy: "",
+      returnEligible: true,
+returnWindowDays: 7,
+replacementEligible: false,
+replacementWindowDays: 0,
       warrantyInfo: "",
       hasVariants: false,
       variants: [],
@@ -86,6 +90,12 @@ export default function AddNewProduct() {
   const watchHasVariants = watch("hasVariants");
   const watchVariants = watch("variants");
 
+
+  const watchReturnEligible = watch("returnEligible");
+const watchReplacementEligible = watch("replacementEligible");
+
+const isReturnEnabled = watchReturnEligible === true;
+const isReplacementEnabled = watchReplacementEligible === true;
   // Update showVariants state when hasVariants changes
   useEffect(() => {
     setShowVariants(watchHasVariants);
@@ -536,7 +546,18 @@ export default function AddNewProduct() {
         height: data.height,
         weight: data.weight,
         weightUnit: data.weightUnit,
-        returnPolicy: data.returnPolicy || null,
+        // returnPolicy: data.returnPolicy || null,
+        returnEligible: data.returnEligible,
+
+returnWindowDays: data.returnEligible
+  ? Number(data.returnWindowDays || 0)
+  : 0,
+
+replacementEligible: data.replacementEligible,
+
+replacementWindowDays: data.replacementEligible
+  ? Number(data.replacementWindowDays || 0)
+  : 0,
         warrantyInfo: data.warrantyInfo || null,
         keywords: JSON.stringify(data.keywords),
         shippingAvailable: data.shippingAvailable,
@@ -968,7 +989,7 @@ export default function AddNewProduct() {
               </div>
 
               {/* Policies */}
-              <div className="border border-gray-200 rounded-lg">
+              {/* <div className="border border-gray-200 rounded-lg">
                 <div className="bg-gray-100 p-3 border-b border-gray-200">
                   <h2 className="font-semibold text-gray-700">Policies</h2>
                 </div>
@@ -1001,7 +1022,132 @@ export default function AddNewProduct() {
                     />
                   </div>
                 </div>
-              </div>
+              </div> */}
+
+              <div className="border border-gray-200 rounded-lg">
+  <div className="bg-gray-100 p-3 border-b border-gray-200">
+    <h2 className="font-semibold text-gray-700">
+      Policies
+    </h2>
+  </div>
+
+  <div className="p-4 space-y-5">
+
+    {/* Return Available */}
+    <div>
+      <Label>Return Available</Label>
+
+      <div className="flex items-center gap-6 mt-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            value="true"
+            {...register("returnEligible")}
+            className="w-4 h-4"
+          />
+          <span>Yes</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            value="false"
+            {...register("returnEligible")}
+            className="w-4 h-4"
+          />
+          <span>No</span>
+        </label>
+      </div>
+    </div>
+
+    {/* Return Window */}
+    {isReturnEnabled && (
+      <div>
+        <Label>Return Window (Days)</Label>
+
+        <Input
+          type="number"
+          min="1"
+          {...register("returnWindowDays", {
+            setValueAs: (v) =>
+              v === "" ? 0 : Number(v),
+          })}
+          placeholder="e.g. 7"
+        />
+
+        <p className="text-xs text-gray-500 mt-1">
+          Number of days after delivery in which the customer can
+          request a return.
+        </p>
+      </div>
+    )}
+
+    {/* Replacement Available */}
+    <div>
+      <Label>Replacement Available</Label>
+
+      <div className="flex items-center gap-6 mt-2">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            value="true"
+            {...register("replacementEligible")}
+            className="w-4 h-4"
+          />
+          <span>Yes</span>
+        </label>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="radio"
+            value="false"
+            {...register("replacementEligible")}
+            className="w-4 h-4"
+          />
+          <span>No</span>
+        </label>
+      </div>
+    </div>
+
+    {/* Replacement Window */}
+    {isReplacementEnabled && (
+      <div>
+        <Label>Replacement Window (Days)</Label>
+
+        <Input
+          type="number"
+          min="1"
+          {...register("replacementWindowDays", {
+            setValueAs: (v) =>
+              v === "" ? 0 : Number(v),
+          })}
+          placeholder="e.g. 7"
+        />
+
+        <p className="text-xs text-gray-500 mt-1">
+          Number of days after delivery in which the customer can
+          request a replacement.
+        </p>
+      </div>
+    )}
+
+    {/* Warranty Information */}
+    <div>
+      <Label>Warranty Information</Label>
+
+      <TextArea
+        {...register("warrantyInfo")}
+        placeholder="e.g. 1-year manufacturer warranty"
+        rows={3}
+      />
+
+      <p className="text-xs text-gray-500 mt-1">
+        Enter warranty details if applicable.
+      </p>
+    </div>
+
+  </div>
+</div>
             </div>
 
             {/* Right Column */}
@@ -1279,7 +1425,7 @@ export default function AddNewProduct() {
           </div>
 
           {/* Description - Full Width */}
-          <div className="mt-6 border border-gray-200 rounded-lg">
+          {/* <div className="mt-6 border border-gray-200 rounded-lg">
             <div className="bg-gray-100 p-3 border-b border-gray-200">
               <h2 className="font-semibold text-gray-700">Details</h2>
             </div>
@@ -1302,7 +1448,47 @@ export default function AddNewProduct() {
                 Add full product details like features, specifications, material, warranty etc.
               </p>
             </div>
-          </div>
+          </div> */}
+
+          <div className="mt-6 border border-gray-200 rounded-lg">
+
+  <div className="bg-gray-100 p-3 border-b border-gray-200">
+    <h2 className="font-semibold text-gray-700">
+      Details
+    </h2>
+  </div>
+
+  <div className="p-4 space-y-2">
+
+    <Label className="text-sm font-medium text-gray-700">
+      Product Description{" "}
+      <span className="text-red-500">*</span>
+    </Label>
+
+    <Controller
+      name="description"
+      control={control}
+      render={({ field }) => (
+        <RichTextEditor
+          value={field.value || ""}
+          onChange={field.onChange}
+        />
+      )}
+    />
+
+    {errors.description && (
+      <p className="text-red-500 text-sm">
+        {errors.description.message}
+      </p>
+    )}
+
+    <p className="text-xs text-gray-500">
+      Add full product details like features, specifications,
+      material, warranty etc.
+    </p>
+
+  </div>
+</div>
 
           {/* Product Images - Full Width */}
           <div className="mt-6 border border-gray-200 rounded-lg">

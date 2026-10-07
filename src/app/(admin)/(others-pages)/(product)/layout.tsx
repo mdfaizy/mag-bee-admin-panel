@@ -14,14 +14,14 @@ export default function ProductLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full  bg-red-200">
-  <div className="bg-white border-b px-6 py-4">
+    <div className="w-full border-2">
+  <div className="bg-white border-b px-2 py-4">
     <h1 className="text-xl font-semibold text-gray-800">
       Product Management
     </h1>
   </div>
 
-  <div className="w-full px-4 md:px-6">
+  <div className="w-full px-2 md:px-4">
     {children}
   </div>
 </div>

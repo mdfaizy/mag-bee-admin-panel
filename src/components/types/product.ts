@@ -67,7 +67,11 @@ export interface Product {
   shippingAvailable: boolean;
   variantGroupId?: number;
   skuCode: string;
-  returnPolicy: string;
+  // returnPolicy: string;
+  returnEligible: boolean;
+returnWindowDays: number;
+replacementEligible: boolean;
+replacementWindowDays: number;
   warrantyInfo: string;
   images?: ProductImage[];
   variants: Variant[];

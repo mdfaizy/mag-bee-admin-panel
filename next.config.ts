@@ -22,6 +22,10 @@ const nextConfig: NextConfig = {
       protocol: "https",
       hostname: "magbee-uat-database.s3.ap-south-1.amazonaws.com",
     },
+     {
+        protocol: "https",
+        hostname: "storage.googleapis.com",
+      },  
    
     ],
     
