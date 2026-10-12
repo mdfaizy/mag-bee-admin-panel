@@ -35,15 +35,13 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   // 🔥 ignore generated folders
-  {
-    ignores: [".next/**", "node_modules/**"],
+ {
+    ignores: [".next/**", "node_modules/**", "next-env.d.ts"],
   },
 
+
   // Next.js recommended rules
-  ...compat.extends(
-    "next/core-web-vitals",
-    "next/typescript"
-  ),
+  ...compat.extends("next/core-web-vitals","next/typescript"),
 
   // 🔧 relax rules for admin panel
   {
@@ -54,7 +52,7 @@ const eslintConfig = [
       "@typescript-eslint/no-wrapper-object-types": "off",
       "@typescript-eslint/no-unsafe-function-type": "off",
       "@typescript-eslint/no-empty-object-type": "off",
-
+      "@typescript-eslint/triple-slash-reference": "off",
       "react-hooks/exhaustive-deps": "off",
       "@next/next/no-img-element": "off",
       "react/no-unescaped-entities": "off",
