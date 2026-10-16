@@ -48,22 +48,23 @@ export default function UserDropdown() {
       >
 
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <Image
+          {/* <Image
             src={`https://api.dicebear.com/5.x/initials/png?seed=${encodeURIComponent(user.name)}`}
             width={44}
             height={44}
             alt={user.name}
             className="rounded-full"
-          />
+          /> */}
+          <Image
+  src={`https://api.dicebear.com/5.x/initials/png?seed=${encodeURIComponent(
+    user?.name || "User"
+  )}`}
+  width={44}
+  height={44}
+  alt={user?.name || "User"}
+  className="rounded-full"
+/>
         </span>
-
-        {/* <span className="block mr-1 font-medium text-theme-sm">
-          {user?.name}
-        </span> */}
-
-        {/* <FaChevronDown
-    className={`text-gray-500 dark:text-gray-400 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
-  /> */}
       </button>
 
       <Dropdown
