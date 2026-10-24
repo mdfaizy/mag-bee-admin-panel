@@ -11,7 +11,9 @@ import {
   CreditCard,
   Hash,
   Receipt,
+  XCircle,
 } from "lucide-react";
+import { getCancellationReasonLabel } from "@/utils/cancellationReasons";
 
 interface OrderViewModalProps {
   isOpen: boolean;
@@ -202,6 +204,43 @@ export default function OrderViewModal({
               )}
             </Section>
           </div>
+
+          {/* CANCELLATION */}
+          {order.status === "CANCELLED" && (
+            <Section
+              title="Cancellation"
+              icon={<XCircle className="w-4 h-4 text-red-500" />}
+            >
+              <Field
+                label="Reason"
+                value={
+                  getCancellationReasonLabel(order.cancelReasonCode) ||
+                  order.cancelReason ||
+                  "No reason recorded"
+                }
+                breakAll
+              />
+              {order.cancellationNote && (
+                <div className="py-1.5">
+                  <p className="text-xs text-gray-500">Notes</p>
+                  <p className="text-sm text-gray-900 whitespace-pre-wrap break-words mt-0.5">
+                    {order.cancellationNote}
+                  </p>
+                </div>
+              )}
+              {order.cancelledAt && (
+                <Field label="Cancelled At" value={formatDate(order.cancelledAt)} />
+              )}
+              <Field
+                label="Cancelled By"
+                value={
+                  order.cancelledByUserId
+                    ? order.cancelledByName || `Admin #${order.cancelledByUserId}`
+                    : "Customer / system"
+                }
+              />
+            </Section>
+          )}
 
           {/* DELIVERY ADDRESS */}
           {hasAddress && (

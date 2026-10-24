@@ -453,6 +453,7 @@ useEffect(() => {
     setFormState({
       data: {
         ...selectedProduct,
+        description: selectedProduct.description ?? "",
 
         categoryId:selectedProduct.category? String(selectedProduct.category.id) : "",
 
@@ -846,21 +847,12 @@ useEffect(() => {
     }));
   };
 
-  // ✅ Calculate final price for base product
-  // const calculateFinalPrice = (): number => {
-  //   if (!formState.data) return 0;
-
-  //   const originalPrice = safeNum(formState.data.originalPrice, 0);
-  //   const offer = safeNum(formState.data.offer, 0);
-
-  //   return computeSellingPrice(originalPrice, offer);
-  // };
 
   console.log(formState.data?.returnPolicy)
   // ✅ Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+        
     if (!formState.data) {
       toast.error("Form data not initialized");
       return;

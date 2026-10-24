@@ -51,5 +51,20 @@ export const updateOrderStatus = async (
   return apiConnector("PUT", `/orders/${orderId}`, data);
 };
 
+/**
+ * Cancel with a mandatory reason (same endpoint as status updates; the
+ * backend validates the reason and runs the refund / Shiprocket flow).
+ */
+export const cancelOrderWithReason = async (
+  orderId: string,
+  data: { cancelReasonCode: string; cancellationNote?: string }
+) => {
+  return apiConnector("PUT", `/orders/${orderId}`, {
+    status: "CANCELLED",
+    cancelReasonCode: data.cancelReasonCode,
+    cancellationNote: data.cancellationNote?.trim() || undefined,
+  });
+};
+
 
 

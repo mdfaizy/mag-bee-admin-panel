@@ -84,7 +84,7 @@ import AppSidebar from "@/layout/AppSidebar";
 import Backdrop from "@/layout/Backdrop";
 import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/redux/store";
-import axiosInstance from "@/services/axiosInstance";
+import axiosInstance, { SESSION_EXPIRED_PATH, SessionAwareError } from "@/services/axiosInstance";
 import { setUser } from "@/redux/authSlice";
 
 export default function AdminLayout({
@@ -98,16 +98,34 @@ export default function AdminLayout({
 
   const user = useSelector((state: RootState) => state.auth.user);
   const [loading, setLoading] = useState(true);
+  // session could not be checked (offline / server error): never a sign-out
+  const [sessionCheckError, setSessionCheckError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const restoreSession = async () => {
+      setLoading(true);
+      setSessionCheckError(null);
+
       try {
         const res = await axiosInstance.get("/auth/me");
         dispatch(setUser(res.data.user));
-      } catch (err: any) {
-        // ❗ only redirect if NOT already on signin
-        if (window.location.pathname !== "/signin") {
-          router.replace("/signin");
+      } catch (err: unknown) {
+        const error = err as SessionAwareError;
+        const status = error.response?.status;
+
+        if (error.sessionExpired) {
+          // the interceptor is already redirecting with the reason
+        } else if (status === 401 || status === 403) {
+          if (window.location.pathname !== "/signin") {
+            router.replace(status === 401 ? SESSION_EXPIRED_PATH : "/signin");
+          }
+        } else {
+          setSessionCheckError(
+            error.response
+              ? "The server could not confirm your session right now."
+              : "Could not reach the server. Check your connection."
+          );
         }
       } finally {
         setLoading(false);
@@ -115,13 +133,30 @@ export default function AdminLayout({
     };
 
     restoreSession();
-  }, [dispatch, router]);
+  }, [dispatch, router, attempt]);
 
   // 🔒 IMPORTANT GUARD
   if (loading) {
     return (
        <div className="flex items-center justify-center h-64">
         <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (sessionCheckError) {
+    return (
+      <div className="flex items-center justify-center h-64 p-4">
+        <div role="alert" className="max-w-md w-full rounded-xl border border-red-200 bg-white p-6 text-center">
+          <p className="font-medium text-gray-800">{sessionCheckError}</p>
+          <button
+            type="button"
+            onClick={() => setAttempt((n) => n + 1)}
+            className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Try again
+          </button>
+        </div>
       </div>
     );
   }

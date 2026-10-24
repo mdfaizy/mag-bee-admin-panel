@@ -64,17 +64,31 @@ export default function RichTextEditor({
   });
 
   // API se description load hone ke baad editor mein set karega
-  useEffect(() => {
-    if (!editor) return;
+  // useEffect(() => {
+  //   if (!editor) return;
 
-    const currentContent = editor.getHTML();
+  //   const currentContent = editor.getHTML();
 
-    if (value !== currentContent) {
-      editor.commands.setContent(value || "", {
-        emitUpdate: false,
-      });
-    }
-  }, [editor, value]);
+  //   if (value !== currentContent) {
+  //     editor.commands.setContent(value || "", {
+  //       emitUpdate: false,
+  //     });
+  //   }
+  // }, [editor, value]);
+  
+useEffect(() => {
+  if (!editor) return;
+
+  const nextContent = value || "";
+  const currentContent = editor.getHTML();
+
+  if (nextContent !== currentContent) {
+    editor.commands.setContent(nextContent, {
+      emitUpdate: false,
+    });
+  }
+}, [editor, value]);
+
 
   if (!editor) {
     return null;

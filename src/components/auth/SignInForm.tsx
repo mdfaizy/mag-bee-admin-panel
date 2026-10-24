@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
@@ -18,6 +18,12 @@ export default function SignInForm() {
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const [showPassword, setShowPassword] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    // read on the client only (no useSearchParams: avoids a Suspense bailout)
+    setSessionExpired(new URLSearchParams(window.location.search).get("reason") === "session_expired");
+  }, []);
   const {
     register,
     handleSubmit,
@@ -39,6 +45,11 @@ export default function SignInForm() {
           <p className="text-sm text-gray-500 dark:text-gray-400">
             Enter your email or username and password to sign in!
           </p>
+          {sessionExpired && (
+            <p role="status" className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              Your session has expired. Please sign in again.
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>

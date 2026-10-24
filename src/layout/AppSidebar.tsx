@@ -157,7 +157,10 @@ const navItems: NavItem[] = [
   {
     name: "Orders",
     icon: <LuFileText />,
-    subItems: [{ name: "Resent Order", path: "/orders-tables", pro: false },],
+    subItems: [
+      { name: "Resent Order", path: "/orders-tables", pro: false },
+      { name: "Returns", path: "/returns-tables", pro: false },
+    ],
   },
   {
     name: "User",
