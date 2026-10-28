@@ -66,6 +66,11 @@ export interface ReturnRequest {
   orderId: number;
   customerId: number;
   type: "RETURN" | "REPLACEMENT";
+  /** replacement dispatch recorded by staff */
+  exchangeAwbCode?: string | null;
+  exchangeCourierName?: string | null;
+  exchangeShippedAt?: string | null;
+  exchangeDeliveredAt?: string | null;
   status: ReturnStatus;
   reason: string;
   customerComment: string | null;
@@ -144,9 +149,19 @@ export const rejectReturn = async (returnRequestId: number, reason: string) =>
 export const bookReturnPickup = async (returnRequestId: number) =>
   (await apiConnector("POST", `/returns/${id(returnRequestId)}/pickup`)).data;
 
-/** Replacements aren't fulfilled yet: turn a replacement request into a refund return */
+/** Refund instead of replacing: turns a replacement request into a refund return */
 export const convertReplacementToRefund = async (returnRequestId: number) =>
   (await apiConnector("POST", `/admin/returns/${id(returnRequestId)}/convert-to-refund`)).data;
+
+/** After the inspection passed: staff shipped the replacement themselves */
+export const dispatchReplacement = async (
+  returnRequestId: number,
+  body: { awbNumber: string; courierName: string }
+) => (await apiConnector("POST", `/admin/returns/${id(returnRequestId)}/replacement/dispatch`, body)).data;
+
+/** The replacement reached the customer: completes the request */
+export const completeReplacement = async (returnRequestId: number) =>
+  (await apiConnector("POST", `/admin/returns/${id(returnRequestId)}/replacement/complete`)).data;
 
 export const markReturnReceived = async (returnRequestId: number) =>
   (await apiConnector("POST", `/admin/returns/${id(returnRequestId)}/receive`)).data;

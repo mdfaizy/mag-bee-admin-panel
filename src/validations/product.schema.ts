@@ -106,6 +106,10 @@ replacementWindowDays: z.preprocess(
   },
   z.number().min(0, "Replacement window cannot be negative")
 ),
+cancelable: z.preprocess(
+  (val) => (val === undefined ? undefined : val === "true" || val === true),
+  z.boolean().optional()
+),
   warrantyInfo: z.string().optional(),
   keywords: z.array(z.string()),
   

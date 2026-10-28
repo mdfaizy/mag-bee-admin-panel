@@ -13,7 +13,9 @@ import {
   approveReturn,
   bookReturnPickup,
   completeInspection,
+  completeReplacement,
   convertReplacementToRefund,
+  dispatchReplacement,
   getApiError,
   getReturn,
   isRefundApprover,
@@ -24,7 +26,7 @@ import {
 } from "@/services/returns/returnService";
 import ReturnStatusBadge from "./ReturnStatusBadge";
 
-type InputKind = "none" | "reason" | "inspectApprove" | "payoutReference";
+type InputKind = "none" | "reason" | "inspectApprove" | "payoutReference" | "replacementDispatch";
 
 interface PendingAction {
   key: string;
@@ -33,7 +35,7 @@ interface PendingAction {
   confirmLabel: string;
   danger?: boolean;
   input: InputKind;
-  run: (input: { text: string; amount: string; restock: boolean }) => Promise<any>;
+  run: (input: { text: string; amount: string; restock: boolean; courier: string }) => Promise<any>;
 }
 
 const money = (value: unknown) =>
@@ -53,6 +55,12 @@ const date = (value?: string | null) =>
     : "—";
 
 const maskAccount = (value?: string | null) => (value ? `XXXXXX${value.slice(-4)}` : "—");
+
+// Replacement progress before a dispatch is recorded
+const status_text = (status: string) =>
+  status === "REPLACEMENT_PROCESSING"
+    ? "Inspection passed. Dispatch the replacement and record its AWB."
+    : "The replacement is shipped after the returned item passes inspection.";
 
 interface Props {
   returnRequestId: number | null;
@@ -77,6 +85,7 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
   const [text, setText] = useState("");
   const [amount, setAmount] = useState("");
   const [restock, setRestock] = useState(true);
+  const [courier, setCourier] = useState("");
   const [inputError, setInputError] = useState("");
   const [showAccount, setShowAccount] = useState(false);
 
@@ -103,6 +112,7 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
   const startAction = (action: PendingAction) => {
     setText("");
     setAmount("");
+    setCourier("");
     setRestock(true);
     setInputError("");
     setPending(action);
@@ -116,6 +126,11 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
       return;
     }
 
+    if (pending.input === "replacementDispatch" && (!text.trim() || !courier.trim())) {
+      setInputError("Enter the AWB number and the courier name.");
+      return;
+    }
+
     if (pending.input === "inspectApprove" && amount !== "") {
       const value = Number(amount);
       if (!Number.isFinite(value) || value <= 0) {
@@ -126,7 +141,7 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
 
     setSubmitting(true);
     try {
-      const result = await pending.run({ text: text.trim(), amount, restock });
+      const result = await pending.run({ text: text.trim(), amount, restock, courier: courier.trim() });
       toast.success(result?.message || "Updated");
       setPending(null);
       onChanged();
@@ -151,14 +166,43 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
     const isReturn = request.type === "RETURN";
     const status = request.status;
 
-    // Replacements are not fulfilled yet: the only way forward is a refund
-    if (request.type === "REPLACEMENT" && !["COMPLETED", "REJECTED", "CANCELLED"].includes(status)) {
+    // Staff-managed replacement: dispatch after the inspection passed, then
+    // confirm delivery
+    if (request.type === "REPLACEMENT" && status === "REPLACEMENT_PROCESSING") {
+      if (!request.exchangeAwbCode) {
+        actions.push({
+          key: "replacement-dispatch",
+          title: "Mark replacement dispatched?",
+          description:
+            "Ship the replacement unit, then enter its AWB number and courier. The unit is deducted from stock now and the customer sees the courier details.",
+          confirmLabel: "Mark dispatched",
+          input: "replacementDispatch",
+          run: ({ text: awbNumber, courier: courierName }) => dispatchReplacement(rid, { awbNumber, courierName }),
+        });
+      } else {
+        actions.push({
+          key: "replacement-complete",
+          title: "Mark replacement delivered?",
+          description: "Confirm the customer received the replacement. This completes the request.",
+          confirmLabel: "Mark delivered",
+          input: "none",
+          run: () => completeReplacement(rid),
+        });
+      }
+    }
+
+    // Refund instead of replacing (e.g. out of stock), until it is dispatched
+    if (
+      request.type === "REPLACEMENT" &&
+      !request.exchangeAwbCode &&
+      !["COMPLETED", "REJECTED", "CANCELLED"].includes(status)
+    ) {
       actions.push({
         key: "convert",
-        title: "Convert to a refund return?",
+        title: "Refund instead of replacing?",
         description:
-          "Replacements are currently unavailable. The request becomes a refund return and follows the normal inspection and refund steps.",
-        confirmLabel: "Convert to refund",
+          "The request becomes a refund return and follows the normal inspection and refund steps. Use this when the replacement cannot be shipped.",
+        confirmLabel: "Refund instead",
         input: "none",
         run: () => convertReplacementToRefund(rid),
       });
@@ -218,7 +262,7 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
         title: isReturn ? "Pass inspection & set refund?" : "Pass inspection?",
         description: isReturn
           ? "Leave the amount empty to refund the full eligible amount. The backend caps it at what the customer paid. This does not send money yet."
-          : "Moves the replacement to processing.",
+          : "Approves the replacement. You can then dispatch the new unit and record its AWB.",
         confirmLabel: "Pass inspection",
         input: "inspectApprove",
         run: ({ amount: refund, restock: shouldRestock }) =>
@@ -403,6 +447,23 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
               <p className="text-red-600">Rejection reason: {request.rejectionReason}</p>
             )}
 
+            {request.type === "REPLACEMENT" && (
+              <section className="rounded-lg border border-gray-200 dark:border-gray-800 p-4 space-y-1">
+                <h3 className="font-semibold text-gray-800 dark:text-white/90">Replacement</h3>
+                {request.exchangeAwbCode ? (
+                  <p className="text-gray-600 dark:text-gray-400">
+                    AWB <strong>{request.exchangeAwbCode}</strong>
+                    {request.exchangeCourierName ? ` via ${request.exchangeCourierName}` : ""} · Dispatched{" "}
+                    {date(request.exchangeShippedAt)} · Delivered {date(request.exchangeDeliveredAt)}
+                  </p>
+                ) : (
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {status_text(request.status)}
+                  </p>
+                )}
+              </section>
+            )}
+
             {request.type === "RETURN" && (
               <section className="rounded-lg border border-gray-200 dark:border-gray-800 p-4 space-y-1">
                 <h3 className="font-semibold text-gray-800 dark:text-white/90">Refund</h3>
@@ -487,6 +548,30 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
               >
                 <p className="font-semibold text-gray-800 dark:text-white/90">{pending.title}</p>
                 <p className="text-gray-600 dark:text-gray-400">{pending.description}</p>
+
+                {pending.input === "replacementDispatch" && (
+                  <div className="grid sm:grid-cols-2 gap-2">
+                    <input
+                      autoFocus
+                      aria-label="AWB number"
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2"
+                      placeholder="AWB number"
+                      maxLength={40}
+                      value={text}
+                      disabled={submitting}
+                      onChange={(event) => setText(event.target.value)}
+                    />
+                    <input
+                      aria-label="Courier name"
+                      className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-transparent px-3 py-2"
+                      placeholder="Courier (e.g. Shadowfax)"
+                      maxLength={100}
+                      value={courier}
+                      disabled={submitting}
+                      onChange={(event) => setCourier(event.target.value)}
+                    />
+                  </div>
+                )}
 
                 {(pending.input === "reason" || pending.input === "payoutReference") && (
                   <input

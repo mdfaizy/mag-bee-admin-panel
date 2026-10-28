@@ -72,6 +72,8 @@ export interface Product {
 returnWindowDays: number;
 replacementEligible: boolean;
 replacementWindowDays: number;
+  /** customer may cancel an order with this product before dispatch */
+  cancelable?: boolean;
   warrantyInfo: string;
   images?: ProductImage[];
   variants: Variant[];

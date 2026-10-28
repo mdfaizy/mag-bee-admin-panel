@@ -507,6 +507,8 @@ replacementEligible:
 replacementWindowDays:
   Number(selectedProduct.replacementWindowDays ?? 0),
 
+cancelable: selectedProduct.cancelable ?? true,
+
 warrantyInfo: selectedProduct.warrantyInfo ?? "",
       },
 
@@ -980,6 +982,11 @@ productData.append(
 );
 
 productData.append(
+  "cancelable",
+  String(formState.data.cancelable ?? true)
+);
+
+productData.append(
   "warrantyInfo",
   formState.data.warrantyInfo?.trim() || ""
 );
@@ -1376,6 +1383,27 @@ productData.append(
     </p>
   </div>
 )}
+
+{/* Cancellation */}
+<div className="flex items-start gap-2">
+  <input
+    id="cancelable"
+    type="checkbox"
+    name="cancelable"
+    checked={formState.data?.cancelable !== false}
+    onChange={handleChange}
+    className="mt-1 h-4 w-4"
+  />
+  <div>
+    <label htmlFor="cancelable" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      Customer can cancel before dispatch
+    </label>
+    <p className="text-xs text-gray-500 mt-1">
+      When unchecked, customers cannot cancel an order that contains this product. Staff can still
+      cancel it with a reason.
+    </p>
+  </div>
+</div>
 
 {/* Warranty */}
 <div>
