@@ -1,15 +1,6 @@
 import { apiConnector } from "../apiConnector";
 import { endpointsOrder } from "../apis";
 
-// export const getAllOrders = async () => {
-//   try {
-//     const response = await apiConnector("GET", endpointsOrder.ORDER_GET_ALL);
-//     return response.data; // 👈 backend se jo bhi array aayega
-//   } catch (error) {
-//     console.error("Error fetching orders", error);
-//     throw error;
-//   } 
-// };
 export const getAllOrders = async (
   page = 1,
   limit = 20
@@ -23,6 +14,44 @@ export const getAllOrders = async (
     return response.data;
   } catch (error) {
     console.error("Error fetching orders", error);
+    throw error;
+  }
+};
+
+
+
+export const getAllOrdersForAnalytics = async () => {
+  try {
+    const firstResponse = await getAllOrders(1, 100);
+
+    const firstOrders = Array.isArray(firstResponse?.orders)
+      ? firstResponse.orders
+      : Array.isArray(firstResponse)
+        ? firstResponse
+        : [];
+
+    const total = Number(firstResponse?.total ?? firstOrders.length);
+    const limit = 100;
+    const totalPages = Math.ceil(total / limit);
+
+    if (totalPages <= 1) {
+      return firstOrders;
+    }
+
+    const remainingResponses = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, index) =>
+        getAllOrders(index + 2, limit)
+      )
+    );
+
+    return [
+      ...firstOrders,
+      ...remainingResponses.flatMap((response: any) =>
+        Array.isArray(response?.orders) ? response.orders : []
+      ),
+    ];
+  } catch (error) {
+    console.error("Error fetching analytics orders:", error);
     throw error;
   }
 };

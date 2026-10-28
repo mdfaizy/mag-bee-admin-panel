@@ -1,13 +1,1286 @@
+// "use client";
+
+// import { useCallback, useEffect, useMemo, useState } from "react";
+// import dynamic from "next/dynamic";
+// import type { ApexOptions } from "apexcharts";
+// import {
+//   ChevronLeft,
+//   ChevronRight,
+//   Download,
+//   IndianRupee,
+//   LineChart,
+//   Receipt,
+//   RefreshCw,
+//   ShoppingBag,
+//   SlidersHorizontal,
+//   TrendingDown,
+//   TrendingUp,
+//   X,
+// } from "lucide-react";
+// import { getAllOrders } from "../../../services/orders/ResentOrder";
+
+// const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+//   ssr: false,
+// });
+
+// /* ========================================================================
+//    TYPES & CONSTANTS
+// ======================================================================== */
+
+// interface Order {
+//   id: string;
+//   orderCode?: string;
+//   createdAt: string;
+//   totalAmount: string | number;
+//   status?: string;
+//   paymentStatus?: string;
+//   paymentMethod?: string;
+// }
+
+// interface ParsedOrder {
+//   ts: number;
+//   amount: number;
+//   status: string;
+//   method: string;
+// }
+
+// interface Agg {
+//   revenue: number;
+//   orders: number;
+// }
+
+// type MetricType = "sales" | "revenue" | "both";
+// type Granularity = "hour" | "day" | "week" | "month";
+// type GroupBy = "auto" | "day" | "week" | "month";
+// type PresetKey =
+//   | "today"
+//   | "7d"
+//   | "30d"
+//   | "90d"
+//   | "mtd"
+//   | "lm"
+//   | "ytd"
+//   | "custom";
+
+// const PRESETS: { key: PresetKey; label: string }[] = [
+//   { key: "today", label: "Today" },
+//   { key: "7d", label: "7 days" },
+//   { key: "30d", label: "30 days" },
+//   { key: "90d", label: "90 days" },
+//   { key: "mtd", label: "This month" },
+//   { key: "lm", label: "Last month" },
+//   { key: "ytd", label: "This year" },
+//   { key: "custom", label: "Custom" },
+// ];
+
+// const GROUP_OPTIONS: { key: GroupBy; label: string }[] = [
+//   { key: "auto", label: "Auto" },
+//   { key: "day", label: "Day" },
+//   { key: "week", label: "Week" },
+//   { key: "month", label: "Month" },
+// ];
+
+// const METRIC_OPTIONS: { key: MetricType; label: string }[] = [
+//   { key: "sales", label: "Sales" },
+//   { key: "revenue", label: "Revenue" },
+//   { key: "both", label: "Both" },
+// ];
+
+// // "Valid orders" scope: these never count towards sales / revenue
+// const EXCLUDED_STATUSES = new Set([
+//   "CANCELLED",
+//   "CANCELED",
+//   "PENDING_PAYMENT",
+//   "PAYMENT_FAILED",
+//   "FAILED",
+//   "EXPIRED",
+// ]);
+
+// const SALES_COLOR = "#465FFF";
+// const REVENUE_COLOR = "#10B981";
+// const PREVIOUS_COLOR = "#9CA3AF";
+
+// const CARD =
+//   "rounded-[10px] border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900";
+
+// const FOCUS =
+//   "outline-none focus-visible:ring-2 focus-visible:ring-[#465FFF]/40";
+
+// const ICON_BTN = `flex h-10 w-10 items-center justify-center rounded-[10px] border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 ${FOCUS}`;
+
+// /* ========================================================================
+//    DATE + FORMAT HELPERS
+// ======================================================================== */
+
+// const startOfDay = (d: Date) =>
+//   new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+// const endOfDay = (d: Date) =>
+//   new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
+// const addDays = (d: Date, n: number) =>
+//   new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+// const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+
+// // Week starts on Monday
+// const startOfWeek = (d: Date) => addDays(startOfDay(d), -((d.getDay() + 6) % 7));
+
+// const daysBetween = (s: Date, e: Date) =>
+//   Math.round((startOfDay(e).getTime() - startOfDay(s).getTime()) / 864e5) + 1;
+
+// const toInput = (d: Date) =>
+//   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+//     d.getDate()
+//   ).padStart(2, "0")}`;
+
+// const parseInput = (s: string) => {
+//   if (!s) return null;
+//   const [y, m, d] = s.split("-").map(Number);
+//   if (!y || !m || !d) return null;
+//   return new Date(y, m - 1, d);
+// };
+
+// function bucketStart(d: Date, g: Granularity) {
+//   switch (g) {
+//     case "hour":
+//       return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours());
+//     case "day":
+//       return startOfDay(d);
+//     case "week":
+//       return startOfWeek(d);
+//     default:
+//       return startOfMonth(d);
+//   }
+// }
+
+// function nextBucket(d: Date, g: Granularity) {
+//   switch (g) {
+//     case "hour":
+//       return new Date(
+//         d.getFullYear(),
+//         d.getMonth(),
+//         d.getDate(),
+//         d.getHours() + 1
+//       );
+//     case "day":
+//       return addDays(d, 1);
+//     case "week":
+//       return addDays(d, 7);
+//     default:
+//       return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+//   }
+// }
+
+// const fmt = (d: Date, o: Intl.DateTimeFormatOptions) =>
+//   d.toLocaleDateString("en-IN", o);
+
+// function bucketLabel(d: Date, g: Granularity) {
+//   if (g === "hour")
+//     return d.toLocaleTimeString("en-IN", { hour: "numeric", hour12: true });
+//   if (g === "month") return fmt(d, { month: "short", year: "2-digit" });
+//   return fmt(d, { day: "numeric", month: "short" });
+// }
+
+// function bucketFullLabel(d: Date, g: Granularity) {
+//   if (g === "hour")
+//     return `${fmt(d, { day: "numeric", month: "short" })}, ${d.toLocaleTimeString(
+//       "en-IN",
+//       { hour: "numeric", hour12: true }
+//     )}`;
+//   if (g === "day")
+//     return fmt(d, {
+//       weekday: "short",
+//       day: "numeric",
+//       month: "short",
+//       year: "numeric",
+//     });
+//   if (g === "week")
+//     return `${fmt(d, { day: "numeric", month: "short" })} – ${fmt(
+//       addDays(d, 6),
+//       { day: "numeric", month: "short" }
+//     )}`;
+//   return fmt(d, { month: "long", year: "numeric" });
+// }
+
+// function formatRange(s: Date, e: Date) {
+//   if (daysBetween(s, e) === 1)
+//     return fmt(s, { day: "numeric", month: "short", year: "numeric" });
+//   const sameYear = s.getFullYear() === e.getFullYear();
+//   const start = fmt(
+//     s,
+//     sameYear
+//       ? { day: "numeric", month: "short" }
+//       : { day: "numeric", month: "short", year: "numeric" }
+//   );
+//   return `${start} – ${fmt(e, {
+//     day: "numeric",
+//     month: "short",
+//     year: "numeric",
+//   })}`;
+// }
+
+// function resolveRange(preset: PresetKey, from: string, to: string) {
+//   const now = new Date();
+//   const today = startOfDay(now);
+//   let start = addDays(today, -29);
+//   let end = endOfDay(now);
+
+//   switch (preset) {
+//     case "today":
+//       start = today;
+//       break;
+//     case "7d":
+//       start = addDays(today, -6);
+//       break;
+//     case "90d":
+//       start = addDays(today, -89);
+//       break;
+//     case "mtd":
+//       start = startOfMonth(now);
+//       break;
+//     case "lm":
+//       start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+//       end = endOfDay(new Date(now.getFullYear(), now.getMonth(), 0));
+//       break;
+//     case "ytd":
+//       start = new Date(now.getFullYear(), 0, 1);
+//       break;
+//     case "custom": {
+//       const t = parseInput(to);
+//       if (t) end = endOfDay(t);
+//       const f = parseInput(from);
+//       start = f ?? addDays(startOfDay(end), -29);
+//       if (start > end) {
+//         const s = startOfDay(end);
+//         end = endOfDay(start);
+//         start = s;
+//       }
+//       // never plot the future
+//       if (end > now) end = endOfDay(now);
+//       if (start > end) start = startOfDay(end);
+//       break;
+//     }
+//     default:
+//       break;
+//   }
+//   return { start, end };
+// }
+
+// // Move the visible period one step back / forward
+// function shiftRange(
+//   start: Date,
+//   end: Date,
+//   preset: PresetKey,
+//   dir: -1 | 1
+// ) {
+//   if (preset === "mtd" || preset === "lm") {
+//     const s = new Date(start.getFullYear(), start.getMonth() + dir, 1);
+//     return {
+//       start: s,
+//       end: endOfDay(new Date(s.getFullYear(), s.getMonth() + 1, 0)),
+//     };
+//   }
+//   if (preset === "ytd") {
+//     const y = start.getFullYear() + dir;
+//     return {
+//       start: new Date(y, 0, 1),
+//       end: endOfDay(new Date(y, 11, 31)),
+//     };
+//   }
+//   const len = daysBetween(start, end);
+//   return {
+//     start: addDays(startOfDay(start), dir * len),
+//     end: endOfDay(addDays(startOfDay(end), dir * len)),
+//   };
+// }
+
+// const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
+
+// const inrCompact = (n: number) => {
+//   const v =
+//     n >= 1e7
+//       ? `${(n / 1e7).toFixed(1)}Cr`
+//       : n >= 1e5
+//         ? `${(n / 1e5).toFixed(1)}L`
+//         : n >= 1e3
+//           ? `${(n / 1e3).toFixed(1)}K`
+//           : `${Math.round(n)}`;
+//   return `₹${v.replace(/\.0(?=[A-Za-z])/, "")}`;
+// };
+
+// const normalizeStatus = (s?: string) =>
+//   (s || "UNKNOWN").toUpperCase().trim().replace(/[\s-]+/g, "_");
+
+// const prettify = (s: string) => {
+//   if (s === "COD") return "COD";
+//   const t = s.toLowerCase().replace(/_/g, " ");
+//   return t.charAt(0).toUpperCase() + t.slice(1);
+// };
+
+// const calcDelta = (cur: number, prev: number) => {
+//   if (prev === 0) return cur === 0 ? 0 : null;
+//   return ((cur - prev) / prev) * 100;
+// };
+
+// function buildSeries(
+//   orders: ParsedOrder[],
+//   s: Date,
+//   e: Date,
+//   g: Granularity
+// ) {
+//   const buckets: Date[] = [];
+//   for (let c = bucketStart(s, g); c <= e; c = nextBucket(c, g)) {
+//     buckets.push(c);
+//   }
+
+//   const map = new Map<number, Agg>(
+//     buckets.map((b) => [b.getTime(), { revenue: 0, orders: 0 }])
+//   );
+//   const total: Agg = { revenue: 0, orders: 0 };
+//   const st = s.getTime();
+//   const et = e.getTime();
+
+//   for (const o of orders) {
+//     if (o.ts < st || o.ts > et) continue;
+//     total.revenue += o.amount;
+//     total.orders += 1;
+//     const slot = map.get(bucketStart(new Date(o.ts), g).getTime());
+//     if (slot) {
+//       slot.revenue += o.amount;
+//       slot.orders += 1;
+//     }
+//   }
+
+//   return { buckets, values: buckets.map((b) => map.get(b.getTime())!), total };
+// }
+
+// function useIsDark() {
+//   const [dark, setDark] = useState(false);
+//   useEffect(() => {
+//     const el = document.documentElement;
+//     const read = () => setDark(el.classList.contains("dark"));
+//     read();
+//     const mo = new MutationObserver(read);
+//     mo.observe(el, { attributes: true, attributeFilter: ["class"] });
+//     return () => mo.disconnect();
+//   }, []);
+//   return dark;
+// }
+
+// /* ========================================================================
+//    SMALL UI PIECES
+// ======================================================================== */
+
+// function Segmented<T extends string>({
+//   value,
+//   options,
+//   onChange,
+//   isDisabled,
+//   fullWidth = true,
+// }: {
+//   value: T;
+//   options: { key: T; label: string }[];
+//   onChange: (k: T) => void;
+//   isDisabled?: (k: T) => boolean;
+//   fullWidth?: boolean;
+// }) {
+//   return (
+//     <div
+//       className={`inline-flex rounded-[10px] border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800 ${
+//         fullWidth ? "w-full sm:w-auto" : ""
+//       }`}
+//     >
+//       {options.map((o) => {
+//         const disabled = isDisabled?.(o.key) ?? false;
+//         const active = value === o.key;
+//         return (
+//           <button
+//             key={o.key}
+//             type="button"
+//             disabled={disabled}
+//             onClick={() => onChange(o.key)}
+//             aria-pressed={active}
+//             className={`flex-1 rounded-[8px] px-3 py-1.5 text-sm font-medium transition-colors sm:flex-none ${FOCUS} ${
+//               active
+//                 ? "bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+//                 : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+//             } ${disabled ? "cursor-not-allowed opacity-40" : ""}`}
+//           >
+//             {o.label}
+//           </button>
+//         );
+//       })}
+//     </div>
+//   );
+// }
+
+// function FilterSelect({
+//   label,
+//   value,
+//   onChange,
+//   children,
+// }: {
+//   label: string;
+//   value: string;
+//   onChange: (v: string) => void;
+//   children: React.ReactNode;
+// }) {
+//   return (
+//     <label className="flex min-w-0 flex-col gap-1">
+//       <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+//         {label}
+//       </span>
+//       <select
+//         value={value}
+//         onChange={(e) => onChange(e.target.value)}
+//         className={`h-10 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 sm:min-w-[170px] ${FOCUS}`}
+//       >
+//         {children}
+//       </select>
+//     </label>
+//   );
+// }
+
+// function Delta({ value }: { value: number | null }) {
+//   if (value === null) {
+//     return (
+//       <span className="text-xs text-gray-400 dark:text-gray-500">
+//         No prior data
+//       </span>
+//     );
+//   }
+//   const up = value >= 0;
+//   const Icon = up ? TrendingUp : TrendingDown;
+//   return (
+//     <span
+//       className={`inline-flex items-center gap-1 text-xs font-medium ${
+//         up
+//           ? "text-emerald-600 dark:text-emerald-400"
+//           : "text-rose-600 dark:text-rose-400"
+//       }`}
+//     >
+//       <Icon className="h-3.5 w-3.5" />
+//       {Math.abs(value).toFixed(1)}%
+//       <span className="font-normal text-gray-400 dark:text-gray-500">
+//         vs previous
+//       </span>
+//     </span>
+//   );
+// }
+
+// function StatCard({
+//   icon: Icon,
+//   label,
+//   value,
+//   delta,
+// }: {
+//   icon: React.ComponentType<{ className?: string }>;
+//   label: string;
+//   value: string;
+//   delta: number | null;
+// }) {
+//   return (
+//     <div className="flex min-w-0 items-center gap-3 rounded-[10px] border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+//       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-gray-100 dark:bg-gray-800">
+//         <Icon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+//       </div>
+//       <div className="min-w-0">
+//         <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+//         <p className="truncate text-lg font-bold text-gray-800 dark:text-white">
+//           {value}
+//         </p>
+//         <Delta value={delta} />
+//       </div>
+//     </div>
+//   );
+// }
+
+// /* ========================================================================
+//    MAIN COMPONENT
+// ======================================================================== */
+
+// export default function DynamicLineChart() {
+//   const dark = useIsDark();
+
+//   const [orders, setOrders] = useState<Order[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [refreshing, setRefreshing] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+
+//   // filters
+//   const [preset, setPreset] = useState<PresetKey>("30d");
+//   const [customFrom, setCustomFrom] = useState("");
+//   const [customTo, setCustomTo] = useState("");
+//   const [statusFilter, setStatusFilter] = useState<string>("valid");
+//   const [methodFilter, setMethodFilter] = useState<string>("all");
+//   const [groupBy, setGroupBy] = useState<GroupBy>("auto");
+//   const [compare, setCompare] = useState(false);
+//   const [activeMetric, setActiveMetric] = useState<MetricType>("both");
+//   const [showFilters, setShowFilters] = useState(false);
+
+//   /* ---------- fetch ---------- */
+
+//   const load = useCallback(async (silent = false) => {
+//     try {
+//       if (silent) setRefreshing(true);
+//       else setLoading(true);
+//       setError(null);
+
+//       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//       const res: any = await getAllOrders();
+//       const list = Array.isArray(res?.orders)
+//         ? res.orders
+//         : Array.isArray(res)
+//           ? res
+//           : [];
+//       setOrders(list);
+//     } catch (err) {
+//       console.error("Error fetching orders:", err);
+//       setError("Couldn't load orders. Check your connection and try again.");
+//     } finally {
+//       setLoading(false);
+//       setRefreshing(false);
+//     }
+//   }, []);
+
+//   useEffect(() => {
+//     load();
+//   }, [load]);
+
+//   /* ---------- derived data ---------- */
+
+//   const parsed = useMemo<ParsedOrder[]>(
+//     () =>
+//       orders.flatMap((o) => {
+//         const ts = Date.parse(o.createdAt);
+//         if (Number.isNaN(ts)) return [];
+//         return [
+//           {
+//             ts,
+//             amount: Number(o.totalAmount) || 0,
+//             status: normalizeStatus(o.status),
+//             method: (o.paymentMethod || "UNKNOWN").toUpperCase(),
+//           },
+//         ];
+//       }),
+//     [orders]
+//   );
+
+//   const firstOrderTs = useMemo(
+//     () => (parsed.length ? Math.min(...parsed.map((o) => o.ts)) : null),
+//     [parsed]
+//   );
+
+//   const statusOptions = useMemo(
+//     () => Array.from(new Set(parsed.map((o) => o.status))).sort(),
+//     [parsed]
+//   );
+//   const methodOptions = useMemo(
+//     () => Array.from(new Set(parsed.map((o) => o.method))).sort(),
+//     [parsed]
+//   );
+
+//   const scoped = useMemo(
+//     () =>
+//       parsed.filter((o) => {
+//         if (statusFilter === "valid" && EXCLUDED_STATUSES.has(o.status))
+//           return false;
+//         if (
+//           statusFilter !== "valid" &&
+//           statusFilter !== "all" &&
+//           o.status !== statusFilter
+//         )
+//           return false;
+//         if (methodFilter !== "all" && o.method !== methodFilter) return false;
+//         return true;
+//       }),
+//     [parsed, statusFilter, methodFilter]
+//   );
+
+//   const { start, end } = useMemo(
+//     () => resolveRange(preset, customFrom, customTo),
+//     [preset, customFrom, customTo]
+//   );
+
+//   const days = daysBetween(start, end);
+
+//   const granularity: Granularity =
+//     days === 1
+//       ? "hour"
+//       : groupBy === "auto"
+//         ? days <= 31
+//           ? "day"
+//           : days <= 120
+//             ? "week"
+//             : "month"
+//         : groupBy === "day" && days > 92
+//           ? "week"
+//           : groupBy;
+
+//   const current = useMemo(
+//     () => buildSeries(scoped, start, end, granularity),
+//     [scoped, start, end, granularity]
+//   );
+
+//   const previous = useMemo(() => {
+//     const prevEnd = endOfDay(addDays(start, -1));
+//     const prevStart = addDays(startOfDay(start), -days);
+//     return buildSeries(scoped, prevStart, prevEnd, granularity);
+//   }, [scoped, start, days, granularity]);
+
+//   const aov = (a: Agg) => (a.orders ? a.revenue / a.orders : 0);
+
+//   const salesData = current.values.map((a) => a.orders);
+//   const revenueData = current.values.map((a) => a.revenue);
+//   const prevSalesData = previous.values.map((a) => a.orders);
+//   const prevRevenueData = previous.values.map((a) => a.revenue);
+
+//   const hasData = current.total.orders > 0;
+//   const showCompare = compare && activeMetric !== "both";
+
+//   const peakSource = activeMetric === "sales" ? salesData : revenueData;
+//   const peakIndex = peakSource.reduce(
+//     (best, v, i) => (v > peakSource[best] ? i : best),
+//     0
+//   );
+
+//   const fullLabels = current.buckets.map((b) => bucketFullLabel(b, granularity));
+
+//   /* ---------- navigation ---------- */
+
+//   const canGoNext = end.getTime() < endOfDay(new Date()).getTime();
+//   const canGoPrev = firstOrderTs !== null && firstOrderTs < start.getTime();
+
+//   const navigate = (dir: -1 | 1) => {
+//     const next = shiftRange(start, end, preset, dir);
+//     setCustomFrom(toInput(next.start));
+//     setCustomTo(toInput(next.end));
+//     setPreset("custom");
+//   };
+
+//   const selectPreset = (key: PresetKey) => {
+//     if (key === "custom" && !customFrom && !customTo) {
+//       setCustomFrom(toInput(start));
+//       setCustomTo(toInput(end));
+//     }
+//     setPreset(key);
+//   };
+
+//   /* ---------- filter chips / reset ---------- */
+
+//   const activeChips: { label: string; clear: () => void }[] = [];
+//   if (statusFilter !== "valid")
+//     activeChips.push({
+//       label: `Status: ${statusFilter === "all" ? "All orders" : prettify(statusFilter)}`,
+//       clear: () => setStatusFilter("valid"),
+//     });
+//   if (methodFilter !== "all")
+//     activeChips.push({
+//       label: `Payment: ${prettify(methodFilter)}`,
+//       clear: () => setMethodFilter("all"),
+//     });
+//   if (groupBy !== "auto")
+//     activeChips.push({
+//       label: `Group by: ${prettify(groupBy)}`,
+//       clear: () => setGroupBy("auto"),
+//     });
+
+//   const resetAll = () => {
+//     setPreset("30d");
+//     setStatusFilter("valid");
+//     setMethodFilter("all");
+//     setGroupBy("auto");
+//     setCompare(false);
+//   };
+
+//   /* ---------- export ---------- */
+
+//   const exportCsv = () => {
+//     const rows: (string | number)[][] = [
+//       ["Period", "Orders", "Revenue (INR)", "Avg order value (INR)"],
+//       ...current.buckets.map((b, i) => {
+//         const a = current.values[i];
+//         return [
+//           bucketFullLabel(b, granularity),
+//           a.orders,
+//           a.revenue.toFixed(2),
+//           a.orders ? (a.revenue / a.orders).toFixed(2) : "0.00",
+//         ];
+//       }),
+//     ];
+//     const csv = rows
+//       .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+//       .join("\n");
+//     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = `sales-${toInput(start)}_to_${toInput(end)}.csv`;
+//     a.click();
+//     URL.revokeObjectURL(url);
+//   };
+
+//   /* ---------- chart ---------- */
+
+//   const axisColor = dark ? "#9CA3AF" : "#64748B";
+//   const isBoth = activeMetric === "both";
+//   const pointCount = current.buckets.length;
+
+//   const fmtValue = (v: number, seriesIndex: number) => {
+//     if (isBoth) return seriesIndex === 0 ? `${Math.round(v)} sales` : inr(v);
+//     return activeMetric === "sales" ? `${Math.round(v)} sales` : inr(v);
+//   };
+
+//   const yaxis: ApexOptions["yaxis"] = isBoth
+//     ? [
+//         {
+//           seriesName: "Sales",
+//           min: 0,
+//           labels: {
+//             style: { colors: [SALES_COLOR], fontSize: "11px" },
+//             formatter: (v: number) => `${Math.round(v)}`,
+//           },
+//         },
+//         {
+//           seriesName: "Revenue",
+//           opposite: true,
+//           min: 0,
+//           labels: {
+//             style: { colors: [REVENUE_COLOR], fontSize: "11px" },
+//             formatter: (v: number) => inrCompact(v),
+//           },
+//         },
+//       ]
+//     : {
+//         min: 0,
+//         labels: {
+//           style: { colors: [axisColor], fontSize: "11px" },
+//           formatter: (v: number) =>
+//             activeMetric === "sales" ? `${Math.round(v)}` : inrCompact(v),
+//         },
+//       };
+
+//   const options: ApexOptions = {
+//     chart: {
+//       type: "line",
+//       fontFamily: "Outfit, sans-serif",
+//       background: "transparent",
+//       toolbar: { show: false },
+//       zoom: { enabled: false },
+//       animations: { enabled: true, speed: 400 },
+//     },
+//     theme: { mode: dark ? "dark" : "light" },
+//     colors: isBoth
+//       ? [SALES_COLOR, REVENUE_COLOR]
+//       : activeMetric === "sales"
+//         ? [SALES_COLOR, PREVIOUS_COLOR]
+//         : [REVENUE_COLOR, PREVIOUS_COLOR],
+//     stroke: {
+//       curve: "smooth",
+//       width: isBoth ? [3, 3] : showCompare ? [3, 2] : [3],
+//       dashArray: showCompare ? [0, 5] : 0,
+//     },
+//     fill: { type: "solid", opacity: 1 },
+//     markers: {
+//       size: pointCount <= 31 ? 3 : 0,
+//       strokeWidth: 0,
+//       hover: { size: 6 },
+//     },
+//     dataLabels: { enabled: false },
+//     legend: {
+//       show: isBoth || showCompare,
+//       position: "top",
+//       horizontalAlign: "right",
+//       fontSize: "12px",
+//       labels: { colors: axisColor },
+//       markers: { size: 6, shape: "circle" },
+//     },
+//     grid: {
+//       borderColor: dark ? "rgba(156,163,175,0.15)" : "#E5E7EB",
+//       strokeDashArray: 5,
+//       xaxis: { lines: { show: false } },
+//       yaxis: { lines: { show: true } },
+//       padding: { top: 0, right: 8, bottom: 0, left: 8 },
+//     },
+//     xaxis: {
+//       type: "category",
+//       categories: current.buckets.map((b) => bucketLabel(b, granularity)),
+//       axisBorder: { show: false },
+//       axisTicks: { show: false },
+//       tooltip: { enabled: false },
+//       tickAmount: pointCount > 12 ? 8 : undefined,
+//       labels: {
+//         rotate: 0,
+//         hideOverlappingLabels: true,
+//         style: { colors: axisColor, fontSize: "11px", fontWeight: 500 },
+//       },
+//     },
+//     yaxis,
+//     tooltip: {
+//       shared: true,
+//       intersect: false,
+//       theme: dark ? "dark" : "light",
+//       x: {
+//         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//         formatter: (_v: number, opts?: any) =>
+//           fullLabels[opts?.dataPointIndex ?? 0] ?? "",
+//       },
+//       y: {
+//         formatter: (
+//           v: number,
+//           { seriesIndex }: { seriesIndex: number }
+//         ) =>
+//           v === null || v === undefined ? "–" : fmtValue(v, seriesIndex),
+//       },
+//     },
+//   };
+
+//   const series = isBoth
+//     ? [
+//         { name: "Sales", data: salesData },
+//         { name: "Revenue", data: revenueData },
+//       ]
+//     : [
+//         {
+//           name: activeMetric === "sales" ? "Sales" : "Revenue",
+//           data: activeMetric === "sales" ? salesData : revenueData,
+//         },
+//         ...(showCompare
+//           ? [
+//               {
+//                 name: "Previous period",
+//                 data: (activeMetric === "sales"
+//                   ? prevSalesData
+//                   : prevRevenueData
+//                 ).length
+//                   ? current.buckets.map(
+//                       (_, i) =>
+//                         (activeMetric === "sales"
+//                           ? prevSalesData
+//                           : prevRevenueData)[i] ?? null
+//                     )
+//                   : [],
+//               },
+//             ]
+//           : []),
+//       ];
+
+//   /* ====================================================================
+//      LOADING / ERROR
+//   ==================================================================== */
+
+//   if (loading) {
+//     return (
+//       <div className={`${CARD} w-full min-w-0 p-4 sm:p-6`}>
+//         <div className="mb-5 flex items-center gap-3">
+//           <div className="h-10 w-10 animate-pulse rounded-[10px] bg-gray-100 dark:bg-gray-800" />
+//           <div className="space-y-2">
+//             <div className="h-5 w-40 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+//             <div className="h-3 w-28 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+//           </div>
+//         </div>
+//         <div className="mb-5 grid gap-3 sm:grid-cols-3">
+//           {Array.from({ length: 3 }).map((_, i) => (
+//             <div
+//               key={i}
+//               className="h-[88px] animate-pulse rounded-[10px] bg-gray-100 dark:bg-gray-800"
+//             />
+//           ))}
+//         </div>
+//         <div className="h-64 animate-pulse rounded-[10px] bg-gray-100 dark:bg-gray-800" />
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div
+//         className={`${CARD} flex w-full min-w-0 flex-col items-center gap-3 p-8 text-center`}
+//       >
+//         <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-gray-100 dark:bg-gray-800">
+//           <LineChart className="h-5 w-5 text-gray-500" />
+//         </div>
+//         <p className="text-sm text-gray-600 dark:text-gray-300">{error}</p>
+//         <button
+//           type="button"
+//           onClick={() => load()}
+//           className={`h-10 rounded-[10px] bg-gray-900 px-4 text-sm font-medium text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 ${FOCUS}`}
+//         >
+//           Retry
+//         </button>
+//       </div>
+//     );
+//   }
+
+//   /* ====================================================================
+//      MAIN UI
+//   ==================================================================== */
+
+//   return (
+//     <div className={`${CARD} w-full min-w-0 p-4 sm:p-6`}>
+//       {/* HEADER */}
+//       <div className="mb-4 flex items-start justify-between gap-3">
+//         <div className="flex min-w-0 items-center gap-3">
+//           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-gray-100 dark:bg-gray-800">
+//             <LineChart className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+//           </div>
+//           <div className="min-w-0">
+//             <h2 className="truncate text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
+//               Sales analytics
+//             </h2>
+//             <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+//               Orders and revenue trend
+//             </p>
+//           </div>
+//         </div>
+
+//         <div className="flex shrink-0 items-center gap-2">
+//           <button
+//             type="button"
+//             onClick={() => load(true)}
+//             disabled={refreshing}
+//             aria-label="Refresh data"
+//             className={ICON_BTN}
+//           >
+//             <RefreshCw
+//               className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+//             />
+//           </button>
+//           <button
+//             type="button"
+//             onClick={exportCsv}
+//             disabled={!hasData}
+//             aria-label="Export CSV"
+//             className={`flex h-10 items-center justify-center gap-2 rounded-[10px] border border-gray-200 px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 ${FOCUS}`}
+//           >
+//             <Download className="h-4 w-4" />
+//             <span className="hidden sm:inline">Export CSV</span>
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* DATE PRESETS */}
+//       <div className="-mx-4 mb-3 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+//         <div className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
+//           {PRESETS.map((p) => (
+//             <button
+//               key={p.key}
+//               type="button"
+//               onClick={() => selectPreset(p.key)}
+//               aria-pressed={preset === p.key}
+//               className={`h-9 whitespace-nowrap rounded-[10px] border px-3 text-sm font-medium transition-colors ${FOCUS} ${
+//                 preset === p.key
+//                   ? "border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900"
+//                   : "border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+//               }`}
+//             >
+//               {p.label}
+//             </button>
+//           ))}
+//         </div>
+//       </div>
+
+//       {/* CUSTOM RANGE */}
+//       {preset === "custom" && (
+//         <div className="mb-3 grid grid-cols-2 gap-3 sm:flex sm:items-end">
+//           {(
+//             [
+//               ["From", customFrom, setCustomFrom],
+//               ["To", customTo, setCustomTo],
+//             ] as const
+//           ).map(([label, val, set]) => (
+//             <label key={label} className="flex min-w-0 flex-col gap-1">
+//               <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+//                 {label}
+//               </span>
+//               <input
+//                 type="date"
+//                 value={val}
+//                 max={toInput(new Date())}
+//                 onChange={(e) => set(e.target.value)}
+//                 className={`h-10 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 ${FOCUS}`}
+//               />
+//             </label>
+//           ))}
+//         </div>
+//       )}
+
+//       {/* FILTER TOGGLE (mobile) */}
+//       <button
+//         type="button"
+//         onClick={() => setShowFilters((v) => !v)}
+//         aria-expanded={showFilters}
+//         className={`mb-3 flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 sm:hidden ${FOCUS}`}
+//       >
+//         <SlidersHorizontal className="h-4 w-4" />
+//         Filters
+//         {activeChips.length > 0 && (
+//           <span className="rounded-full bg-[#465FFF] px-1.5 text-xs text-white">
+//             {activeChips.length}
+//           </span>
+//         )}
+//       </button>
+
+//       {/* FILTERS */}
+//       <div
+//         className={`${
+//           showFilters ? "grid" : "hidden"
+//         } mb-3 grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end`}
+//       >
+//         <FilterSelect
+//           label="Order status"
+//           value={statusFilter}
+//           onChange={setStatusFilter}
+//         >
+//           <option value="valid">Valid orders</option>
+//           <option value="all">All orders</option>
+//           {statusOptions.map((s) => (
+//             <option key={s} value={s}>
+//               {prettify(s)}
+//             </option>
+//           ))}
+//         </FilterSelect>
+
+//         <FilterSelect
+//           label="Payment method"
+//           value={methodFilter}
+//           onChange={setMethodFilter}
+//         >
+//           <option value="all">All methods</option>
+//           {methodOptions.map((m) => (
+//             <option key={m} value={m}>
+//               {prettify(m)}
+//             </option>
+//           ))}
+//         </FilterSelect>
+
+//         <div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
+//           <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+//             Group by
+//           </span>
+//           <Segmented
+//             value={days === 1 ? "auto" : groupBy}
+//             options={GROUP_OPTIONS}
+//             onChange={setGroupBy}
+//             isDisabled={(k) => days === 1 || (k === "day" && days > 92)}
+//           />
+//         </div>
+
+//         <label
+//           className={`col-span-2 flex h-10 items-center gap-2 text-sm text-gray-700 dark:text-gray-200 sm:col-span-1 ${
+//             isBoth ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+//           }`}
+//           title={
+//             isBoth
+//               ? "Choose Sales or Revenue to compare with the previous period"
+//               : undefined
+//           }
+//         >
+//           <input
+//             type="checkbox"
+//             checked={compare}
+//             disabled={isBoth}
+//             onChange={(e) => setCompare(e.target.checked)}
+//             className="h-4 w-4 rounded border-gray-300 accent-[#465FFF]"
+//           />
+//           Compare with previous period
+//         </label>
+//       </div>
+
+//       {/* ACTIVE FILTER CHIPS */}
+//       {activeChips.length > 0 && (
+//         <div className="mb-3 flex flex-wrap items-center gap-2">
+//           {activeChips.map((c) => (
+//             <span
+//               key={c.label}
+//               className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 py-1 pl-3 pr-1.5 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+//             >
+//               {c.label}
+//               <button
+//                 type="button"
+//                 onClick={c.clear}
+//                 aria-label={`Clear ${c.label}`}
+//                 className={`rounded-full p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 ${FOCUS}`}
+//               >
+//                 <X className="h-3 w-3" />
+//               </button>
+//             </span>
+//           ))}
+//           <button
+//             type="button"
+//             onClick={resetAll}
+//             className={`rounded px-1 text-xs font-medium text-[#465FFF] hover:underline ${FOCUS}`}
+//           >
+//             Reset all
+//           </button>
+//         </div>
+//       )}
+
+//       {/* STAT CARDS */}
+//       <div className="mb-5 mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+//         <StatCard
+//           icon={ShoppingBag}
+//           label="Total sales"
+//           value={current.total.orders.toLocaleString("en-IN")}
+//           delta={calcDelta(current.total.orders, previous.total.orders)}
+//         />
+//         <StatCard
+//           icon={IndianRupee}
+//           label="Total revenue"
+//           value={inr(current.total.revenue)}
+//           delta={calcDelta(current.total.revenue, previous.total.revenue)}
+//         />
+//         <StatCard
+//           icon={Receipt}
+//           label="Avg. order value"
+//           value={inr(aov(current.total))}
+//           delta={calcDelta(aov(current.total), aov(previous.total))}
+//         />
+//       </div>
+
+//       {/* CHART TOOLBAR: period navigation + metric */}
+//       <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+//         <div className="flex items-center gap-2">
+//           <button
+//             type="button"
+//             onClick={() => navigate(-1)}
+//             disabled={!canGoPrev}
+//             aria-label="Previous period"
+//             className={ICON_BTN}
+//           >
+//             <ChevronLeft className="h-4 w-4" />
+//           </button>
+//           <div className="min-w-0 flex-1 text-center sm:min-w-[190px] sm:text-left">
+//             <p className="truncate text-sm font-semibold text-gray-800 dark:text-white">
+//               {formatRange(start, end)}
+//             </p>
+//             <p className="text-xs text-gray-500 dark:text-gray-400">
+//               {days === 1 ? "Hourly" : `${days} days`} · by{" "}
+//               {granularity === "hour" ? "hour" : granularity}
+//             </p>
+//           </div>
+//           <button
+//             type="button"
+//             onClick={() => navigate(1)}
+//             disabled={!canGoNext}
+//             aria-label="Next period"
+//             className={ICON_BTN}
+//           >
+//             <ChevronRight className="h-4 w-4" />
+//           </button>
+//         </div>
+
+//         <Segmented
+//           value={activeMetric}
+//           options={METRIC_OPTIONS}
+//           onChange={setActiveMetric}
+//         />
+//       </div>
+
+//       {/* CHART */}
+//       {hasData ? (
+//         <>
+//           <div className="h-[260px] w-full min-w-0 sm:h-[320px] lg:h-[360px]">
+//             <ReactApexChart
+//               options={options}
+//               series={series}
+//               type="line"
+//               height="100%"
+//               width="100%"
+//             />
+//           </div>
+
+//           {peakSource[peakIndex] > 0 && (
+//             <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+//               Best {granularity}:{" "}
+//               <span className="font-medium text-gray-700 dark:text-gray-200">
+//                 {fullLabels[peakIndex]}
+//               </span>{" "}
+//               with{" "}
+//               {activeMetric === "sales"
+//                 ? `${salesData[peakIndex]} sales`
+//                 : inr(revenueData[peakIndex])}
+//             </p>
+//           )}
+//         </>
+//       ) : (
+//         <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
+//           <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-gray-100 dark:bg-gray-800">
+//             <TrendingUp className="h-5 w-5 text-gray-400" />
+//           </div>
+//           <div>
+//             <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+//               No orders in this period
+//             </p>
+//             <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+//               Try a longer date range or clear the filters.
+//             </p>
+//           </div>
+//           <div className="flex gap-2">
+//             <button
+//               type="button"
+//               onClick={() => setPreset("90d")}
+//               className={`h-9 rounded-[10px] border border-gray-200 px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 ${FOCUS}`}
+//             >
+//               Show 90 days
+//             </button>
+//             <button
+//               type="button"
+//               onClick={resetAll}
+//               className={`h-9 rounded-[10px] bg-gray-900 px-3 text-sm font-medium text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 ${FOCUS}`}
+//             >
+//               Reset filters
+//             </button>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* FOOTER */}
+//       <div className="mt-4 flex flex-col gap-1 border-t border-gray-100 pt-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
+//         <span>
+//           {statusFilter === "valid"
+//             ? "Valid orders exclude cancelled and unpaid orders."
+//             : statusFilter === "all"
+//               ? "Includes every order, even cancelled and unpaid."
+//               : `Only ${prettify(statusFilter).toLowerCase()} orders.`}
+//         </span>
+//         <span>
+//           {current.total.orders.toLocaleString("en-IN")} orders ·{" "}
+//           {inr(current.total.revenue)} revenue
+//         </span>
+//       </div>
+//     </div>
+//   );
+// }
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { ApexOptions } from "apexcharts";
+import type { ApexOptions } from "apexcharts";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  IndianRupee,
+  LineChart,
+  Receipt,
+  RefreshCw,
+  ShoppingBag,
+  SlidersHorizontal,
+  TrendingDown,
+  TrendingUp,
+  X,
+} from "lucide-react";
 import { getAllOrders } from "../../../services/orders/ResentOrder";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
+
+/* ========================================================================
+   TYPES & CONSTANTS
+======================================================================== */
 
 interface Order {
   id: string;
@@ -16,1118 +1289,1221 @@ interface Order {
   totalAmount: string | number;
   status?: string;
   paymentStatus?: string;
+  paymentMethod?: string;
+}
+
+interface ParsedOrder {
+  ts: number;
+  amount: number;
+  status: string;
+  method: string;
+}
+
+interface Agg {
+  revenue: number;
+  orders: number;
 }
 
 type MetricType = "sales" | "revenue" | "both";
+type Granularity = "hour" | "day" | "week" | "month";
+type GroupBy = "auto" | "day" | "week" | "month";
+type PresetKey =
+  | "today"
+  | "7d"
+  | "30d"
+  | "90d"
+  | "mtd"
+  | "lm"
+  | "ytd"
+  | "custom";
 
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
+const PRESETS: { key: PresetKey; label: string }[] = [
+  { key: "today", label: "Today" },
+  { key: "7d", label: "7 days" },
+  { key: "30d", label: "30 days" },
+  { key: "90d", label: "90 days" },
+  { key: "mtd", label: "This month" },
+  { key: "lm", label: "Last month" },
+  { key: "ytd", label: "This year" },
+  { key: "custom", label: "Custom" },
 ];
 
-const FULL_MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
+const GROUP_OPTIONS: { key: GroupBy; label: string }[] = [
+  { key: "auto", label: "Auto" },
+  { key: "day", label: "Day" },
+  { key: "week", label: "Week" },
+  { key: "month", label: "Month" },
 ];
+
+const METRIC_OPTIONS: { key: MetricType; label: string }[] = [
+  { key: "sales", label: "Sales" },
+  { key: "revenue", label: "Revenue" },
+  { key: "both", label: "Both" },
+];
+
+// "Valid orders" scope: these never count towards sales / revenue
+const EXCLUDED_STATUSES = new Set([
+  "CANCELLED",
+  "CANCELED",
+  "PENDING_PAYMENT",
+  "PAYMENT_FAILED",
+  "FAILED",
+  "EXPIRED",
+]);
+
+const SALES_COLOR = "#465FFF";
+const REVENUE_COLOR = "#10B981";
+const PREVIOUS_COLOR = "#9CA3AF";
+
+const CARD =
+  "rounded-[10px] border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900";
+
+const FOCUS =
+  "outline-none focus-visible:ring-2 focus-visible:ring-[#465FFF]/40";
+
+const ICON_BTN = `flex h-10 w-10 items-center justify-center rounded-[10px] border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 ${FOCUS}`;
+
+/* ========================================================================
+   DATE + FORMAT HELPERS
+======================================================================== */
+
+const startOfDay = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+const endOfDay = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+
+const addDays = (d: Date, n: number) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
+
+// Week starts on Monday
+const startOfWeek = (d: Date) => addDays(startOfDay(d), -((d.getDay() + 6) % 7));
+
+const daysBetween = (s: Date, e: Date) =>
+  Math.round((startOfDay(e).getTime() - startOfDay(s).getTime()) / 864e5) + 1;
+
+const toInput = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+    d.getDate()
+  ).padStart(2, "0")}`;
+
+const parseInput = (s: string) => {
+  if (!s) return null;
+  const [y, m, d] = s.split("-").map(Number);
+  if (!y || !m || !d) return null;
+  return new Date(y, m - 1, d);
+};
+
+function bucketStart(d: Date, g: Granularity) {
+  switch (g) {
+    case "hour":
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate(), d.getHours());
+    case "day":
+      return startOfDay(d);
+    case "week":
+      return startOfWeek(d);
+    default:
+      return startOfMonth(d);
+  }
+}
+
+function nextBucket(d: Date, g: Granularity) {
+  switch (g) {
+    case "hour":
+      return new Date(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+        d.getHours() + 1
+      );
+    case "day":
+      return addDays(d, 1);
+    case "week":
+      return addDays(d, 7);
+    default:
+      return new Date(d.getFullYear(), d.getMonth() + 1, 1);
+  }
+}
+
+const fmt = (d: Date, o: Intl.DateTimeFormatOptions) =>
+  d.toLocaleDateString("en-IN", o);
+
+function bucketLabel(d: Date, g: Granularity) {
+  if (g === "hour")
+    return d.toLocaleTimeString("en-IN", { hour: "numeric", hour12: true });
+  if (g === "month") return fmt(d, { month: "short", year: "2-digit" });
+  return fmt(d, { day: "numeric", month: "short" });
+}
+
+function bucketFullLabel(d: Date, g: Granularity) {
+  if (g === "hour")
+    return `${fmt(d, { day: "numeric", month: "short" })}, ${d.toLocaleTimeString(
+      "en-IN",
+      { hour: "numeric", hour12: true }
+    )}`;
+  if (g === "day")
+    return fmt(d, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  if (g === "week")
+    return `${fmt(d, { day: "numeric", month: "short" })} – ${fmt(
+      addDays(d, 6),
+      { day: "numeric", month: "short" }
+    )}`;
+  return fmt(d, { month: "long", year: "numeric" });
+}
+
+function formatRange(s: Date, e: Date) {
+  if (daysBetween(s, e) === 1)
+    return fmt(s, { day: "numeric", month: "short", year: "numeric" });
+  const sameYear = s.getFullYear() === e.getFullYear();
+  const start = fmt(
+    s,
+    sameYear
+      ? { day: "numeric", month: "short" }
+      : { day: "numeric", month: "short", year: "numeric" }
+  );
+  return `${start} – ${fmt(e, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  })}`;
+}
+
+function resolveRange(preset: PresetKey, from: string, to: string) {
+  const now = new Date();
+  const today = startOfDay(now);
+  let start = addDays(today, -29);
+  let end = endOfDay(now);
+
+  switch (preset) {
+    case "today":
+      start = today;
+      break;
+    case "7d":
+      start = addDays(today, -6);
+      break;
+    case "90d":
+      start = addDays(today, -89);
+      break;
+    case "mtd":
+      start = startOfMonth(now);
+      break;
+    case "lm":
+      start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      end = endOfDay(new Date(now.getFullYear(), now.getMonth(), 0));
+      break;
+    case "ytd":
+      start = new Date(now.getFullYear(), 0, 1);
+      break;
+    case "custom": {
+      const t = parseInput(to);
+      if (t) end = endOfDay(t);
+      const f = parseInput(from);
+      start = f ?? addDays(startOfDay(end), -29);
+      if (start > end) {
+        const s = startOfDay(end);
+        end = endOfDay(start);
+        start = s;
+      }
+      // never plot the future
+      if (end > now) end = endOfDay(now);
+      if (start > end) start = startOfDay(end);
+      break;
+    }
+    default:
+      break;
+  }
+  return { start, end };
+}
+
+// Move the visible period one step back / forward
+function shiftRange(
+  start: Date,
+  end: Date,
+  preset: PresetKey,
+  dir: -1 | 1
+) {
+  if (preset === "mtd" || preset === "lm") {
+    const s = new Date(start.getFullYear(), start.getMonth() + dir, 1);
+    return {
+      start: s,
+      end: endOfDay(new Date(s.getFullYear(), s.getMonth() + 1, 0)),
+    };
+  }
+  if (preset === "ytd") {
+    const y = start.getFullYear() + dir;
+    return {
+      start: new Date(y, 0, 1),
+      end: endOfDay(new Date(y, 11, 31)),
+    };
+  }
+  const len = daysBetween(start, end);
+  return {
+    start: addDays(startOfDay(start), dir * len),
+    end: endOfDay(addDays(startOfDay(end), dir * len)),
+  };
+}
+
+const inr = (n: number) => `₹${Math.round(n).toLocaleString("en-IN")}`;
+
+const inrCompact = (n: number) => {
+  const v =
+    n >= 1e7
+      ? `${(n / 1e7).toFixed(1)}Cr`
+      : n >= 1e5
+        ? `${(n / 1e5).toFixed(1)}L`
+        : n >= 1e3
+          ? `${(n / 1e3).toFixed(1)}K`
+          : `${Math.round(n)}`;
+  return `₹${v.replace(/\.0(?=[A-Za-z])/, "")}`;
+};
+
+const normalizeStatus = (s?: string) =>
+  (s || "UNKNOWN").toUpperCase().trim().replace(/[\s-]+/g, "_");
+
+const prettify = (s: string) => {
+  if (s === "COD") return "COD";
+  const t = s.toLowerCase().replace(/_/g, " ");
+  return t.charAt(0).toUpperCase() + t.slice(1);
+};
+
+const calcDelta = (cur: number, prev: number) => {
+  if (prev === 0) return cur === 0 ? 0 : null;
+  return ((cur - prev) / prev) * 100;
+};
+
+function buildSeries(
+  orders: ParsedOrder[],
+  s: Date,
+  e: Date,
+  g: Granularity
+) {
+  const buckets: Date[] = [];
+  for (let c = bucketStart(s, g); c <= e; c = nextBucket(c, g)) {
+    buckets.push(c);
+  }
+
+  const map = new Map<number, Agg>(
+    buckets.map((b) => [b.getTime(), { revenue: 0, orders: 0 }])
+  );
+  const total: Agg = { revenue: 0, orders: 0 };
+  const st = s.getTime();
+  const et = e.getTime();
+
+  for (const o of orders) {
+    if (o.ts < st || o.ts > et) continue;
+    total.revenue += o.amount;
+    total.orders += 1;
+    const slot = map.get(bucketStart(new Date(o.ts), g).getTime());
+    if (slot) {
+      slot.revenue += o.amount;
+      slot.orders += 1;
+    }
+  }
+
+  return { buckets, values: buckets.map((b) => map.get(b.getTime())!), total };
+}
+
+function useIsDark() {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const el = document.documentElement;
+    const read = () => setDark(el.classList.contains("dark"));
+    read();
+    const mo = new MutationObserver(read);
+    mo.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => mo.disconnect();
+  }, []);
+  return dark;
+}
+
+/* ========================================================================
+   SMALL UI PIECES
+======================================================================== */
+
+function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+  isDisabled,
+  fullWidth = true,
+}: {
+  value: T;
+  options: { key: T; label: string }[];
+  onChange: (k: T) => void;
+  isDisabled?: (k: T) => boolean;
+  fullWidth?: boolean;
+}) {
+  return (
+    <div
+      className={`inline-flex rounded-[10px] border border-gray-200 bg-gray-50 p-1 dark:border-gray-700 dark:bg-gray-800 ${
+        fullWidth ? "w-full sm:w-auto" : ""
+      }`}
+    >
+      {options.map((o) => {
+        const disabled = isDisabled?.(o.key) ?? false;
+        const active = value === o.key;
+        return (
+          <button
+            key={o.key}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange(o.key)}
+            aria-pressed={active}
+            className={`flex-1 rounded-[8px] px-3 py-1.5 text-sm font-medium transition-colors sm:flex-none ${FOCUS} ${
+              active
+                ? "bg-white text-gray-900 dark:bg-gray-700 dark:text-white"
+                : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            } ${disabled ? "cursor-not-allowed opacity-40" : ""}`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="flex min-w-0 flex-col gap-1">
+      <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={`h-10 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm font-medium text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 sm:min-w-[170px] ${FOCUS}`}
+      >
+        {children}
+      </select>
+    </label>
+  );
+}
+
+function Delta({ value }: { value: number | null }) {
+  if (value === null) {
+    return (
+      <span className="text-xs text-gray-400 dark:text-gray-500">
+        No prior data
+      </span>
+    );
+  }
+  const up = value >= 0;
+  const Icon = up ? TrendingUp : TrendingDown;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-xs font-medium ${
+        up
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-rose-600 dark:text-rose-400"
+      }`}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {Math.abs(value).toFixed(1)}%
+      <span className="font-normal text-gray-400 dark:text-gray-500">
+        vs previous
+      </span>
+    </span>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  delta,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+  delta: number | null;
+}) {
+  return (
+    <div className="flex min-w-0 items-center gap-3 rounded-[10px] border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-900">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-gray-100 dark:bg-gray-800">
+        <Icon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
+        <p className="truncate text-lg font-bold text-gray-800 dark:text-white">
+          {value}
+        </p>
+        <Delta value={delta} />
+      </div>
+    </div>
+  );
+}
+
+/* ========================================================================
+   MAIN COMPONENT
+======================================================================== */
 
 export default function DynamicLineChart() {
-  // =========================================================
-  // STATE
-  // =========================================================
+  const dark = useIsDark();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const currentYear = new Date().getFullYear();
+  // filters
+  const [preset, setPreset] = useState<PresetKey>("30d");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("valid");
+  const [methodFilter, setMethodFilter] = useState<string>("all");
+  const [groupBy, setGroupBy] = useState<GroupBy>("auto");
+  const [compare, setCompare] = useState(false);
+  const [activeMetric, setActiveMetric] = useState<MetricType>("both");
+  const [showFilters, setShowFilters] = useState(false);
 
-  const [selectedYear, setSelectedYear] = useState(currentYear);
-  const [selectedMonth, setSelectedMonth] = useState<number | "all">("all");
+  /* ---------- fetch ---------- */
 
-  const [activeMetric, setActiveMetric] =
-    useState<MetricType>("both");
-
-  // =========================================================
-  // FETCH ORDERS
-  // =========================================================
-
-  const fetchOrders = async () => {
+  const load = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
+      if (silent) setRefreshing(true);
+      else setLoading(true);
       setError(null);
 
-      const ordersData = await getAllOrders();
-
-      console.log("Sales Analytics Orders:", ordersData);
-
-      if (Array.isArray(ordersData)) {
-        setOrders(ordersData);
-      } else {
-        setOrders([]);
-      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res: any = await getAllOrders();
+      const list = Array.isArray(res?.orders)
+        ? res.orders
+        : Array.isArray(res)
+          ? res
+          : [];
+      setOrders(list);
     } catch (err) {
       console.error("Error fetching orders:", err);
-
-      setError(
-        "Failed to load order data. Please try again later."
-      );
-
-      setOrders([]);
+      setError("Couldn't load orders. Check your connection and try again.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchOrders();
   }, []);
 
-  // =========================================================
-  // AVAILABLE YEARS
-  // =========================================================
-  //
-  // Current year + previous 5 years.
-  // Isliye agar kisi previous year mein order nahi bhi hua,
-  // tab bhi year dropdown mein year available rahega.
-  //
-  // Example:
-  // 2026
-  // 2025
-  // 2024
-  // 2023
-  // 2022
-  // 2021
-  // =========================================================
-
-  const availableYears = useMemo(() => {
-    const years = new Set<number>();
-
-    // Current year + previous 5 years
-    for (let i = 0; i <= 5; i++) {
-      years.add(currentYear - i);
-    }
-
-    // Orders ke years bhi add karo
-    orders.forEach((order) => {
-      if (!order.createdAt) return;
-
-      const date = new Date(order.createdAt);
-
-      if (!Number.isNaN(date.getTime())) {
-        years.add(date.getFullYear());
-      }
-    });
-
-    return Array.from(years).sort((a, b) => b - a);
-  }, [orders, currentYear]);
-
-  // =========================================================
-  // FIND LATEST YEAR WITH DATA
-  // =========================================================
-
   useEffect(() => {
-    if (orders.length === 0) return;
+    load();
+  }, [load]);
 
-    const orderYears = orders
-      .map((order) => {
-        const date = new Date(order.createdAt);
+  /* ---------- derived data ---------- */
 
-        if (Number.isNaN(date.getTime())) {
-          return null;
-        }
+  const parsed = useMemo<ParsedOrder[]>(
+    () =>
+      orders.flatMap((o) => {
+        const ts = Date.parse(o.createdAt);
+        if (Number.isNaN(ts)) return [];
+        return [
+          {
+            ts,
+            amount: Number(o.totalAmount) || 0,
+            status: normalizeStatus(o.status),
+            method: (o.paymentMethod || "UNKNOWN").toUpperCase(),
+          },
+        ];
+      }),
+    [orders]
+  );
 
-        return date.getFullYear();
-      })
-      .filter((year): year is number => year !== null);
+  const firstOrderTs = useMemo(
+    () => (parsed.length ? Math.min(...parsed.map((o) => o.ts)) : null),
+    [parsed]
+  );
 
-    if (orderYears.length === 0) return;
+  const statusOptions = useMemo(
+    () => Array.from(new Set(parsed.map((o) => o.status))).sort(),
+    [parsed]
+  );
+  const methodOptions = useMemo(
+    () => Array.from(new Set(parsed.map((o) => o.method))).sort(),
+    [parsed]
+  );
 
-    const latestYear = Math.max(...orderYears);
+  const scoped = useMemo(
+    () =>
+      parsed.filter((o) => {
+        if (statusFilter === "valid" && EXCLUDED_STATUSES.has(o.status))
+          return false;
+        if (
+          statusFilter !== "valid" &&
+          statusFilter !== "all" &&
+          o.status !== statusFilter
+        )
+          return false;
+        if (methodFilter !== "all" && o.method !== methodFilter) return false;
+        return true;
+      }),
+    [parsed, statusFilter, methodFilter]
+  );
 
-    setSelectedYear(latestYear);
-  }, [orders]);
+  const { start, end } = useMemo(
+    () => resolveRange(preset, customFrom, customTo),
+    [preset, customFrom, customTo]
+  );
 
-  // =========================================================
-  // FILTERED ORDERS
-  // =========================================================
+  const days = daysBetween(start, end);
 
-  const filteredOrders = useMemo(() => {
-    return orders.filter((order) => {
-      if (!order.createdAt) return false;
+  const granularity: Granularity =
+    days === 1
+      ? "hour"
+      : groupBy === "auto"
+        ? days <= 31
+          ? "day"
+          : days <= 120
+            ? "week"
+            : "month"
+        : groupBy === "day" && days > 92
+          ? "week"
+          : groupBy;
 
-      const orderDate = new Date(order.createdAt);
+  const current = useMemo(
+    () => buildSeries(scoped, start, end, granularity),
+    [scoped, start, end, granularity]
+  );
 
-      if (Number.isNaN(orderDate.getTime())) {
-        return false;
-      }
+  const previous = useMemo(() => {
+    const prevEnd = endOfDay(addDays(start, -1));
+    const prevStart = addDays(startOfDay(start), -days);
+    return buildSeries(scoped, prevStart, prevEnd, granularity);
+  }, [scoped, start, days, granularity]);
 
-      const orderYear = orderDate.getFullYear();
-      const orderMonth = orderDate.getMonth();
+  const aov = (a: Agg) => (a.orders ? a.revenue / a.orders : 0);
 
-      // Year filter
-      if (orderYear !== selectedYear) {
-        return false;
-      }
+  const salesData = current.values.map((a) => a.orders);
+  const revenueData = current.values.map((a) => a.revenue);
+  const prevSalesData = previous.values.map((a) => a.orders);
+  const prevRevenueData = previous.values.map((a) => a.revenue);
 
-      // Month filter
-      if (
-        selectedMonth !== "all" &&
-        orderMonth !== selectedMonth
-      ) {
-        return false;
-      }
+  const hasData = current.total.orders > 0;
+  const showCompare = compare && activeMetric !== "both";
 
-      return true;
+  const peakSource = activeMetric === "sales" ? salesData : revenueData;
+  const peakIndex = peakSource.reduce(
+    (best, v, i) => (v > peakSource[best] ? i : best),
+    0
+  );
+
+  const fullLabels = current.buckets.map((b) => bucketFullLabel(b, granularity));
+
+  /* ---------- navigation ---------- */
+
+  const canGoNext = end.getTime() < endOfDay(new Date()).getTime();
+  const canGoPrev = firstOrderTs !== null && firstOrderTs < start.getTime();
+
+  const navigate = (dir: -1 | 1) => {
+    const next = shiftRange(start, end, preset, dir);
+    setCustomFrom(toInput(next.start));
+    setCustomTo(toInput(next.end));
+    setPreset("custom");
+  };
+
+  const selectPreset = (key: PresetKey) => {
+    if (key === "custom" && !customFrom && !customTo) {
+      setCustomFrom(toInput(start));
+      setCustomTo(toInput(end));
+    }
+    setPreset(key);
+  };
+
+  /* ---------- filter chips / reset ---------- */
+
+  const activeChips: { label: string; clear: () => void }[] = [];
+  if (statusFilter !== "valid")
+    activeChips.push({
+      label: `Status: ${statusFilter === "all" ? "All orders" : prettify(statusFilter)}`,
+      clear: () => setStatusFilter("valid"),
     });
-  }, [orders, selectedYear, selectedMonth]);
+  if (methodFilter !== "all")
+    activeChips.push({
+      label: `Payment: ${prettify(methodFilter)}`,
+      clear: () => setMethodFilter("all"),
+    });
+  if (groupBy !== "auto")
+    activeChips.push({
+      label: `Group by: ${prettify(groupBy)}`,
+      clear: () => setGroupBy("auto"),
+    });
 
-  // =========================================================
-  // CHART DATA
-  // =========================================================
-
-  const chartData = useMemo(() => {
-    let categories: string[] = [];
-    let salesData: number[] = [];
-    let revenueData: number[] = [];
-
-    // =======================================================
-    // ALL MONTHS
-    // =======================================================
-
-    if (selectedMonth === "all") {
-      categories = MONTHS;
-
-      salesData = Array(12).fill(0);
-      revenueData = Array(12).fill(0);
-
-      filteredOrders.forEach((order) => {
-        const date = new Date(order.createdAt);
-
-        if (Number.isNaN(date.getTime())) {
-          return;
-        }
-
-        const monthIndex = date.getMonth();
-
-        const amount = Number(order.totalAmount || 0);
-
-        // IMPORTANT:
-        // paymentStatus check intentionally removed.
-        //
-        // Har order ko Sales mein count kiya ja raha hai.
-        // Har order ka totalAmount Revenue mein add kiya ja raha hai.
-
-        salesData[monthIndex] += 1;
-
-        if (!Number.isNaN(amount)) {
-          revenueData[monthIndex] += amount;
-        }
-      });
-    }
-
-    // =======================================================
-    // SPECIFIC MONTH
-    // =======================================================
-
-    else {
-      categories = [FULL_MONTHS[selectedMonth]];
-
-      salesData = [filteredOrders.length];
-
-      const revenue = filteredOrders.reduce((sum, order) => {
-        const amount = Number(order.totalAmount || 0);
-
-        if (Number.isNaN(amount)) {
-          return sum;
-        }
-
-        return sum + amount;
-      }, 0);
-
-      revenueData = [revenue];
-    }
-
-    return {
-      categories,
-      salesData,
-      revenueData,
-    };
-  }, [filteredOrders, selectedMonth]);
-
-  // =========================================================
-  // SUMMARY
-  // =========================================================
-
-  const totalSales = useMemo(() => {
-    return chartData.salesData.reduce(
-      (sum, value) => sum + value,
-      0
-    );
-  }, [chartData.salesData]);
-
-  const totalRevenue = useMemo(() => {
-    return chartData.revenueData.reduce(
-      (sum, value) => sum + value,
-      0
-    );
-  }, [chartData.revenueData]);
-
-  const avgOrderValue =
-    totalSales > 0 ? totalRevenue / totalSales : 0;
-
-  // =========================================================
-  // FORMAT CURRENCY
-  // =========================================================
-
-  const formatCurrency = (value: number) => {
-    return `₹${Math.round(value).toLocaleString("en-IN")}`;
+  const resetAll = () => {
+    setPreset("30d");
+    setStatusFilter("valid");
+    setMethodFilter("all");
+    setGroupBy("auto");
+    setCompare(false);
   };
 
-  const formatAxisCurrency = (value: number) => {
-    if (value >= 100000) {
-      return `₹${(value / 100000).toFixed(1)}L`;
-    }
+  /* ---------- export ---------- */
 
-    if (value >= 1000) {
-      return `₹${(value / 1000).toFixed(1)}K`;
-    }
-
-    return `₹${Math.round(value)}`;
-  };
-
-  // =========================================================
-  // SERIES
-  // =========================================================
-
-  const series = useMemo(() => {
-    if (activeMetric === "sales") {
-      return [
-        {
-          name: "Sales",
-          data: chartData.salesData,
-        },
-      ];
-    }
-
-    if (activeMetric === "revenue") {
-      return [
-        {
-          name: "Revenue",
-          data: chartData.revenueData,
-        },
-      ];
-    }
-
-    return [
-      {
-        name: "Sales",
-        data: chartData.salesData,
-      },
-      {
-        name: "Revenue",
-        data: chartData.revenueData,
-      },
+  const exportCsv = () => {
+    const rows: (string | number)[][] = [
+      ["Period", "Orders", "Revenue (INR)", "Avg order value (INR)"],
+      ...current.buckets.map((b, i) => {
+        const a = current.values[i];
+        return [
+          bucketFullLabel(b, granularity),
+          a.orders,
+          a.revenue.toFixed(2),
+          a.orders ? (a.revenue / a.orders).toFixed(2) : "0.00",
+        ];
+      }),
     ];
-  }, [activeMetric, chartData]);
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `sales-${toInput(start)}_to_${toInput(end)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-  // =========================================================
-  // CHART OPTIONS
-  // =========================================================
+  /* ---------- chart ---------- */
 
-  const options: ApexOptions = useMemo(() => {
-    const isBoth = activeMetric === "both";
+  const axisColor = dark ? "#9CA3AF" : "#64748B";
+  const isBoth = activeMetric === "both";
+  const pointCount = current.buckets.length;
 
-    const yAxis: ApexOptions["yaxis"] = isBoth
-      ? [
-          {
-            seriesName: "Sales",
-            min: 0,
+  const fmtValue = (v: number, seriesIndex: number) => {
+    if (isBoth) return seriesIndex === 0 ? `${Math.round(v)} sales` : inr(v);
+    return activeMetric === "sales" ? `${Math.round(v)} sales` : inr(v);
+  };
 
-            title: {
-              text: "Sales",
-              style: {
-                color: "#465FFF",
-                fontSize: "12px",
-                fontWeight: 500,
-              },
-            },
-
-            labels: {
-              style: {
-                colors: "#64748B",
-                fontSize: "11px",
-              },
-
-              formatter: (value: number) => {
-                return Math.round(value).toString();
-              },
-            },
-          },
-
-          {
-            seriesName: "Revenue",
-            opposite: true,
-            min: 0,
-
-            title: {
-              text: "Revenue",
-              style: {
-                color: "#10B981",
-                fontSize: "12px",
-                fontWeight: 500,
-              },
-            },
-
-            labels: {
-              style: {
-                colors: "#64748B",
-                fontSize: "11px",
-              },
-
-              formatter: (value: number) => {
-                return formatAxisCurrency(value);
-              },
-            },
-          },
-        ]
-      : {
+  const yaxis: ApexOptions["yaxis"] = isBoth
+    ? [
+        {
+          seriesName: "Sales",
           min: 0,
-
           labels: {
-            style: {
-              colors: ["#64748B"],
-              fontSize: "11px",
-              fontFamily: "Outfit, sans-serif",
-            },
-
-            formatter: (value: number) => {
-              if (activeMetric === "revenue") {
-                return formatAxisCurrency(value);
-              }
-
-              return Math.round(value).toString();
-            },
-          },
-        };
-
-    return {
-      chart: {
-        type: "line",
-
-        height: 350,
-
-        fontFamily: "Outfit, sans-serif",
-
-        toolbar: {
-          show: false,
-        },
-
-        zoom: {
-          enabled: false,
-        },
-
-        animations: {
-          enabled: true,
-          speed: 500,
-        },
-      },
-
-      colors:
-        activeMetric === "sales"
-          ? ["#465FFF"]
-          : activeMetric === "revenue"
-          ? ["#10B981"]
-          : ["#465FFF", "#10B981"],
-
-      stroke: {
-        curve: "smooth",
-
-        width:
-          activeMetric === "both"
-            ? [3, 3]
-            : [3],
-      },
-
-      fill: {
-        type: "gradient",
-
-        gradient: {
-          shade: "light",
-
-          type: "vertical",
-
-          shadeIntensity: 0.2,
-
-          inverseColors: false,
-
-          opacityFrom: 0.35,
-
-          opacityTo: 0.05,
-
-          stops: [0, 100],
-        },
-      },
-
-      markers: {
-        size: 0,
-
-        strokeWidth: 2,
-
-        strokeColors: "#ffffff",
-
-        hover: {
-          size: 6,
-        },
-      },
-
-      dataLabels: {
-        enabled: false,
-      },
-
-      legend: {
-        show: activeMetric === "both",
-
-        position: "top",
-
-        horizontalAlign: "right",
-
-        fontFamily: "Outfit, sans-serif",
-
-        fontSize: "12px",
-
-        fontWeight: 500,
-
-        markers: {
-          size: 10,
-          shape: "circle",
-        },
-      },
-
-      grid: {
-        borderColor: "#E5E7EB",
-
-        strokeDashArray: 5,
-
-        xaxis: {
-          lines: {
-            show: false,
+            style: { colors: [SALES_COLOR], fontSize: "11px" },
+            formatter: (v: number) => `${Math.round(v)}`,
           },
         },
-
-        yaxis: {
-          lines: {
-            show: true,
+        {
+          seriesName: "Revenue",
+          opposite: true,
+          min: 0,
+          labels: {
+            style: { colors: [REVENUE_COLOR], fontSize: "11px" },
+            formatter: (v: number) => inrCompact(v),
           },
         },
-
-        padding: {
-          top: 0,
-          right: 10,
-          bottom: 0,
-          left: 10,
-        },
-      },
-
-      xaxis: {
-        type: "category",
-
-        categories: chartData.categories,
-
-        axisBorder: {
-          show: false,
-        },
-
-        axisTicks: {
-          show: false,
-        },
-
+      ]
+    : {
+        min: 0,
         labels: {
-          style: {
-            colors: "#64748B",
-
-            fontSize: "11px",
-
-            fontFamily: "Outfit, sans-serif",
-
-            fontWeight: 500,
-          },
+          style: { colors: [axisColor], fontSize: "11px" },
+          formatter: (v: number) =>
+            activeMetric === "sales" ? `${Math.round(v)}` : inrCompact(v),
         },
+      };
+
+  const options: ApexOptions = {
+    chart: {
+      type: "line",
+      fontFamily: "Outfit, sans-serif",
+      background: "transparent",
+      toolbar: { show: false },
+      zoom: { enabled: false },
+      animations: { enabled: true, speed: 400 },
+    },
+    theme: { mode: dark ? "dark" : "light" },
+    colors: isBoth
+      ? [SALES_COLOR, REVENUE_COLOR]
+      : activeMetric === "sales"
+        ? [SALES_COLOR, PREVIOUS_COLOR]
+        : [REVENUE_COLOR, PREVIOUS_COLOR],
+    stroke: {
+      curve: "smooth",
+      width: isBoth ? [3, 3] : showCompare ? [3, 2] : [3],
+      dashArray: showCompare ? [0, 5] : 0,
+    },
+    fill: { type: "solid", opacity: 1 },
+    markers: {
+      size: pointCount <= 31 ? 3 : 0,
+      strokeWidth: 0,
+      hover: { size: 6 },
+    },
+    dataLabels: { enabled: false },
+    legend: {
+      show: isBoth || showCompare,
+      position: "top",
+      horizontalAlign: "right",
+      fontSize: "12px",
+      labels: { colors: axisColor },
+      markers: { size: 6, shape: "circle" },
+    },
+    grid: {
+      borderColor: dark ? "rgba(156,163,175,0.15)" : "#E5E7EB",
+      strokeDashArray: 5,
+      xaxis: { lines: { show: false } },
+      yaxis: { lines: { show: true } },
+      padding: { top: 0, right: 8, bottom: 0, left: 8 },
+    },
+    xaxis: {
+      type: "category",
+      categories: current.buckets.map((b) => bucketLabel(b, granularity)),
+      axisBorder: { show: false },
+      axisTicks: { show: false },
+      tooltip: { enabled: false },
+      tickAmount: pointCount > 12 ? 8 : undefined,
+      labels: {
+        rotate: 0,
+        hideOverlappingLabels: true,
+        style: { colors: axisColor, fontSize: "11px", fontWeight: 500 },
       },
-
-      yaxis: yAxis,
-
-      tooltip: {
-        enabled: true,
-
-        shared: isBoth,
-
-        intersect: false,
-
-        theme: "light",
-
-       x: {
-  formatter: (value: number) => {
-    return String(value);
-  },
-},
-
-        y: {
-          formatter: (
-            value: number,
-            { seriesIndex }: { seriesIndex: number }
-          ) => {
-            if (activeMetric === "both") {
-              if (seriesIndex === 0) {
-                return `${Math.round(value)} sales`;
-              }
-
-              return formatCurrency(value);
-            }
-
-            if (activeMetric === "sales") {
-              return `${Math.round(value)} sales`;
-            }
-
-            return formatCurrency(value);
-          },
-        },
-
-        style: {
-          fontSize: "12px",
-          fontFamily: "Outfit, sans-serif",
-        },
+    },
+    yaxis,
+    tooltip: {
+      shared: true,
+      intersect: false,
+      theme: dark ? "dark" : "light",
+      x: {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        formatter: (_v: number, opts?: any) =>
+          fullLabels[opts?.dataPointIndex ?? 0] ?? "",
       },
-
-      noData: {
-        text: "No data available",
-
-        align: "center",
-
-        verticalAlign: "middle",
-
-        style: {
-          color: "#64748B",
-
-          fontSize: "14px",
-
-          fontFamily: "Outfit, sans-serif",
-        },
+      y: {
+        formatter: (
+          v: number,
+          { seriesIndex }: { seriesIndex: number }
+        ) =>
+          v === null || v === undefined ? "–" : fmtValue(v, seriesIndex),
       },
-    };
-  }, [activeMetric, chartData.categories]);
-
-  // =========================================================
-  // NAVIGATION
-  // =========================================================
-
-  const navigateYear = (direction: "prev" | "next") => {
-    const currentIndex = availableYears.indexOf(selectedYear);
-
-    if (currentIndex === -1) return;
-
-    if (direction === "prev") {
-      const nextIndex = currentIndex + 1;
-
-      if (nextIndex < availableYears.length) {
-        setSelectedYear(availableYears[nextIndex]);
-      }
-    } else {
-      const nextIndex = currentIndex - 1;
-
-      if (nextIndex >= 0) {
-        setSelectedYear(availableYears[nextIndex]);
-      }
-    }
+    },
   };
 
-  const navigateMonth = (direction: "prev" | "next") => {
-    if (selectedMonth === "all") {
-      return;
-    }
+  const series = isBoth
+    ? [
+        { name: "Sales", data: salesData },
+        { name: "Revenue", data: revenueData },
+      ]
+    : [
+        {
+          name: activeMetric === "sales" ? "Sales" : "Revenue",
+          data: activeMetric === "sales" ? salesData : revenueData,
+        },
+        ...(showCompare
+          ? [
+              {
+                name: "Previous period",
+                data: (activeMetric === "sales"
+                  ? prevSalesData
+                  : prevRevenueData
+                ).length
+                  ? current.buckets.map(
+                      (_, i) =>
+                        (activeMetric === "sales"
+                          ? prevSalesData
+                          : prevRevenueData)[i] ?? null
+                    )
+                  : [],
+              },
+            ]
+          : []),
+      ];
 
-    let newMonth = selectedMonth;
-
-    if (direction === "prev") {
-      newMonth = selectedMonth - 1;
-
-      if (newMonth < 0) {
-        if (availableYears.includes(selectedYear - 1)) {
-          setSelectedYear(selectedYear - 1);
-          newMonth = 11;
-        } else {
-          newMonth = 0;
-        }
-      }
-    } else {
-      newMonth = selectedMonth + 1;
-
-      if (newMonth > 11) {
-        if (availableYears.includes(selectedYear + 1)) {
-          setSelectedYear(selectedYear + 1);
-          newMonth = 0;
-        } else {
-          newMonth = 11;
-        }
-      }
-    }
-
-    setSelectedMonth(newMonth);
-  };
-
-  // =========================================================
-  // PERIOD TITLE
-  // =========================================================
-
-  const periodTitle =
-    selectedMonth === "all"
-      ? selectedYear.toString()
-      : `${FULL_MONTHS[selectedMonth]} ${selectedYear}`;
-
-  // =========================================================
-  // LOADING UI
-  // =========================================================
+  /* ====================================================================
+     LOADING / ERROR
+  ==================================================================== */
 
   if (loading) {
     return (
-      <div className="w-full overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <div className="border-b border-gray-100 px-6 pb-5 pt-6 dark:border-gray-800">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="h-6 w-40 animate-pulse rounded bg-gray-200 dark:bg-gray-800" />
-
-              <div className="mt-2 h-4 w-56 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
-            </div>
-
-            <div className="flex gap-3">
-              <div className="h-10 w-28 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />
-
-              <div className="h-10 w-28 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />
-
-              <div className="h-10 w-28 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800" />
-            </div>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                className="h-24 animate-pulse rounded-lg bg-gray-100 dark:bg-gray-800"
-              />
-            ))}
+      <div className={`${CARD} w-full min-w-0 p-4 sm:p-6`}>
+        <div className="mb-5 flex items-center gap-3">
+          <div className="h-10 w-10 animate-pulse rounded-[10px] bg-gray-100 dark:bg-gray-800" />
+          <div className="space-y-2">
+            <div className="h-5 w-40 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
+            <div className="h-3 w-28 animate-pulse rounded bg-gray-100 dark:bg-gray-800" />
           </div>
         </div>
-
-        <div className="flex h-[400px] items-center justify-center">
-          <div className="text-center">
-            <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-gray-200 border-t-blue-600" />
-
-            <p className="mt-3 text-sm text-gray-500">
-              Loading sales data...
-            </p>
-          </div>
+        <div className="mb-5 grid gap-3 sm:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-[88px] animate-pulse rounded-[10px] bg-gray-100 dark:bg-gray-800"
+            />
+          ))}
         </div>
+        <div className="h-64 animate-pulse rounded-[10px] bg-gray-100 dark:bg-gray-800" />
       </div>
     );
   }
-
-  // =========================================================
-  // ERROR UI
-  // =========================================================
 
   if (error) {
     return (
-      <div className="w-full rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
-        <div className="flex min-h-[350px] flex-col items-center justify-center text-center">
-          <div className="mb-4 text-red-500">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="mx-auto h-14 w-14"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={1.5}
-                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
-              />
-            </svg>
-          </div>
-
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Unable to load data
-          </h3>
-
-          <p className="mt-2 max-w-md text-sm text-gray-500">
-            {error}
-          </p>
-
-          <button
-            type="button"
-            onClick={fetchOrders}
-            className="mt-5 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-700"
-          >
-            Try Again
-          </button>
+      <div
+        className={`${CARD} flex w-full min-w-0 flex-col items-center gap-3 p-8 text-center`}
+      >
+        <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-gray-100 dark:bg-gray-800">
+          <LineChart className="h-5 w-5 text-gray-500" />
         </div>
+        <p className="text-sm text-gray-600 dark:text-gray-300">{error}</p>
+        <button
+          type="button"
+          onClick={() => load()}
+          className={`h-10 rounded-[10px] bg-gray-900 px-4 text-sm font-medium text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 ${FOCUS}`}
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
-  // =========================================================
-  // MAIN UI
-  // =========================================================
+  /* ====================================================================
+     MAIN UI
+  ==================================================================== */
 
   return (
-    <div className="w-full overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
-      {/* =====================================================
-          HEADER
-      ====================================================== */}
-
-      <div className="border-b border-gray-100 px-6 pb-5 pt-6 dark:border-gray-800">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-          {/* TITLE */}
-
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Sales Analytics
+    <div className={`${CARD} w-full min-w-0 p-4 sm:p-6`}>
+      {/* HEADER */}
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] bg-gray-100 dark:bg-gray-800">
+            <LineChart className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+          </div>
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-semibold text-gray-800 dark:text-white/90 sm:text-lg">
+              Sales analytics
             </h2>
-
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Tracking your business performance
+            <p className="truncate text-xs text-gray-500 dark:text-gray-400">
+              Orders and revenue trend
             </p>
-          </div>
-
-          {/* CONTROLS */}
-
-          <div className="flex flex-wrap items-center gap-3">
-            {/* METRIC */}
-
-            <div className="flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
-              <button
-                type="button"
-                onClick={() => setActiveMetric("sales")}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-                  activeMetric === "sales"
-                    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                }`}
-              >
-                Sales
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveMetric("revenue")}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-                  activeMetric === "revenue"
-                    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                }`}
-              >
-                Revenue
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setActiveMetric("both")}
-                className={`rounded-md px-3 py-2 text-sm font-medium transition ${
-                  activeMetric === "both"
-                    ? "bg-white text-gray-900 shadow-sm dark:bg-gray-700 dark:text-white"
-                    : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                }`}
-              >
-                Both
-              </button>
-            </div>
-
-            {/* YEAR */}
-
-            <select
-              value={selectedYear}
-              onChange={(e) =>
-                setSelectedYear(Number(e.target.value))
-              }
-              className="h-10 min-w-[120px] rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-            >
-              {availableYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-
-            {/* MONTH */}
-
-            <select
-              value={selectedMonth}
-              onChange={(e) => {
-                const value = e.target.value;
-
-                if (value === "all") {
-                  setSelectedMonth("all");
-                } else {
-                  setSelectedMonth(Number(value));
-                }
-              }}
-              className="h-10 min-w-[140px] rounded-lg border border-gray-300 bg-white px-3 text-sm font-medium text-gray-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
-            >
-              <option value="all">
-                All Months
-              </option>
-
-              {FULL_MONTHS.map((month, index) => (
-                <option key={month} value={index}>
-                  {month}
-                </option>
-              ))}
-            </select>
           </div>
         </div>
 
-        {/* ===================================================
-            SUMMARY
-        ==================================================== */}
-
-        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-          {/* TOTAL SALES */}
-
-          <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 dark:border-blue-900/30 dark:bg-blue-900/10">
-            <div className="flex items-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-blue-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-                  />
-                </svg>
-              </div>
-
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Sales
-                </p>
-
-                <p className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {totalSales.toLocaleString("en-IN")}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* TOTAL REVENUE */}
-
-          <div className="rounded-lg border border-green-100 bg-green-50 p-4 dark:border-green-900/30 dark:bg-green-900/10">
-            <div className="flex items-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100 dark:bg-green-900/30">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-green-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-              </div>
-
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Total Revenue
-                </p>
-
-                <p className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {formatCurrency(totalRevenue)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* AVG ORDER VALUE */}
-
-          <div className="rounded-lg border border-purple-100 bg-purple-50 p-4 dark:border-purple-900/30 dark:bg-purple-900/10">
-            <div className="flex items-center">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-900/30">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 text-purple-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                  />
-                </svg>
-              </div>
-
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                  Avg. Order Value
-                </p>
-
-                <p className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {formatCurrency(avgOrderValue)}
-                </p>
-              </div>
-            </div>
-          </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => load(true)}
+            disabled={refreshing}
+            aria-label="Refresh data"
+            className={ICON_BTN}
+          >
+            <RefreshCw
+              className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+          </button>
+          <button
+            type="button"
+            onClick={exportCsv}
+            disabled={!hasData}
+            aria-label="Export CSV"
+            className={`flex h-10 items-center justify-center gap-2 rounded-[10px] border border-gray-200 px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 ${FOCUS}`}
+          >
+            <Download className="h-4 w-4" />
+            <span className="hidden sm:inline">Export CSV</span>
+          </button>
         </div>
       </div>
 
-      {/* =====================================================
-          CHART HEADER
-      ====================================================== */}
-
-      <div className="px-6 pb-2 pt-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-              {periodTitle}
-            </h3>
-
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              {selectedMonth === "all"
-                ? "Monthly performance"
-                : "Selected month performance"}
-            </p>
-          </div>
-
-          {/* NAVIGATION */}
-
-          <div className="flex items-center gap-2">
+      {/* DATE PRESETS */}
+      <div className="-mx-4 mb-3 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+        <div className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
+          {PRESETS.map((p) => (
             <button
+              key={p.key}
               type="button"
-              onClick={() => {
-                if (selectedMonth === "all") {
-                  navigateYear("prev");
-                } else {
-                  navigateMonth("prev");
-                }
-              }}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              aria-label="Previous"
+              onClick={() => selectPreset(p.key)}
+              aria-pressed={preset === p.key}
+              className={`h-9 whitespace-nowrap rounded-[10px] border px-3 text-sm font-medium transition-colors ${FOCUS} ${
+                preset === p.key
+                  ? "border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900"
+                  : "border-gray-200 text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
+              }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              {p.label}
             </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (selectedMonth === "all") {
-                  navigateYear("next");
-                } else {
-                  navigateMonth("next");
-                }
-              }}
-              className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-              aria-label="Next"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* =====================================================
-          CHART
-      ====================================================== */}
+      {/* CUSTOM RANGE */}
+      {preset === "custom" && (
+        <div className="mb-3 grid grid-cols-2 gap-3 sm:flex sm:items-end">
+          {(
+            [
+              ["From", customFrom, setCustomFrom],
+              ["To", customTo, setCustomTo],
+            ] as const
+          ).map(([label, val, set]) => (
+            <label key={label} className="flex min-w-0 flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                {label}
+              </span>
+              <input
+                type="date"
+                value={val}
+                max={toInput(new Date())}
+                onChange={(e) => set(e.target.value)}
+                className={`h-10 w-full rounded-[10px] border border-gray-200 bg-white px-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 ${FOCUS}`}
+              />
+            </label>
+          ))}
+        </div>
+      )}
 
-      <div className="px-6 pb-4 pt-2">
-        <div className="w-full overflow-x-auto">
-          <div className="min-w-[800px] xl:min-w-full">
+      {/* FILTER TOGGLE (mobile) */}
+      <button
+        type="button"
+        onClick={() => setShowFilters((v) => !v)}
+        aria-expanded={showFilters}
+        className={`mb-3 flex h-10 w-full items-center justify-center gap-2 rounded-[10px] border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 sm:hidden ${FOCUS}`}
+      >
+        <SlidersHorizontal className="h-4 w-4" />
+        Filters
+        {activeChips.length > 0 && (
+          <span className="rounded-full bg-[#465FFF] px-1.5 text-xs text-white">
+            {activeChips.length}
+          </span>
+        )}
+      </button>
+
+      {/* FILTERS */}
+      <div
+        className={`${
+          showFilters ? "grid" : "hidden"
+        } mb-3 grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-end`}
+      >
+        <FilterSelect
+          label="Order status"
+          value={statusFilter}
+          onChange={setStatusFilter}
+        >
+          <option value="valid">Valid orders</option>
+          <option value="all">All orders</option>
+          {statusOptions.map((s) => (
+            <option key={s} value={s}>
+              {prettify(s)}
+            </option>
+          ))}
+        </FilterSelect>
+
+        <FilterSelect
+          label="Payment method"
+          value={methodFilter}
+          onChange={setMethodFilter}
+        >
+          <option value="all">All methods</option>
+          {methodOptions.map((m) => (
+            <option key={m} value={m}>
+              {prettify(m)}
+            </option>
+          ))}
+        </FilterSelect>
+
+        <div className="col-span-2 flex flex-col gap-1 sm:col-span-1">
+          <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+            Group by
+          </span>
+          <Segmented
+            value={days === 1 ? "auto" : groupBy}
+            options={GROUP_OPTIONS}
+            onChange={setGroupBy}
+            isDisabled={(k) => days === 1 || (k === "day" && days > 92)}
+          />
+        </div>
+
+        <label
+          className={`col-span-2 flex h-10 items-center gap-2 text-sm text-gray-700 dark:text-gray-200 sm:col-span-1 ${
+            isBoth ? "cursor-not-allowed opacity-50" : "cursor-pointer"
+          }`}
+          title={
+            isBoth
+              ? "Choose Sales or Revenue to compare with the previous period"
+              : undefined
+          }
+        >
+          <input
+            type="checkbox"
+            checked={compare}
+            disabled={isBoth}
+            onChange={(e) => setCompare(e.target.checked)}
+            className="h-4 w-4 rounded border-gray-300 accent-[#465FFF]"
+          />
+          Compare with previous period
+        </label>
+      </div>
+
+      {/* ACTIVE FILTER CHIPS */}
+      {activeChips.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          {activeChips.map((c) => (
+            <span
+              key={c.label}
+              className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-gray-50 py-1 pl-3 pr-1.5 text-xs text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+            >
+              {c.label}
+              <button
+                type="button"
+                onClick={c.clear}
+                aria-label={`Clear ${c.label}`}
+                className={`rounded-full p-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 ${FOCUS}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          ))}
+          <button
+            type="button"
+            onClick={resetAll}
+            className={`rounded px-1 text-xs font-medium text-[#465FFF] hover:underline ${FOCUS}`}
+          >
+            Reset all
+          </button>
+        </div>
+      )}
+
+      {/* STAT CARDS */}
+      <div className="mb-5 mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatCard
+          icon={ShoppingBag}
+          label="Total sales"
+          value={current.total.orders.toLocaleString("en-IN")}
+          delta={calcDelta(current.total.orders, previous.total.orders)}
+        />
+        <StatCard
+          icon={IndianRupee}
+          label="Total revenue"
+          value={inr(current.total.revenue)}
+          delta={calcDelta(current.total.revenue, previous.total.revenue)}
+        />
+        <StatCard
+          icon={Receipt}
+          label="Avg. order value"
+          value={inr(aov(current.total))}
+          delta={calcDelta(aov(current.total), aov(previous.total))}
+        />
+      </div>
+
+      {/* CHART TOOLBAR: period navigation + metric */}
+      <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            disabled={!canGoPrev}
+            aria-label="Previous period"
+            className={ICON_BTN}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div className="min-w-0 flex-1 text-center sm:min-w-[190px] sm:text-left">
+            <p className="truncate text-sm font-semibold text-gray-800 dark:text-white">
+              {formatRange(start, end)}
+            </p>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              {days === 1 ? "Hourly" : `${days} days`} · by{" "}
+              {granularity === "hour" ? "hour" : granularity}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(1)}
+            disabled={!canGoNext}
+            aria-label="Next period"
+            className={ICON_BTN}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
+        <Segmented
+          value={activeMetric}
+          options={METRIC_OPTIONS}
+          onChange={setActiveMetric}
+        />
+      </div>
+
+      {/* CHART */}
+      {hasData ? (
+        <>
+          <div className="h-[260px] w-full min-w-0 sm:h-[320px] lg:h-[360px]">
             <ReactApexChart
               options={options}
               series={series}
               type="line"
-              height={350}
+              height="100%"
+              width="100%"
             />
           </div>
+
+          {peakSource[peakIndex] > 0 && (
+            <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+              Best {granularity}:{" "}
+              <span className="font-medium text-gray-700 dark:text-gray-200">
+                {fullLabels[peakIndex]}
+              </span>{" "}
+              with{" "}
+              {activeMetric === "sales"
+                ? `${salesData[peakIndex]} sales`
+                : inr(revenueData[peakIndex])}
+            </p>
+          )}
+        </>
+      ) : (
+        <div className="flex h-64 flex-col items-center justify-center gap-3 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-gray-100 dark:bg-gray-800">
+            <TrendingUp className="h-5 w-5 text-gray-400" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              No orders in this period
+            </p>
+            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+              Try a longer date range or clear the filters.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPreset("90d")}
+              className={`h-9 rounded-[10px] border border-gray-200 px-3 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800 ${FOCUS}`}
+            >
+              Show 90 days
+            </button>
+            <button
+              type="button"
+              onClick={resetAll}
+              className={`h-9 rounded-[10px] bg-gray-900 px-3 text-sm font-medium text-white hover:bg-gray-800 dark:bg-white dark:text-gray-900 dark:hover:bg-gray-200 ${FOCUS}`}
+            >
+              Reset filters
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* =====================================================
-          FOOTER
-      ====================================================== */}
-
-      <div className="border-t border-gray-100 bg-gray-50 px-6 py-4 dark:border-gray-800 dark:bg-gray-800/40">
-        <div className="flex flex-col gap-2 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between dark:text-gray-400">
-          <span>
-            Showing{" "}
-            {selectedMonth === "all"
-              ? `${selectedYear} monthly`
-              : `${FULL_MONTHS[selectedMonth]} ${selectedYear}`}{" "}
-            data
-          </span>
-
-          <span>
-            {totalSales.toLocaleString("en-IN")} orders •{" "}
-            {formatCurrency(totalRevenue)} revenue
-          </span>
-        </div>
+      {/* FOOTER */}
+      <div className="mt-4 flex flex-col gap-1 border-t border-gray-100 pt-3 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400 sm:flex-row sm:items-center sm:justify-between">
+        <span>
+          {statusFilter === "valid"
+            ? "Valid orders exclude cancelled and unpaid orders."
+            : statusFilter === "all"
+              ? "Includes every order, even cancelled and unpaid."
+              : `Only ${prettify(statusFilter).toLowerCase()} orders.`}
+        </span>
+        <span>
+          {current.total.orders.toLocaleString("en-IN")} orders ·{" "}
+          {inr(current.total.revenue)} revenue
+        </span>
       </div>
     </div>
   );
