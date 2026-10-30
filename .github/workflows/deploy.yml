@@ -1,400 +1,400 @@
-# name: Deploy Admin Next.js
+name: Deploy Admin Next.js
 
-# on:
-#   push:
-#     branches:
-#       - next-faizy
+on:
+  push:
+    branches:
+      - next-faizy
 
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-#     steps:
-#       - name: Deploy to Server via SSH
-#         uses: appleboy/ssh-action@v0.1.10
+    steps:
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v0.1.10
 
-#         with:
-#           host: ${{ secrets.HOST }}
-#           username: ${{ secrets.USERNAME }}
-#           password: ${{ secrets.PASSWORD }}
-#           # Better: use an SSH key instead of a password
-#           # key: ${{ secrets.SSH_KEY }}
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          # Better: use an SSH key instead of a password
+          # key: ${{ secrets.SSH_KEY }}
 
-#           command_timeout: 20m
+          command_timeout: 20m
 
-#           script: |
-#             set -e
+          script: |
+            set -e
 
-#             echo "========================================="
-#             echo "🚀 START NEXT.JS ADMIN DEPLOY"
-#             echo "========================================="
+            echo "========================================="
+            echo "🚀 START NEXT.JS ADMIN DEPLOY"
+            echo "========================================="
 
-#             # ---------- NODE ----------
-#             export NODE_HOME="/root/.nvm/versions/node/v22.23.2"
-#             export PATH="$NODE_HOME/bin:$PATH"
+            # ---------- NODE ----------
+            export NODE_HOME="/root/.nvm/versions/node/v22.23.2"
+            export PATH="$NODE_HOME/bin:$PATH"
 
-#             node -v
-#             npm -v
+            node -v
+            npm -v
 
-#             # ---------- PROJECT DIRECTORY ----------
-#             APP_DIR="/var/www/magbeeadmin.magaritatech.com"
+            # ---------- PROJECT DIRECTORY ----------
+            APP_DIR="/var/www/magbeeadmin.magaritatech.com"
 
-#             if [ ! -d "$APP_DIR" ]; then
-#               echo "❌ Application directory not found: $APP_DIR"
-#               exit 1
-#             fi
-
-#             cd "$APP_DIR"
-#             pwd
-
-#             # ---------- GIT ----------
-#             echo "📥 Pull latest code"
-
-#             git config --global --add safe.directory "$APP_DIR"
-#             git fetch origin
-#             git reset --hard origin/next-faizy
-
-#             echo "📌 Current commit:"
-#             git log -1 --oneline
-
-#             # ---------- ENV CHECK ----------
-#             if [ ! -f ".env" ]; then
-#               echo "❌ ERROR: .env file not found"
-#               exit 1
-#             fi
-
-#             echo "✅ .env exists"
-
-#             # ---------- STOP APP BEFORE CLEANING ----------
-#             echo "⏹ Stopping app before cleanup"
-#             pm2 stop admin-next || true
-
-#             echo "🧹 Cleaning old build"
-#             rm -rf .next node_modules
-
-#             # ---------- INSTALL ----------
-#             echo "📦 Installing dependencies"
-
-#             if [ -f "package-lock.json" ]; then
-#               npm ci
-#             else
-#               npm install
-#             fi
-
-#             echo "✅ Dependencies installed"
-
-#             # ---------- BUILD ----------
-#             echo "🏗 Building Next.js app"
-
-#             NODE_OPTIONS="--max-old-space-size=4096" npm run build
-
-#             echo "✅ Next.js build completed"
-
-#             # ---------- VERIFY BUILD ----------
-#             if [ ! -d ".next" ]; then
-#               echo "❌ .next directory not found"
-#               exit 1
-#             fi
-
-#             if [ ! -f ".next/BUILD_ID" ]; then
-#               echo "❌ .next/BUILD_ID not found"
-#               exit 1
-#             fi
-
-#             echo "✅ Next.js build verified"
-
-#             # ---------- PM2 (fresh start) ----------
-#             echo "🔄 Starting PM2 process"
-
-#             pm2 delete admin-next || true
-
-#             pm2 start npm \
-#               --name "admin-next" \
-#               --cwd "$APP_DIR" \
-#               -- start
-
-#             pm2 save --force
-
-#             echo "📋 PM2 STATUS"
-#             pm2 status
-
-#             # ---------- HEALTH CHECK (no curl, uses node fetch) ----------
-#             echo "🔍 Checking Next.js application"
-
-#             for i in $(seq 1 20); do
-#               CODE=$(node -e "fetch('http://127.0.0.1:3000/',{redirect:'manual'}).then(r=>console.log(r.status)).catch(()=>console.log(0))")
-#               echo "Attempt $i: HTTP $CODE"
-
-#               if [[ "$CODE" =~ ^(200|301|302|307|308)$ ]]; then
-#                 echo "✅ Next.js application is responding"
-#                 break
-#               fi
-
-#               if [ "$i" -eq 20 ]; then
-#                 echo "❌ Health check failed"
-#                 pm2 status
-#                 pm2 logs admin-next --lines 50 --nostream
-#                 exit 1
-#               fi
-
-#               sleep 3
-#             done
-
-#             echo ""
-#             echo "========================================="
-#             echo "✅ NEXT.JS ADMIN DEPLOY SUCCESSFUL"
-#             echo "========================================="
-
-
-
-  name: Production Deploy Next.js (Standalone + Rollback)
-
-  on:
-    push:
-      branches:
-        - next-faizy
-
-  concurrency:
-    group: deploy-admin-next
-    cancel-in-progress: false
-
-  jobs:
-    build-and-deploy:
-      runs-on: ubuntu-latest
-      timeout-minutes: 25
-
-      steps:
-        # 1. Checkout source code
-        - name: Checkout Code
-          uses: actions/checkout@v4
-
-        # 2. Setup Node.js
-        - name: Setup Node.js 22
-          uses: actions/setup-node@v4
-          with:
-            node-version: "22"
-            cache: npm
-
-        # 3. Cache Next.js build
-        - name: Cache Next.js Build
-          uses: actions/cache@v4
-          with:
-            path: .next/cache
-            key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
-            restore-keys: |
-              ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
-              ${{ runner.os }}-nextjs-
-
-        # 4. Install dependencies on GitHub
-        - name: Install Dependencies
-          run: npm ci --no-audit --no-fund
-
-        # 5. Build on GitHub runner
-        - name: Build Next.js Standalone
-          env:
-            NODE_OPTIONS: --max-old-space-size=4096
-            # Add required NEXT_PUBLIC_* build variables here
-            # using GitHub Secrets if your application needs them.
-          run: npm run build
-
-        # 6. Prepare standalone artifact
-        - name: Package Standalone Release
-          shell: bash
-          run: |
-            set -euo pipefail
-
-            test -f .next/standalone/server.js || {
-              echo "Standalone build missing. Check next.config.ts."
+            if [ ! -d "$APP_DIR" ]; then
+              echo "❌ Application directory not found: $APP_DIR"
               exit 1
-            }
-
-            mkdir -p .next/standalone/.next
-
-            if [ -d public ]; then
-              cp -a public .next/standalone/public
             fi
 
-            cp -a .next/static .next/standalone/.next/static
+            cd "$APP_DIR"
+            pwd
 
-            tar -czf release.tar.gz \
-              -C .next/standalone .
+            # ---------- GIT ----------
+            echo "📥 Pull latest code"
 
-            echo "Standalone artifact created."
+            git config --global --add safe.directory "$APP_DIR"
+            git fetch origin
+            git reset --hard origin/next-faizy
 
-        # 7. Upload artifact to VPS
-        - name: Upload Release to VPS
-          uses: appleboy/scp-action@v0.1.7
-          with:
-            host: ${{ secrets.HOST }}
-            username: ${{ secrets.USERNAME }}
-            password: ${{ secrets.PASSWORD }}
-            source: release.tar.gz
-            target: /tmp
-            overwrite: true
-            command_timeout: 5m
+            echo "📌 Current commit:"
+            git log -1 --oneline
 
-        # 8. Deploy and verify
-        - name: Deploy on VPS
-          uses: appleboy/ssh-action@v1.1.0
-          env:
-            DEPLOY_SHA: ${{ github.sha }}
-          with:
-            host: ${{ secrets.HOST }}
-            username: ${{ secrets.USERNAME }}
-            password: ${{ secrets.PASSWORD }}
-            envs: DEPLOY_SHA
-            command_timeout: 10m
-            script: |
-              set -Eeuo pipefail
+            # ---------- ENV CHECK ----------
+            if [ ! -f ".env" ]; then
+              echo "❌ ERROR: .env file not found"
+              exit 1
+            fi
 
-              export NODE_HOME="/root/.nvm/versions/node/v22.23.2"
-              export PATH="$NODE_HOME/bin:$PATH"
+            echo "✅ .env exists"
 
-              BASE_DIR="/var/www/releases/admin-next"
-              CURRENT="$BASE_DIR/current"
-              SHARED_ENV="/var/www/magbeeadmin.magaritatech.com/.env"
-              RELEASE_ID="$(date +%Y%m%d%H%M%S)-${DEPLOY_SHA:0:7}"
-              RELEASE="$BASE_DIR/$RELEASE_ID"
-              PREV_DIR=""
+            # ---------- STOP APP BEFORE CLEANING ----------
+            echo "⏹ Stopping app before cleanup"
+            pm2 stop admin-next || true
 
-              SWITCHED=false
-              DEPLOY_OK=false
+            echo "🧹 Cleaning old build"
+            rm -rf .next node_modules
 
-              mkdir -p "$BASE_DIR"
+            # ---------- INSTALL ----------
+            echo "📦 Installing dependencies"
 
-              if [ -L "$CURRENT" ]; then
-                PREV_DIR="$(readlink -f "$CURRENT" || true)"
-                if [ ! -d "$PREV_DIR" ]; then
-                  PREV_DIR=""
-                fi
+            if [ -f "package-lock.json" ]; then
+              npm ci
+            else
+              npm install
+            fi
+
+            echo "✅ Dependencies installed"
+
+            # ---------- BUILD ----------
+            echo "🏗 Building Next.js app"
+
+            NODE_OPTIONS="--max-old-space-size=4096" npm run build
+
+            echo "✅ Next.js build completed"
+
+            # ---------- VERIFY BUILD ----------
+            if [ ! -d ".next" ]; then
+              echo "❌ .next directory not found"
+              exit 1
+            fi
+
+            if [ ! -f ".next/BUILD_ID" ]; then
+              echo "❌ .next/BUILD_ID not found"
+              exit 1
+            fi
+
+            echo "✅ Next.js build verified"
+
+            # ---------- PM2 (fresh start) ----------
+            echo "🔄 Starting PM2 process"
+
+            pm2 delete admin-next || true
+
+            pm2 start npm \
+              --name "admin-next" \
+              --cwd "$APP_DIR" \
+              -- start
+
+            pm2 save --force
+
+            echo "📋 PM2 STATUS"
+            pm2 status
+
+            # ---------- HEALTH CHECK (no curl, uses node fetch) ----------
+            echo "🔍 Checking Next.js application"
+
+            for i in $(seq 1 20); do
+              CODE=$(node -e "fetch('http://127.0.0.1:3000/',{redirect:'manual'}).then(r=>console.log(r.status)).catch(()=>console.log(0))")
+              echo "Attempt $i: HTTP $CODE"
+
+              if [[ "$CODE" =~ ^(200|301|302|307|308)$ ]]; then
+                echo "✅ Next.js application is responding"
+                break
               fi
 
-              rollback() {
-                STATUS=$?
-
-                if [ "$DEPLOY_OK" != "true" ]; then
-                  echo "Deployment failed. Starting rollback."
-
-                  if [ "$SWITCHED" = "true" ]; then
-                    if [ -n "$PREV_DIR" ] && [ -f "$PREV_DIR/server.js" ]; then
-                      ln -sfn "$PREV_DIR" "$CURRENT.rollback"
-                      mv -Tf "$CURRENT.rollback" "$CURRENT"
-
-                      pm2 reload admin-next --update-env || \
-                        pm2 restart admin-next --update-env || true
-
-                      echo "Previous release restored."
-                    else
-                      echo "No previous release available."
-
-                      # Do not delete the only release automatically.
-                      # Preserve it for manual recovery.
-                    fi
-                  fi
-
-                  rm -rf -- "$RELEASE"
-                  rm -f /tmp/release.tar.gz
-                fi
-
-                exit "$STATUS"
-              }
-
-              trap rollback EXIT
-
-              # 1. Validate required files
-              test -f "$SHARED_ENV" || {
-                echo "Production .env not found."
-                exit 1
-              }
-
-              test -f /tmp/release.tar.gz || {
-                echo "Release archive not found."
-                exit 1
-              }
-
-              # 2. Extract into a new release directory
-              mkdir -p "$RELEASE"
-              tar -xzf /tmp/release.tar.gz -C "$RELEASE"
-              rm -f /tmp/release.tar.gz
-
-              test -f "$RELEASE/server.js" || {
-                echo "server.js missing from release."
-                exit 1
-              }
-
-              # 3. Attach production environment
-              install -m 600 "$SHARED_ENV" "$RELEASE/.env"
-
-              # 4. Atomically switch current symlink
-              ln -s "$RELEASE" "$CURRENT.next"
-              mv -Tf "$CURRENT.next" "$CURRENT"
-              SWITCHED=true
-
-              # 5. Start or reload PM2
-              if pm2 describe admin-next >/dev/null 2>&1; then
-                pm2 reload admin-next --update-env
-              else
-                pm2 start "$CURRENT/server.js" \
-                  --name admin-next \
-                  --cwd "$CURRENT" \
-                  -i 2 \
-                  --exec-mode cluster
-              fi
-
-              # 6. Health check
-              HEALTHY=false
-
-              for i in $(seq 1 30); do
-                CODE="$(node -e "
-                  fetch('http://127.0.0.1:3000/', {
-                    redirect: 'manual'
-                  })
-                  .then(r => console.log(r.status))
-                  .catch(() => console.log(0))
-                " 2>/dev/null || echo 0)"
-
-                case "$CODE" in
-                  200|301|302|307|308)
-                    HEALTHY=true
-                    break
-                    ;;
-                esac
-
-                sleep 2
-              done
-
-              if [ "$HEALTHY" != "true" ]; then
-                echo "Health check failed."
+              if [ "$i" -eq 20 ]; then
+                echo "❌ Health check failed"
+                pm2 status
+                pm2 logs admin-next --lines 50 --nostream
                 exit 1
               fi
 
-              # 7. Persist PM2 configuration
-              pm2 save --force
+              sleep 3
+            done
 
-              # 8. Keep current and two previous releases
-              DEPLOY_OK=true
-              trap - EXIT
+            echo ""
+            echo "========================================="
+            echo "✅ NEXT.JS ADMIN DEPLOY SUCCESSFUL"
+            echo "========================================="
 
-              mapfile -t RELEASES < <(
-                find "$BASE_DIR" \
-                  -mindepth 1 -maxdepth 1 \
-                  -type d -name '20*' \
-                  -printf '%f\n' | sort -r
-              )
 
-              COUNT=0
-              for ITEM in "${RELEASES[@]}"; do
-                COUNT=$((COUNT + 1))
 
-                if [ "$COUNT" -gt 3 ]; then
-                  OLD="$BASE_DIR/$ITEM"
+  # name: Production Deploy Next.js (Standalone + Rollback)
 
-                  if [ "$OLD" != "$RELEASE" ] && \
-                    [ "$OLD" != "$PREV_DIR" ]; then
-                    rm -rf -- "$OLD"
-                  fi
-                fi
-              done
+  # on:
+  #   push:
+  #     branches:
+  #       - next-faizy
 
-              echo "Deployment completed successfully."
-              echo "Release: $RELEASE_ID"
+  # concurrency:
+  #   group: deploy-admin-next
+  #   cancel-in-progress: false
+
+  # jobs:
+  #   build-and-deploy:
+  #     runs-on: ubuntu-latest
+  #     timeout-minutes: 25
+
+  #     steps:
+  #       # 1. Checkout source code
+  #       - name: Checkout Code
+  #         uses: actions/checkout@v4
+
+  #       # 2. Setup Node.js
+  #       - name: Setup Node.js 22
+  #         uses: actions/setup-node@v4
+  #         with:
+  #           node-version: "22"
+  #           cache: npm
+
+  #       # 3. Cache Next.js build
+  #       - name: Cache Next.js Build
+  #         uses: actions/cache@v4
+  #         with:
+  #           path: .next/cache
+  #           key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+  #           restore-keys: |
+  #             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+  #             ${{ runner.os }}-nextjs-
+
+  #       # 4. Install dependencies on GitHub
+  #       - name: Install Dependencies
+  #         run: npm ci --no-audit --no-fund
+
+  #       # 5. Build on GitHub runner
+  #       - name: Build Next.js Standalone
+  #         env:
+  #           NODE_OPTIONS: --max-old-space-size=4096
+  #           # Add required NEXT_PUBLIC_* build variables here
+  #           # using GitHub Secrets if your application needs them.
+  #         run: npm run build
+
+  #       # 6. Prepare standalone artifact
+  #       - name: Package Standalone Release
+  #         shell: bash
+  #         run: |
+  #           set -euo pipefail
+
+  #           test -f .next/standalone/server.js || {
+  #             echo "Standalone build missing. Check next.config.ts."
+  #             exit 1
+  #           }
+
+  #           mkdir -p .next/standalone/.next
+
+  #           if [ -d public ]; then
+  #             cp -a public .next/standalone/public
+  #           fi
+
+  #           cp -a .next/static .next/standalone/.next/static
+
+  #           tar -czf release.tar.gz \
+  #             -C .next/standalone .
+
+  #           echo "Standalone artifact created."
+
+  #       # 7. Upload artifact to VPS
+  #       - name: Upload Release to VPS
+  #         uses: appleboy/scp-action@v0.1.7
+  #         with:
+  #           host: ${{ secrets.HOST }}
+  #           username: ${{ secrets.USERNAME }}
+  #           password: ${{ secrets.PASSWORD }}
+  #           source: release.tar.gz
+  #           target: /tmp
+  #           overwrite: true
+  #           command_timeout: 5m
+
+  #       # 8. Deploy and verify
+  #       - name: Deploy on VPS
+  #         uses: appleboy/ssh-action@v1.1.0
+  #         env:
+  #           DEPLOY_SHA: ${{ github.sha }}
+  #         with:
+  #           host: ${{ secrets.HOST }}
+  #           username: ${{ secrets.USERNAME }}
+  #           password: ${{ secrets.PASSWORD }}
+  #           envs: DEPLOY_SHA
+  #           command_timeout: 10m
+  #           script: |
+  #             set -Eeuo pipefail
+
+  #             export NODE_HOME="/root/.nvm/versions/node/v22.23.2"
+  #             export PATH="$NODE_HOME/bin:$PATH"
+
+  #             BASE_DIR="/var/www/releases/admin-next"
+  #             CURRENT="$BASE_DIR/current"
+  #             SHARED_ENV="/var/www/magbeeadmin.magaritatech.com/.env"
+  #             RELEASE_ID="$(date +%Y%m%d%H%M%S)-${DEPLOY_SHA:0:7}"
+  #             RELEASE="$BASE_DIR/$RELEASE_ID"
+  #             PREV_DIR=""
+
+  #             SWITCHED=false
+  #             DEPLOY_OK=false
+
+  #             mkdir -p "$BASE_DIR"
+
+  #             if [ -L "$CURRENT" ]; then
+  #               PREV_DIR="$(readlink -f "$CURRENT" || true)"
+  #               if [ ! -d "$PREV_DIR" ]; then
+  #                 PREV_DIR=""
+  #               fi
+  #             fi
+
+  #             rollback() {
+  #               STATUS=$?
+
+  #               if [ "$DEPLOY_OK" != "true" ]; then
+  #                 echo "Deployment failed. Starting rollback."
+
+  #                 if [ "$SWITCHED" = "true" ]; then
+  #                   if [ -n "$PREV_DIR" ] && [ -f "$PREV_DIR/server.js" ]; then
+  #                     ln -sfn "$PREV_DIR" "$CURRENT.rollback"
+  #                     mv -Tf "$CURRENT.rollback" "$CURRENT"
+
+  #                     pm2 reload admin-next --update-env || \
+  #                       pm2 restart admin-next --update-env || true
+
+  #                     echo "Previous release restored."
+  #                   else
+  #                     echo "No previous release available."
+
+  #                     # Do not delete the only release automatically.
+  #                     # Preserve it for manual recovery.
+  #                   fi
+  #                 fi
+
+  #                 rm -rf -- "$RELEASE"
+  #                 rm -f /tmp/release.tar.gz
+  #               fi
+
+  #               exit "$STATUS"
+  #             }
+
+  #             trap rollback EXIT
+
+  #             # 1. Validate required files
+  #             test -f "$SHARED_ENV" || {
+  #               echo "Production .env not found."
+  #               exit 1
+  #             }
+
+  #             test -f /tmp/release.tar.gz || {
+  #               echo "Release archive not found."
+  #               exit 1
+  #             }
+
+  #             # 2. Extract into a new release directory
+  #             mkdir -p "$RELEASE"
+  #             tar -xzf /tmp/release.tar.gz -C "$RELEASE"
+  #             rm -f /tmp/release.tar.gz
+
+  #             test -f "$RELEASE/server.js" || {
+  #               echo "server.js missing from release."
+  #               exit 1
+  #             }
+
+  #             # 3. Attach production environment
+  #             install -m 600 "$SHARED_ENV" "$RELEASE/.env"
+
+  #             # 4. Atomically switch current symlink
+  #             ln -s "$RELEASE" "$CURRENT.next"
+  #             mv -Tf "$CURRENT.next" "$CURRENT"
+  #             SWITCHED=true
+
+  #             # 5. Start or reload PM2
+  #             if pm2 describe admin-next >/dev/null 2>&1; then
+  #               pm2 reload admin-next --update-env
+  #             else
+  #               pm2 start "$CURRENT/server.js" \
+  #                 --name admin-next \
+  #                 --cwd "$CURRENT" \
+  #                 -i 2 \
+  #                 --exec-mode cluster
+  #             fi
+
+  #             # 6. Health check
+  #             HEALTHY=false
+
+  #             for i in $(seq 1 30); do
+  #               CODE="$(node -e "
+  #                 fetch('http://127.0.0.1:3000/', {
+  #                   redirect: 'manual'
+  #                 })
+  #                 .then(r => console.log(r.status))
+  #                 .catch(() => console.log(0))
+  #               " 2>/dev/null || echo 0)"
+
+  #               case "$CODE" in
+  #                 200|301|302|307|308)
+  #                   HEALTHY=true
+  #                   break
+  #                   ;;
+  #               esac
+
+  #               sleep 2
+  #             done
+
+  #             if [ "$HEALTHY" != "true" ]; then
+  #               echo "Health check failed."
+  #               exit 1
+  #             fi
+
+  #             # 7. Persist PM2 configuration
+  #             pm2 save --force
+
+  #             # 8. Keep current and two previous releases
+  #             DEPLOY_OK=true
+  #             trap - EXIT
+
+  #             mapfile -t RELEASES < <(
+  #               find "$BASE_DIR" \
+  #                 -mindepth 1 -maxdepth 1 \
+  #                 -type d -name '20*' \
+  #                 -printf '%f\n' | sort -r
+  #             )
+
+  #             COUNT=0
+  #             for ITEM in "${RELEASES[@]}"; do
+  #               COUNT=$((COUNT + 1))
+
+  #               if [ "$COUNT" -gt 3 ]; then
+  #                 OLD="$BASE_DIR/$ITEM"
+
+  #                 if [ "$OLD" != "$RELEASE" ] && \
+  #                   [ "$OLD" != "$PREV_DIR" ]; then
+  #                   rm -rf -- "$OLD"
+  #                 fi
+  #               fi
+  #             done
+
+  #             echo "Deployment completed successfully."
+  #             echo "Release: $RELEASE_ID"
