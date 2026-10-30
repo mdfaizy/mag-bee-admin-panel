@@ -57,6 +57,7 @@ packQuantity: z.preprocess(
   length: z.string().regex(/^\d+(\.\d+)?$/, "Length must be a valid number"),
   width: z.string().regex(/^\d+(\.\d+)?$/, "Width must be a valid number"),
   height: z.string().regex(/^\d+(\.\d+)?$/, "Height must be a valid number"),
+  dimensionUnit: z.enum(["cm", "mm", "inch"]).default("cm"),
   weight: z.string().regex(/^\d+(\.\d+)?$/, "Weight must be a valid number"),
   weightUnit: z.enum(["kg", "g"]),
 /* Pricing Fields */

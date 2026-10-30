@@ -12,7 +12,7 @@ import { HiChevronDown, HiPlus, HiUpload, HiX } from 'react-icons/hi';
 import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategoryService";
 import { SubCategory, CategoryOption } from "@/components/types/category";
 import { apiConnector } from "@/services/apiConnector";
-import { useDispatch } from "react-redux";
+// import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { calculateFinalPrice, calculateOfferPercentage } from "@/utils/priceUtils";
 import { ProductFormData, productSchema } from "@/validations/product.schema";
@@ -67,6 +67,7 @@ export default function AddNewProduct() {
       width: "",
       height: "",
       weight: "",
+      dimensionUnit: "cm",
       packQuantity: undefined,
       weightUnit: "kg",
       stock: undefined,
@@ -183,10 +184,6 @@ const isReplacementEnabled = watchReplacementEligible === true;
   };
 
   // Calculate selling price for variant
-  // const updateVariantSellingPrice = (variantIndex: number, price: number, offer: number = 0) => {
-  //   const sellingPrice = calculateOfferPercentage(price, offer);
-  //   setValue(`variants.${variantIndex}.sellingPrice`, sellingPrice);
-  // };
   const updateOfferFromSelling = (
     variantIndex: number,
     price: number,
@@ -233,17 +230,6 @@ const isReplacementEnabled = watchReplacementEligible === true;
   }, []);
 
   // Filter subcategories when category changes
-  // const handleCategoryChange = (value: string) => {
-  //   setValue("categoryId", value);
-  //   setValue("subCategoryId", "");
-  //   setValue("childSubCategoryId", "");
-  //   const filtered = subCategory.filter(sc => sc.categoryId === value);
-  //   setFilteredSubCategory(filtered);
-  //   setSubCategoryChildren([]);
-  //   trigger("categoryId");
-  // };
-
-
   const handleCategoryChange = (value: string) => {
     setValue("categoryId", value);
     setValue("subCategoryId", "");
@@ -258,24 +244,7 @@ const isReplacementEnabled = watchReplacementEligible === true;
 
     trigger("categoryId");
   };
-
   // Fetch children subcategories
-  // const fetchChildren = async (parentId: string) => {
-  //   try {
-  //     const res = await apiConnector("GET", `/subcategories/${parentId}/children`);
-  //     const children = Array.isArray(res.data.children) ? res.data.children : res.data;
-  //     const formatted = children.map((item: any) => ({
-  //       value: String(item.id),
-  //       label: item.name,
-  //       parentId: String(parentId),
-  //     }));
-  //     setSubCategoryChildren(formatted);
-  //   } catch (error) {
-  //     console.error("Failed to fetch subcategory children:", error);
-  //     setSubCategoryChildren([]);
-  //   }
-  // };
-
   const fetchNestedChildren = async (
     parentId: string,
     level: number
@@ -285,41 +254,33 @@ const isReplacementEnabled = watchReplacementEligible === true;
         "GET",
         `/subcategories/${parentId}/children`
       );
-
       const children = Array.isArray(
         res.data.children
       )
         ? res.data.children
         : [];
-
       const formatted = children.map(
         (item: any) => ({
           value: String(item.id),
           label: item.name,
         })
       );
-
       const updatedLevels = [
         ...nestedLevels.slice(0, level),
       ];
-
       if (formatted.length > 0) {
         updatedLevels.push(formatted);
       }
-
       setNestedLevels(updatedLevels);
-
       const updatedSelected = [
         ...selectedNestedIds.slice(
           0,
           level
         ),
       ];
-
       setSelectedNestedIds(
         updatedSelected
       );
-
       if (
         formatted.length === 0
       ) {
@@ -328,211 +289,28 @@ const isReplacementEnabled = watchReplacementEligible === true;
           parentId
         );
       }
-
     } catch (err) {
       console.error(err);
     }
   };
-
   // Toggle variants
   const toggleVariants = () => {
     const newValue = !watchHasVariants;
     setValue("hasVariants", newValue, { shouldValidate: true });
-
     if (!newValue) {
       setValue("variants", []);
     }
   };
-
-
-
-  // Check if variant SKU exists
-  const checkVariantSkuExists = async (sku: string, index: number) => {
-    if (!sku || sku.length < 3) return;
-
-    try {
-      const response = await apiConnector("GET", `/product/check-sku?variantSku=${sku}`);
-      if (response.data.exists) {
-        setError(`variants.${index}.sku`, {
-          type: "manual",
-          message: "This variant SKU already exists"
-        });
-        return true;
-      } else {
-        clearErrors(`variants.${index}.sku`);
-        return false;
-      }
-    } catch (error) {
-      console.error("Error checking variant SKU:", error);
-      return false;
-    }
-  };
-
-  // Form submission
-  // const onSubmit = async (data: ProductFormData) => {
-  //   if (isSubmitting) return;
-
-  //   // Validate images
-  //   if (productImages.length === 0) {
-  //     toast.error("Please upload at least one image");
-  //     return;
-  //   }
-
-  //   setIsSubmitting(true);
-  //   const toastId = toast.loading("Creating product...");
-
-  //   try {
-  //     // Prepare payload
-  //     const payload: any = {
-  //       name: data.name,
-  //       skuCode: data.skuCode,
-  //       material: data.material,
-  //       description: data.description,
-  //       categoryId: data.categoryId,
-  //       subCategoryId: data.subCategoryId || null,
-  //       childSubCategoryId: data.childSubCategoryId || null,
-  //       length: data.length,
-  //       width: data.width,
-  //       height: data.height,
-  //       weight: data.weight,
-  //       weightUnit: data.weightUnit,
-  //       returnPolicy: data.returnPolicy || null,
-  //       warrantyInfo: data.warrantyInfo || null,
-  //       keywords: JSON.stringify(data.keywords),
-  //       shippingAvailable: data.shippingAvailable, // Boolean rahne do
-  //       hasVariants: data.hasVariants, // Boolean rahne do
-  //       isActive: isActive,
-  //     };
-
-  //     // Handle pricing based on variants
-  //     if (data.hasVariants) {
-  //       payload.originalPrice = null;
-  //       payload.price = null;
-  //       payload.stock = null;
-  //       payload.offer = null;
-
-  //       // Prepare variants - DON'T filter out based on SKU
-  //       if (data.variants && data.variants.length > 0) {
-  //         // const validVariants = data.variants.map(v => ({
-  //         //   sku: v.sku, // SKU required
-  //         //   price: Number(v.price || 0),
-  //         //   sellingPrice: Number(v.sellingPrice || calculateFinalPrice(Number(v.price || 0), Number(v.offer || 0))),
-  //         //   stock: Number(v.stock || 0),
-  //         //   offer: Number(v.offer || 0),
-  //         //   attributes: v.attributes.filter(a => a.key && a.value),
-  //         // }));
-  //         const validVariants = data.variants
-  // .filter(v => v.sku && v.price !== undefined && v.stock !== undefined)
-  // .map(v => ({
-  //   sku: v.sku.trim(),
-  //   price: Number(v.price),
-  //   sellingPrice: Number(
-  //     v.sellingPrice ??
-  //     calculateFinalPrice(Number(v.price), Number(v.offer || 0))
-  //   ),
-  //   stock: Number(v.stock),
-  //   offer: Number(v.offer || 0),
-  //   attributes: v.attributes.filter(a => a.key && a.value),
-  // }));
-  //        console.log("VALID VARIANTS:", validVariants); 
-  //         payload.variants = JSON.stringify(validVariants);
-  //       }
-  //     } else {
-  //       payload.originalPrice = data.originalPrice || 0;
-  //       payload.price = data.price || data.originalPrice || 0;
-  //       payload.stock = data.stock || 0;
-  //       payload.offer = data.offer || 0;
-  //       payload.variants = null;
-  //     }
-
-  //     console.log("Final Payload:", payload);
-
-  //     // Create FormData
-  //     const form = new FormData();
-  //     Object.entries(payload).forEach(([key, value]) => {
-  //       if (value !== undefined && value !== null) {
-  //         form.append(key, value.toString());
-  //       }
-  //     });
-
-  //     // Add images
-  //     productImages.forEach(file => form.append("imageUrl", file));
-
-  //     // API call
-  //     const res = await apiConnector("POST", "/product", form);
-
-  //     toast.dismiss(toastId);
-
-  //     if (res.status === 201 || res.status === 200) {
-  //       toast.success("✅ Product created successfully!");
-  //       router.push("/");
-  //     }
-  //   } catch (error: any) {
-  //     toast.dismiss(toastId);
-  //     console.error("Product create error:", error);
-
-  //     let message = "❌ Failed to create product";
-
-  //     // Handle variant SKU errors
-  //     if (error?.response?.data?.message?.includes("SKU")) {
-  //       message = error.response.data.message;
-
-  //       // Try to extract which SKU is duplicate
-  //       const skuMatch = error.response.data.message.match(/SKU:?\s*([A-Z0-9-]+)/i);
-  //       if (skuMatch && skuMatch[1]) {
-  //         const duplicateSku = skuMatch[1];
-  //         toast.error(`SKU "${duplicateSku}" already exists. Please use a different SKU.`);
-  //       }
-  //     } else if (error?.response?.data?.message) {
-  //       message = error.response.data.message;
-  //     } else if (error?.message) {
-  //       message = error.message;
-  //     }
-
-  //     toast.error(message);
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
-  console.log("FUNC:", calculateOfferPercentage);
   const onSubmit = async (data: ProductFormData) => {
     if (isSubmitting) return;
-
     // ✅ Image validation
     if (productImages.length === 0) {
       toast.error("Please upload at least one image");
       return;
     }
-
     setIsSubmitting(true);
     const toastId = toast.loading("Creating product...");
-
     try {
-      // ========================
-      // ✅ BASE PAYLOAD
-      // ========================
-      // const payload: any = {
-      //   name: data.name,
-      //   skuCode: data.skuCode,
-      //   material: data.material,
-      //   description: data.description,
-      //   categoryId: data.categoryId,
-      //   subCategoryId: data.subCategoryId || null,
-      //   childSubCategoryId: data.childSubCategoryId || null,
-      //   length: data.length,
-      //   width: data.width,
-      //   height: data.height,
-      //   weight: data.weight,
-      //   weightUnit: data.weightUnit,
-      //   returnPolicy: data.returnPolicy || null,
-      //   warrantyInfo: data.warrantyInfo || null,
-      //   keywords: JSON.stringify(data.keywords),
-      //   shippingAvailable: data.shippingAvailable,
-      // hasVariants: data.hasVariants,
-      //   isActive: isActive,
-      // };
-
       const payload: any = {
         name: data.name,
         skuCode: data.skuCode,
@@ -544,20 +322,15 @@ const isReplacementEnabled = watchReplacementEligible === true;
         length: data.length,
         width: data.width,
         height: data.height,
+        dimensionUnit: data.dimensionUnit,
         weight: data.weight,
         weightUnit: data.weightUnit,
-        // returnPolicy: data.returnPolicy || null,
+        //returnPolicy: data.returnPolicy || null,
         returnEligible: data.returnEligible,
-
-returnWindowDays: data.returnEligible
-  ? Number(data.returnWindowDays || 0)
-  : 0,
-
-replacementEligible: data.replacementEligible,
-
-replacementWindowDays: data.replacementEligible
-  ? Number(data.replacementWindowDays || 0)
-  : 0,
+        returnWindowDays: data.returnEligible? Number(data.returnWindowDays || 0): 0,
+        replacementEligible: data.replacementEligible,
+        replacementWindowDays: data.replacementEligible
+          ? Number(data.replacementWindowDays || 0): 0,
         warrantyInfo: data.warrantyInfo || null,
         keywords: JSON.stringify(data.keywords),
         shippingAvailable: data.shippingAvailable,
@@ -567,11 +340,6 @@ replacementWindowDays: data.replacementEligible
       };
 
       // 🔥 ADD THIS BLOCK (MANDATORY)
-      // payload.originalPrice = data.originalPrice || 0;
-      // payload.price = data.price || data.originalPrice || 0;
-      // payload.stock = data.stock || 0;
-      // payload.offer = data.offer || 0;
-      // payload.variants = null;
 
       const originalPrice = Number(data.originalPrice);
       const finalPrice = Number(data.price);
@@ -600,76 +368,9 @@ replacementWindowDays: data.replacementEligible
       payload.offer = offer > 0 ? offer : 0;
       payload.stock = data.stock || 0;
       payload.variants = null;
-
       // ========================
       // ✅ VARIANTS HANDLING
       // ========================
-      // if (data.hasVariants) {
-      //   payload.originalPrice = null;
-      //   payload.price = null;
-      //   payload.stock = null;
-      //   payload.offer = null;
-
-      //   if (data.variants && data.variants.length > 0) {
-
-      //     // ✅ FILTER + FORMAT
-      //     const validVariants = data.variants
-      //       .filter(v => v.sku && v.price !== undefined && v.stock !== undefined)
-      //       .map(v => ({
-      //         sku: v.sku.trim(),
-      //         price: Number(v.price),
-      //         sellingPrice: Number(
-      //           v.sellingPrice ??
-      //           calculateFinalPrice(Number(v.price), Number(v.offer || 0))
-      //         ),
-      //         stock: Number(v.stock),
-      //         offer: Number(v.offer || 0),
-      //         attributes: v.attributes.filter(a => a.key && a.value),
-      //       }));
-
-      //     console.log("VALID VARIANTS:", validVariants);
-
-      //     // ========================
-      //     // ✅ VALIDATION
-      //     // ========================
-      //     if (validVariants.length === 0) {
-      //       toast.error("At least one valid variant required");
-      //       setIsSubmitting(false);
-      //       return;
-      //     }
-
-      //     const skuSet = new Set();
-
-      //     for (const v of validVariants) {
-      //       if (!v.sku || v.sku.trim() === "") {
-      //         toast.error("SKU is required for all variants");
-      //         setIsSubmitting(false);
-      //         return;
-      //       }
-
-      //       if (skuSet.has(v.sku)) {
-      //         toast.error(`Duplicate SKU in variants: ${v.sku}`);
-      //         setIsSubmitting(false);
-      //         return;
-      //       }
-
-      //       skuSet.add(v.sku);
-      //     }
-
-      //     payload.variants = JSON.stringify(validVariants);
-      //   }
-
-      // } else {
-      //   // ========================
-      //   // ✅ SIMPLE PRODUCT
-      //   // ========================
-      //   payload.originalPrice = data.originalPrice || 0;
-      //   payload.price = data.price || data.originalPrice || 0;
-      //   payload.stock = data.stock || 0;
-      //   payload.offer = data.offer || 0;
-      //   payload.variants = null;
-      // }
-
       if (data.hasVariants) {
         payload.originalPrice = null;
         payload.price = null;
@@ -814,7 +515,7 @@ replacementWindowDays: data.replacementEligible
 
       if (res.status === 201 || res.status === 200) {
         toast.success("✅ Product created successfully!");
-        router.push("/");
+        router.push("/product");
       }
 
     } catch (error: any) {
@@ -845,8 +546,6 @@ replacementWindowDays: data.replacementEligible
       setIsSubmitting(false);
     }
   };
-
-  console.log("✅ Variants grouped successfully");
   return (
     <div className="flex flex-col flex-1 lg:w-11/12 w-full mx-auto items-center">
       <div className="flex flex-col justify-center w-full p-4 bg-white rounded-lg shadow-sm">
@@ -927,7 +626,7 @@ replacementWindowDays: data.replacementEligible
                 <div className="p-4 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label>Length<span className="text-red-500">*</span></Label>
+                      <Label>Length (cm)<span className="text-red-500">*</span></Label>
                       <Input
                         type="text"
                         {...register("length")}
@@ -939,7 +638,7 @@ replacementWindowDays: data.replacementEligible
                       )}
                     </div>
                     <div>
-                      <Label>Width<span className="text-red-500">*</span></Label>
+                      <Label>Width (cm)<span className="text-red-500">*</span></Label>
                       <Input
                         type="text"
                         {...register("width")}
@@ -951,7 +650,7 @@ replacementWindowDays: data.replacementEligible
                       )}
                     </div>
                     <div>
-                      <Label>Height<span className="text-red-500">*</span></Label>
+                      <Label>Height (cm)<span className="text-red-500">*</span></Label>
                       <Input
                         type="text"
                         {...register("height")}

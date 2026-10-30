@@ -4,6 +4,7 @@ import {
   updateProductGroup
 } from "@/services/product/productService";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Input from "../../../../../../components/form/input/InputField";
@@ -58,6 +59,7 @@ const computeSellingPrice = (price: number, offer: number): number => {
 const EditProductPage: React.FC = () => {
   const dispatch = useDispatch();
   const { id } = useParams();
+  const navigate = useNavigate();
   const router = useRouter();
 
   const { selectedProduct, products } = useSelector((state: RootState) => state.product);
@@ -88,12 +90,6 @@ const EditProductPage: React.FC = () => {
   const [showVariants, setShowVariants] = useState(false);
   const [isActive, setIsActive] = useState(true);
   const [filteredSubCategory, setFilteredSubCategory] = useState<{ value: string; label: string }[]>([]);
-
-  const returnPolicyOptions = [
-    { value: "7-day return", label: "7-day return" },
-    { value: "30-day return", label: "30-day return" },
-    { value: "No return", label: "No return" },
-  ];
 
   // ✅ Fetch product by ID on mount
   useEffect(() => {
@@ -213,169 +209,6 @@ const EditProductPage: React.FC = () => {
     loadGroupProducts();
   }, [selectedProduct]);
 
-  // ✅ Initialize form data when selectedProduct changes
-//   useEffect(() => {
-//     // 🚫 guard clauses
-//     if (!selectedProduct) return;
-//     if (formState.initialized) return;
-//     // if (!options.subCategories.length) return;
-
-//     try {
-//       // =========================
-//       // ✅ Prepare variants
-//       // =========================
-//       const initialVariants: Variant[] = (selectedProduct.variants || []).map(
-//         (v: any) => {
-//           const price = safeNum(v.price, 0);
-//           const offer = safeNum(v.offer, 0);
-//           const sellingPrice = safeNum(
-//             v.sellingPrice,
-//             computeSellingPrice(price, offer)
-//           );
-
-//           return {
-//             id: v.id,
-//             sku: v.sku ?? "",
-//             price,
-//             sellingPrice,
-//             stock: safeNum(v.stock, 0),
-//             offer,
-//             attributes:
-//               (v.attributes || []).length > 0
-//                 ? v.attributes.map((a: any) => ({
-//                   key: a.key ?? "",
-//                   value: a.value ?? "",
-//                 }))
-//                 : [{ key: "", value: "" }],
-//           };
-//         }
-//       );
-
-//       // =========================
-//       // ✅ Prepare images
-//       // =========================
-//       const typedProduct = selectedProduct as unknown as Product;
-
-//       const imageUrls =
-//         typedProduct.images?.map((img: any) =>
-//           typeof img === "string" ? img : img.imageUrl
-//         ) || [];
-
-//       // =========================
-//       // ✅ Filter subcategories
-//       // =========================
-//       let filtered: any[] = [];
-
-//       const categoryId = selectedProduct.category?.id;
-
-//       if (categoryId) {
-//         filtered = options.subCategories.filter(
-//           (sc: any) => sc.categoryId === String(categoryId)
-//         );
-//       }
-
-//       setFilteredSubCategory(filtered);
-// //       if (selectedProduct.subCategory?.id) {
-// //   fetchChildren(
-// //     String(selectedProduct.subCategory.id)
-// //   );
-// // }
-
-// if (selectedProduct.subCategory?.id) {
-
-//   fetchChildren(
-//     String(selectedProduct.subCategory.id)
-//   );
-
-//   setFormState((prev) => ({
-//     ...prev,
-//     data: {
-//       ...prev.data,
-//       childSubCategoryId:
-//         selectedProduct.childSubCategory?.id
-//           ? String(selectedProduct.childSubCategory.id)
-//           : "",
-//     },
-//   }));
-// }
-
-//       // =========================
-//       // ✅ Set form state (FULL)
-//       // =========================
-//       setFormState({
-//         data: {
-//           ...selectedProduct,
-//           categoryId: selectedProduct.category
-//             ? String(selectedProduct.category.id)
-//             : "",
-//           subCategoryId: selectedProduct.subCategory
-//             ? String(selectedProduct.subCategory.id)
-//             : "",
-//             childSubCategoryId:
-//   selectedProduct.childSubCategory?.id
-//     ? String(selectedProduct.childSubCategory.id)
-//     : "",
-//           originalPrice: safeNum(selectedProduct.originalPrice, 0),
-//           finalPrice: safeNum(selectedProduct.price, 0),
-//           offer: safeNum(selectedProduct.offer, 0),
-//           stock: safeNum(selectedProduct.stock, 0),
-//           shippingAvailable: selectedProduct.shippingAvailable ?? false,
-//           warrantyInfo: selectedProduct.warrantyInfo ?? "",
-//           skuCode: selectedProduct.skuCode ?? "",
-//           material: selectedProduct.material ?? "",
-//           returnPolicy: selectedProduct.returnPolicy ?? "",
-//           manufactureDetails:
-//             selectedProduct.manufactureDetails ?? "",
-//           // keywords: selectedProduct.keywords || [],
-//         keywords:
-//   (selectedProduct.keywords || [])
-//     .filter(
-//       (k) =>
-//         typeof k === "string"
-//     )
-//     .map((k) => k.trim()),
-//           length: selectedProduct.length ?? "",
-//           width: selectedProduct.width ?? "",
-//           height: selectedProduct.height ?? "",
-//           weight: selectedProduct.weight ?? "",
-//           weightUnit: selectedProduct.weightUnit ?? "kg",
-//           hasVariants: initialVariants.length > 0,
-//         },
-//         variants: initialVariants,
-//         images: imageUrls,
-//         newImages: [],
-//         removedImageIds: [],
-//         loading: false,
-//         initialized: true,
-//       });
-
-//       // =========================
-//       // ✅ Variant toggle
-//       // =========================
-//       setShowVariants(initialVariants.length > 0);
-//     } catch (error) {
-//       console.error("Error initializing form data:", error);
-//       toast.error("Failed to initialize form");
-//     }
-//   }, [selectedProduct, options.subCategories, formState.initialized]);
-
-// useEffect(() => {
-//   if (!selectedProduct) return;
-//   if (formState.initialized) return;
-//   if (!options.subCategories.length) return;
-
-//   try {
-
-//     // your existing code
-
-//   } catch (error) {
-//     console.error("Error initializing form data:", error);
-//   }
-// }, [
-//   selectedProduct,
-//   options.subCategories,
-//   formState.initialized
-// ]);
 
 useEffect(() => {
   if (!selectedProduct) return;
@@ -453,6 +286,8 @@ useEffect(() => {
     setFormState({
       data: {
         ...selectedProduct,
+        dimensionUnit: selectedProduct.dimensionUnit ?? "cm",
+
         description: selectedProduct.description ?? "",
 
         categoryId:selectedProduct.category? String(selectedProduct.category.id) : "",
@@ -636,44 +471,9 @@ useEffect(() => {
         } else {
           if (name !== "attributes") {
             (updatedVariants[variantIndex] as any)[name] = value;
-
-            // Recalculate selling price for variants
-            // if (name === "price" || name === "offer") {
-            //   const price = name === "price" ? safeNum(value, 0) : updatedVariants[variantIndex].price;
-            //   const offer = name === "offer" ? safeNum(value, 0) : (updatedVariants[variantIndex].offer || 0);
-            //   updatedVariants[variantIndex].sellingPrice = computeSellingPrice(price, offer);
-            // }
-            // if (name === "price" || name === "sellingPrice") {
-            //   const price =
-            //     name === "price"
-            //       ? safeNum(value, 0)
-            //       : updatedVariants[variantIndex].price;
-
-            //   const sellingPrice =
-            //     name === "sellingPrice"
-            //       ? safeNum(value, 0)
-            //       : updatedVariants[variantIndex].sellingPrice;
-
-            //   updatedVariants[variantIndex].offer =
-            //     price > 0
-            //       ? Math.round(((price - sellingPrice) / price) * 100)
-            //       : 0;
-            // }
-
             if (name === "price" || name === "sellingPrice") {
-
-  const price =
-    name === "price"
-      ? safeNum(value, 0)
-      : safeNum(updatedVariants[variantIndex].price, 0);
-
-  let sellingPrice =
-    name === "sellingPrice"
-      ? safeNum(value, 0)
-      : safeNum(
-          updatedVariants[variantIndex].sellingPrice,
-          0
-        );
+           const price = name === "price"? safeNum(value, 0): safeNum(updatedVariants[variantIndex].price, 0);
+            let sellingPrice =name === "sellingPrice"? safeNum(value, 0): safeNum(updatedVariants[variantIndex].sellingPrice,0);
 
   // ✅ Prevent negative value
   if (sellingPrice < 0) {
@@ -764,37 +564,13 @@ useEffect(() => {
   };
 
   // ✅ Image management
-  // const handleRemoveImage = (index: number) => {
-  //   if (!formState.images[index] || !selectedProduct?.images) return;
-
-  //   const imgObj = selectedProduct.images[index];
-  //   if (imgObj && typeof imgObj === 'object' && "id" in imgObj) {
-  //     setFormState(prev => ({
-  //       ...prev,
-  //       removedImageIds: [...prev.removedImageIds, (imgObj as { id: number }).id],
-  //       images: prev.images.filter((_, i) => i !== index),
-  //     }));
-  //   } else {
-  //     setFormState(prev => ({
-  //       ...prev,
-  //       images: prev.images.filter((_, i) => i !== index),
-  //     }));
-  //   }
-  // };
-
   const handleRemoveImage = (index: number) => {
-
   setFormState(prev => {
-
     const imageToRemove =
       prev.images[index];
-
     if (!imageToRemove) return prev;
-
     return {
-
       ...prev,
-
       removedImageIds:
         imageToRemove.id
           ? [
@@ -802,15 +578,11 @@ useEffect(() => {
               imageToRemove.id
             ]
           : prev.removedImageIds,
-
       images: prev.images.filter(
         (_, i) => i !== index
       ),
-
     };
-
   });
-
 };
 
   const handleRemoveNewImage = (index: number) => {
@@ -849,46 +621,36 @@ useEffect(() => {
     }));
   };
 
-
-  console.log(formState.data?.returnPolicy)
   // ✅ Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-        
     if (!formState.data) {
       toast.error("Form data not initialized");
       return;
     }
-
     // Validation
     if (!formState.data.name?.trim()) {
       toast.error("Product name is required");
       return;
     }
-
     if (!formState.data.categoryId) {
       toast.error("Category is required");
       return;
     }
-
     if (!showVariants && formState.data.originalPrice <= 0) {
       toast.error("Original price must be greater than 0");
       return;
     }
-
     if (showVariants) {
       const invalidVariant = formState.variants.find(v =>
         !v.sku?.trim() || v.price <= 0 || v.stock < 0
       );
-
       if (invalidVariant) {
         toast.error("All variants must have SKU, valid price, and stock");
         return;
       }
     }
-
     setFormState(prev => ({ ...prev, loading: true }));
-
     try {
       const sanitizedVariants = formState.variants
         .filter(v => v.sku || v.price || v.stock)
@@ -927,22 +689,7 @@ useEffect(() => {
       // productData.append("offer", String(formState.data.offer ?? 0));
       productData.append("originalPrice", String(formState.data.originalPrice || 0));
       productData.append("finalPrice", String(formState.data.finalPrice || 0));
-      // productData.append("price", String(hasVariants ? 0 : calculateFinalPrice()));
-      //       productData.append(
-      //   "price",
-      //   String(
-      //     hasVariants
-      //       ? 0
-      //       : calculateFinalPrice(
-      //           Number(formState.data?.originalPrice || 0),
-      //           Number(formState.data?.offer || 0)
-      //         )
-      //   )
-      // );
-      productData.append(
-        "price",
-        String(hasVariants ? 0 : formState.data.finalPrice || 0)
-      );
+      productData.append("price",String(hasVariants ? 0 : formState.data.finalPrice || 0));
       productData.append("material", formState.data.material?.trim() || "");
       productData.append("stock", String(hasVariants ? 0 : formState.data.stock ?? 0));
       productData.append("length", String(formState.data.length ?? 0));
@@ -950,21 +697,12 @@ useEffect(() => {
       productData.append("width", String(formState.data.width ?? 0));
       productData.append("weight", String(formState.data.weight ?? 0));
       productData.append("weightUnit", formState.data.weightUnit?.trim() || "kg");
+      productData.append("dimensionUnit",formState.data.dimensionUnit || "cm");
       productData.append("shippingAvailable", String(formState.data.shippingAvailable ?? false));
       productData.append("skuCode", formState.data.skuCode?.trim() || "");
-      // productData.append("returnPolicy", formState.data.returnPolicy?.trim() || "");
-      productData.append(
-  "returnEligible",
-  String(formState.data.returnEligible ?? false)
-);
+      productData.append("returnEligible",String(formState.data.returnEligible ?? false));
 
-productData.append(
-  "returnWindowDays",
-  String(
-    formState.data.returnEligible
-      ? Number(formState.data.returnWindowDays || 0)
-      : 0
-  )
+      productData.append("returnWindowDays",String(formState.data.returnEligible? Number(formState.data.returnWindowDays || 0): 0)
 );
 
 productData.append(
@@ -1031,7 +769,7 @@ productData.append(
       dispatch(setSelectedProduct(updatedProduct));
 
       toast.success("✅ Product updated successfully!");
-
+      navigate("/product");
       // Reset temporary states
       setFormState(prev => ({
         ...prev,
@@ -1150,7 +888,7 @@ productData.append(
                 <div className="p-4 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <Label>Length<span className="text-red-500">*</span></Label>
+                      <Label>Length (cm)<span className="text-red-500">*</span></Label>
                       <Input
                         type="text"
                         name="length"
@@ -1160,7 +898,7 @@ productData.append(
                       />
                     </div>
                     <div>
-                      <Label>Width<span className="text-red-500">*</span></Label>
+                      <Label>Width (cm)<span className="text-red-500">*</span></Label>
                       <Input
                         type="text"
                         name="width"
@@ -1170,7 +908,7 @@ productData.append(
                       />
                     </div>
                     <div>
-                      <Label>Height<span className="text-red-500">*</span></Label>
+                      <Label>Height (cm)<span className="text-red-500">*</span></Label>
                       <Input
                         type="text"
                         name="height"

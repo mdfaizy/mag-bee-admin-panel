@@ -61,6 +61,7 @@ export interface Product {
   length: string;
   width: string;
   height: string;
+  dimensionUnit: string;
   weight: string;
   weightUnit: string;
   // stock: string;

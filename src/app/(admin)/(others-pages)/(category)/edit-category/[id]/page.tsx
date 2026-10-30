@@ -766,7 +766,7 @@ const EditCategoryPage = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                placeholder="Category ke baare mein short description likhein"
+                placeholder="Category  description..."
               />
             </div>
           </div>
