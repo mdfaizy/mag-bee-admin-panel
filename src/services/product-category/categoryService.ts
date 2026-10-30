@@ -3,10 +3,10 @@ import { AppDispatch } from "@/redux/store";
 import { toast } from "react-toastify";
 import { apiConnector } from "@/services/apiConnector";
 import { BASE_URL, endpointsCategory } from "../apis";
-import { setCategories } from "../../redux/productCategory";
+import { removeCategory, setCategories } from "../../redux/productCategory";
 import { AxiosError } from "axios";
 
-const { CREATE_CATEGORY_API ,PRODUCT_CATEGORY_GET_ALL} = endpointsCategory;
+const { CREATE_CATEGORY_API, PRODUCT_CATEGORY_GET_ALL } = endpointsCategory;
 
 interface CreateCategoryParams {
   formData: FormData;
@@ -16,22 +16,14 @@ interface CreateCategoryParams {
 export const createCategory = ({ formData, router }: CreateCategoryParams) => {
   return async (dispatch: AppDispatch) => {
     const toastId = toast.loading("Creating Category...");
-
     try {
-      const rawToken = localStorage.getItem("token");
-      const token = rawToken ? rawToken.replace(/^"|"$/g, "") : "";
-
       const res = await apiConnector<any>(
         "POST",
         CREATE_CATEGORY_API,
         formData,
-        {
-          Authorization: `Bearer ${token}`,
-        }
       );
-
-      // ✅ Update Redux store with the newly created category
-      dispatch(setCategories([res.data]));
+      const updatedList = await fetchProductCategory();
+      dispatch(setCategories(updatedList));
       toast.success("Product category created successfully!");
       router.push("/");
     } catch (err) {
@@ -52,37 +44,37 @@ export const createCategory = ({ formData, router }: CreateCategoryParams) => {
 
 
 export const fetchProductCategory = async () => {
-  // const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
-  const res = await apiConnector("GET", PRODUCT_CATEGORY_GET_ALL, undefined, {
-    // Authorization: `Bearer ${token}`,
-  });
-  return res.data;
+  // const res = await apiConnector("GET", PRODUCT_CATEGORY_GET_ALL);
+  // return res.data;
+  try {
+    const res = await apiConnector("GET", PRODUCT_CATEGORY_GET_ALL);
+    // return res.data;
+    return res.data.categories || [];
+  } catch (error) {
+    toast.error("Failed to load categories");
+    return [];
+  }
 };
 
 export const deleteCategory = (id: number) => {
   return async (dispatch: AppDispatch) => {
-    const toastId = toast.loading("Deleting category...", { position: "top-center" ,style: { zIndex: 100 }});
+    const toastId = toast.loading("Deleting category...", { position: "top-center", style: { zIndex: 100 } });
 
     try {
-      const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
-
       await apiConnector(
         "DELETE",
-        `${BASE_URL}/category/${id}`,
-        undefined,
-        {
-          Authorization: `Bearer ${token}`,
-        }
-      );
+        `/category/${id}`);
 
-      toast.success("Category deleted successfully!", { position: "top-center" });
+      // toast.success("Category deleted successfully!", { position: "top-center" });
 
       // Optionally refetch updated list after deletion
-      const updatedList = await fetchProductCategory();
-      dispatch(setCategories(updatedList));
+      // const updatedList = await fetchProductCategory();
+      // dispatch(setCategories(updatedList));
+      dispatch(removeCategory(id));
+      toast.success("Category deleted successfully!", { position: "top-center" });
     } catch (error: any) {
       const errMsg = error?.response?.data?.message || "Delete failed.";
-      toast.error(errMsg, { position: "top-center" ,style: { zIndex: 100 }});
+      toast.error(errMsg, { position: "top-center", style: { zIndex: 100 } });
     } finally {
       toast.dismiss(toastId);
     }

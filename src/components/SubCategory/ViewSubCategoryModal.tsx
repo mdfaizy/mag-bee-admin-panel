@@ -56,11 +56,14 @@ console.log('data',data)
   // 🔹 Set category name from categories list or fallback
 useEffect(() => {
   if (data) {
-    const cat = categories.find((c) => c.id === String(data.categoryId));
+    const cat = categories.find(
+      (c) => c.id === data.categoryId
+    );
 
     setCategoryName(cat?.name ?? data.category?.name ?? "N/A");
   }
 }, [data, categories]);
+
 
 
 
