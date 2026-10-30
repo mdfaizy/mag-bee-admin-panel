@@ -4,7 +4,7 @@ import {
   updateProductGroup
 } from "@/services/product/productService";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Input from "../../../../../../components/form/input/InputField";
@@ -59,7 +59,6 @@ const computeSellingPrice = (price: number, offer: number): number => {
 const EditProductPage: React.FC = () => {
   const dispatch = useDispatch();
   const { id } = useParams();
-  const navigate = useNavigate();
   const router = useRouter();
 
   const { selectedProduct, products } = useSelector((state: RootState) => state.product);
@@ -769,7 +768,7 @@ productData.append(
       dispatch(setSelectedProduct(updatedProduct));
 
       toast.success("✅ Product updated successfully!");
-      navigate("/product");
+      router.push("/product");
       // Reset temporary states
       setFormState(prev => ({
         ...prev,
