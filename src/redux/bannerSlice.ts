@@ -116,7 +116,7 @@ export interface Banner {
   link?: string;
 
   imageUrl: string;
-
+   mobileImageUrl?: string | null; // NEW
   startDate?: string;
 
   endDate?: string;
