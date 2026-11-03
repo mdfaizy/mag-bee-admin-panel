@@ -1,4 +1,274 @@
-"use client";
+  // "use client";
+
+  // import React, { useState, ChangeEvent, FormEvent } from "react";
+  // import { useDispatch } from "react-redux";
+  // import { useRouter } from "next/navigation";
+  // import { createOfferBanner } from "@/services/bannerServices/BannerService";
+  // import { AppDispatch } from "@/redux/store";
+  // import { toast } from "react-toastify";
+
+  // import Label from "../form/Label";
+  // import Input from "../form/input/InputField";
+  // import TextArea from "../form/input/TextArea";
+
+  // interface OfferBannerFormData {
+  //   title: string;
+  //   subtitle: string;
+  //   link: string;
+  //   startDate: string;
+  //   endDate: string;
+  //   image: File | null;
+  // }
+
+  // const OfferSliderForm = () => {
+  //   const dispatch = useDispatch<AppDispatch>();
+  //   const router = useRouter();
+  //   const [isActive, setIsActive] = useState(true);
+  //   const [form, setForm] = useState<OfferBannerFormData>({
+  //     title: "",
+  //     subtitle: "",
+  //     link: "",
+  //     startDate: "",
+  //     endDate: "",
+  //     image: null,
+  //   });
+  //   // const [isActive, setIsActive] = useState(true);
+
+  //   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  //   const [loading, setLoading] = useState(false);
+
+  //   /* -------------------- HANDLERS -------------------- */
+
+  //   const handleChange = (
+  //     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  //   ) => {
+  //     const { name, value } = e.target;
+  //     setForm((prev) => ({ ...prev, [name]: value }));
+  //   };
+
+  //   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+  //     const file = e.target.files?.[0];
+  //     if (!file) return;
+
+  //     // ✅ file size check (2MB)
+  //     if (file.size > 2 * 1024 * 1024) {
+  //       toast.error("Image size must be less than 2MB");
+  //       return;
+  //     }
+
+  //     // ✅ file type check
+  //     if (!file.type.startsWith("image/")) {
+  //       toast.error("Only image files are allowed");
+  //       return;
+  //     }
+
+  //     setForm((prev) => ({ ...prev, image: file }));
+
+  //     const reader = new FileReader();
+  //     reader.onloadend = () => setImagePreview(reader.result as string);
+  //     reader.readAsDataURL(file);
+  //   };
+
+  //   const handleSubmit = async (e: FormEvent) => {
+  //     e.preventDefault();
+
+  //     // if (!form.title.trim()) {
+  //     //   toast.error("Title is required");
+  //     //   return;
+  //     // }
+
+  //     if (!form.image) {
+  //       toast.error("Banner image is required");
+  //       return;
+  //     }
+
+  //     const formData = new FormData();
+  //     formData.append("title", form.title);
+  //     formData.append("subtitle", form.subtitle);
+  //     formData.append("link", form.link);
+  //     formData.append("startDate", form.startDate);
+  //     formData.append("endDate", form.endDate);
+  //     formData.append("image", form.image);
+  //     formData.append("isActive", String(isActive));
+
+  //     try {
+  //       setLoading(true);
+  //       await dispatch(createOfferBanner({ formData, router }));
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   /* -------------------- UI -------------------- */
+
+  //   return (
+  //     <form
+  //       onSubmit={handleSubmit}
+  //       className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md space-y-6"
+  //     >
+  //       <h2 className="text-2xl font-bold text-gray-800">
+  //         Create New Offer Banner
+  //       </h2>
+
+  //       <div className="flex items-center">
+  //         <span className="mr-2 text-sm font-medium text-gray-700">Status:</span>
+  //         <button
+  //           type="button"
+  //           onClick={() => setIsActive(!isActive)}
+  //           className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${isActive ? 'bg-green-500' : 'bg-gray-300'}`}
+  //         >
+  //           <span className="sr-only">Toggle Status</span>
+  //           <span
+  //             className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`}
+  //           />
+  //         </button>
+  //         <span className="ml-2 text-sm font-medium text-gray-700">
+  //           {isActive ? 'Active' : 'Inactive'}
+  //         </span>
+  //       </div>
+
+  //       {/* Title */}
+  //       <div>
+  //         <Label>
+  //           Offer Title <span className="text-red-500">*</span>
+  //         </Label>
+  //         <Input
+  //           type="text"
+  //           name="title"
+  //           value={form.title}
+  //           onChange={handleChange}
+  //           placeholder="e.g. Big Billion Days"
+
+  //         />
+  //       </div>
+
+  //       {/* Subtitle */}
+  //       <div>
+  //         <Label>Subtitle</Label>
+  //         <TextArea
+  //           name="subtitle"
+  //           value={form.subtitle}
+  //           onChange={handleChange}
+  //           placeholder="e.g. Up to 70% off"
+  //         />
+  //       </div>
+
+  //       {/* Link */}
+  //       <div>
+  //         <Label>Redirect Link</Label>
+  //         <Input
+  //           type="url"
+  //           name="link"
+  //           value={form.link}
+  //           onChange={handleChange}
+  //           placeholder="https://example.com"
+  //         />
+  //       </div>
+
+  //       {/* Dates */}
+  //       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  //         <div>
+  //           <Label>Start Date</Label>
+  //           <Input
+  //             type="date"
+  //             name="startDate"
+  //             value={form.startDate}
+  //             onChange={handleChange}
+  //           />
+  //         </div>
+  //         <div>
+  //           <Label>End Date</Label>
+  //           <Input
+  //             type="date"
+  //             name="endDate"
+  //             value={form.endDate}
+  //             onChange={handleChange}
+  //           />
+  //         </div>
+  //       </div>
+
+  //       {/* Image Upload */}
+
+  //       <div className="space-y-2">
+  //         <Label className="text-sm font-medium text-gray-700">
+  //           Banner Image <span className="text-red-500">*</span>
+  //         </Label>
+
+  //         <div className="flex gap-6">
+  //           {/* Upload Box */}
+  //           <label
+  //             htmlFor="bannerImage"
+  //             className="flex flex-col items-center justify-center w-64 h-40
+  //                 border-2 border-dashed border-gray-300 rounded-lg
+  //                 cursor-pointer hover:border-blue-500
+  //                 transition-colors bg-gray-50"
+  //           >
+  //             <svg
+  //               className="w-10 h-10 mb-2 text-gray-400"
+  //               fill="none"
+  //               stroke="currentColor"
+  //               viewBox="0 0 24 24"
+  //             >
+  //               <path
+  //                 strokeLinecap="round"
+  //                 strokeLinejoin="round"
+  //                 strokeWidth={2}
+  //                 d="M7 16V12m0 0l2 2m-2-2l-2 2m6-6h.01M12 16v-4m0 0l2 2m-2-2l-2 2m6-6h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+  //               />
+  //             </svg>
+
+  //             <p className="text-sm text-gray-600">
+  //               <span className="font-semibold text-blue-600">Click to upload</span>
+  //             </p>
+  //             <p className="text-xs text-gray-500 mt-1">
+  //               PNG, JPG (Max 2MB)
+  //             </p>
+
+  //             <input
+  //               id="bannerImage"
+  //               type="file"
+  //               accept="image/*"
+  //               onChange={handleImageChange}
+  //               className="hidden"
+  //               required
+  //             />
+  //           </label>
+
+  //           {/* Preview */}
+  //           {imagePreview && (
+  //             <div className="relative w-64 h-40 border rounded-lg overflow-hidden bg-white shadow-sm">
+  //               <img
+  //                 src={imagePreview}
+  //                 alt="Banner Preview"
+  //                 className="w-full h-full object-contain"
+  //               />
+  //               <span className="absolute top-1 right-1 text-xs bg-black/70 text-white px-2 py-0.5 rounded">
+  //                 Preview
+  //               </span>
+  //             </div>
+  //           )}
+  //         </div>
+  //       </div>
+
+
+  //       {/* Submit */}
+  //       <button
+  //         type="submit"
+  //         disabled={loading}
+  //         className={`w-full py-2 rounded text-white ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+  //           }`}
+  //       >
+  //         {loading ? "Creating..." : "Create Banner"}
+  //       </button>
+  //     </form>
+  //   );
+  // };
+
+  // export default OfferSliderForm;
+
+
+
+  "use client";
 
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { useDispatch } from "react-redux";
@@ -11,19 +281,24 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import TextArea from "../form/input/TextArea";
 
+type ImageField = "image" | "mobileImage";
+
 interface OfferBannerFormData {
   title: string;
   subtitle: string;
   link: string;
   startDate: string;
   endDate: string;
-  image: File | null;
+  image: File | null; // desktop (required)
+  mobileImage: File | null; // mobile (optional)
 }
+
+const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 const OfferSliderForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
- const [isActive, setIsActive] = useState(true);
+  const [isActive, setIsActive] = useState(true);
   const [form, setForm] = useState<OfferBannerFormData>({
     title: "",
     subtitle: "",
@@ -31,10 +306,15 @@ const OfferSliderForm = () => {
     startDate: "",
     endDate: "",
     image: null,
+    mobileImage: null,
   });
-// const [isActive, setIsActive] = useState(true);
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<Record<ImageField, string | null>>({
+    image: null,
+    mobileImage: null,
+  });
+  // mobile input ko reset karne ke liye (same file dobara select ho sake)
+  const [mobileInputKey, setMobileInputKey] = useState(0);
   const [loading, setLoading] = useState(false);
 
   /* -------------------- HANDLERS -------------------- */
@@ -46,39 +326,44 @@ const OfferSliderForm = () => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleImageChange =
+    (field: ImageField) => (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    // ✅ file size check (2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image size must be less than 2MB");
-      return;
-    }
+      // file size check (2MB)
+      if (file.size > MAX_SIZE) {
+        toast.error("Image size must be less than 2MB");
+        e.target.value = "";
+        return;
+      }
 
-    // ✅ file type check
-    if (!file.type.startsWith("image/")) {
-      toast.error("Only image files are allowed");
-      return;
-    }
+      // file type check
+      if (!file.type.startsWith("image/")) {
+        toast.error("Only image files are allowed");
+        e.target.value = "";
+        return;
+      }
 
-    setForm((prev) => ({ ...prev, image: file }));
+      setForm((prev) => ({ ...prev, [field]: file }));
 
-    const reader = new FileReader();
-    reader.onloadend = () => setImagePreview(reader.result as string);
-    reader.readAsDataURL(file);
+      const reader = new FileReader();
+      reader.onloadend = () =>
+        setPreviews((prev) => ({ ...prev, [field]: reader.result as string }));
+      reader.readAsDataURL(file);
+    };
+
+  const removeMobileImage = () => {
+    setForm((prev) => ({ ...prev, mobileImage: null }));
+    setPreviews((prev) => ({ ...prev, mobileImage: null }));
+    setMobileInputKey((k) => k + 1);
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!form.title.trim()) {
-      toast.error("Title is required");
-      return;
-    }
-
     if (!form.image) {
-      toast.error("Banner image is required");
+      toast.error("Desktop banner image is required");
       return;
     }
 
@@ -90,6 +375,11 @@ const OfferSliderForm = () => {
     formData.append("endDate", form.endDate);
     formData.append("image", form.image);
     formData.append("isActive", String(isActive));
+
+    // optional mobile image
+    if (form.mobileImage) {
+      formData.append("mobileImage", form.mobileImage);
+    }
 
     try {
       setLoading(true);
@@ -110,22 +400,26 @@ const OfferSliderForm = () => {
         Create New Offer Banner
       </h2>
 
-       <div className="flex items-center">
-            <span className="mr-2 text-sm font-medium text-gray-700">Status:</span>
-            <button
-              type="button"
-              onClick={() => setIsActive(!isActive)}
-              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${isActive ? 'bg-green-500' : 'bg-gray-300'}`}
-            >
-              <span className="sr-only">Toggle Status</span>
-              <span
-                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${isActive ? 'translate-x-6' : 'translate-x-1'}`}
-              />
-            </button>
-            <span className="ml-2 text-sm font-medium text-gray-700">
-              {isActive ? 'Active' : 'Inactive'}
-            </span>
-          </div>
+      <div className="flex items-center">
+        <span className="mr-2 text-sm font-medium text-gray-700">Status:</span>
+        <button
+          type="button"
+          onClick={() => setIsActive(!isActive)}
+          className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none ${
+            isActive ? "bg-green-500" : "bg-gray-300"
+          }`}
+        >
+          <span className="sr-only">Toggle Status</span>
+          <span
+            className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform ${
+              isActive ? "translate-x-6" : "translate-x-1"
+            }`}
+          />
+        </button>
+        <span className="ml-2 text-sm font-medium text-gray-700">
+          {isActive ? "Active" : "Inactive"}
+        </span>
+      </div>
 
       {/* Title */}
       <div>
@@ -138,7 +432,6 @@ const OfferSliderForm = () => {
           value={form.title}
           onChange={handleChange}
           placeholder="e.g. Big Billion Days"
-
         />
       </div>
 
@@ -187,81 +480,142 @@ const OfferSliderForm = () => {
         </div>
       </div>
 
-      {/* Image Upload */}
-
+      {/* Desktop Image Upload */}
       <div className="space-y-2">
         <Label className="text-sm font-medium text-gray-700">
-          Banner Image <span className="text-red-500">*</span>
+          Desktop Banner Image <span className="text-red-500">*</span>
         </Label>
+        <p className="text-xs text-gray-500">
+          Recommended 1521 × 400 px. PNG, JPG (Max 2MB)
+        </p>
 
-        <div className="flex gap-6">
-          {/* Upload Box */}
+        <div className="flex flex-wrap gap-6">
           <label
             htmlFor="bannerImage"
             className="flex flex-col items-center justify-center w-64 h-40
-                 border-2 border-dashed border-gray-300 rounded-lg
-                 cursor-pointer hover:border-blue-500
-                 transition-colors bg-gray-50"
+                border-2 border-dashed border-gray-300 rounded-lg
+                cursor-pointer hover:border-blue-500
+                transition-colors bg-gray-50"
           >
-            <svg
-              className="w-10 h-10 mb-2 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 16V12m0 0l2 2m-2-2l-2 2m6-6h.01M12 16v-4m0 0l2 2m-2-2l-2 2m6-6h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-
+            <UploadIcon />
             <p className="text-sm text-gray-600">
-              <span className="font-semibold text-blue-600">Click to upload</span>
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              PNG, JPG (Max 2MB)
+              <span className="font-semibold text-blue-600">
+                Click to upload
+              </span>
             </p>
 
             <input
               id="bannerImage"
               type="file"
               accept="image/*"
-              onChange={handleImageChange}
+              onChange={handleImageChange("image")}
               className="hidden"
               required
             />
           </label>
 
-          {/* Preview */}
-          {imagePreview && (
+          {previews.image && (
             <div className="relative w-64 h-40 border rounded-lg overflow-hidden bg-white shadow-sm">
               <img
-                src={imagePreview}
-                alt="Banner Preview"
+                src={previews.image}
+                alt="Desktop Banner Preview"
                 className="w-full h-full object-contain"
               />
               <span className="absolute top-1 right-1 text-xs bg-black/70 text-white px-2 py-0.5 rounded">
-                Preview
+                Desktop
               </span>
             </div>
           )}
         </div>
       </div>
 
+      {/* Mobile Image Upload (optional) */}
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-gray-700">
+          Mobile Banner Image{" "}
+          <span className="font-normal text-gray-400">(optional)</span>
+        </Label>
+        <p className="text-xs text-gray-500">
+          Recommended 800 × 600 px (4:3). PNG, JPG (Max 2MB). Na doge to mobile
+          pe desktop image dikhegi.
+        </p>
+
+        <div className="flex flex-wrap gap-6">
+          <label
+            htmlFor="mobileBannerImage"
+            className="flex flex-col items-center justify-center w-64 h-40
+                border-2 border-dashed border-gray-300 rounded-lg
+                cursor-pointer hover:border-blue-500
+                transition-colors bg-gray-50"
+          >
+            <UploadIcon />
+            <p className="text-sm text-gray-600">
+              <span className="font-semibold text-blue-600">
+                Click to upload
+              </span>
+            </p>
+
+            <input
+              key={mobileInputKey}
+              id="mobileBannerImage"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange("mobileImage")}
+              className="hidden"
+            />
+          </label>
+
+          {previews.mobileImage && (
+            <div className="relative w-64 h-40 border rounded-lg overflow-hidden bg-white shadow-sm">
+              <img
+                src={previews.mobileImage}
+                alt="Mobile Banner Preview"
+                className="w-full h-full object-contain"
+              />
+              <span className="absolute top-1 left-1 text-xs bg-black/70 text-white px-2 py-0.5 rounded">
+                Mobile
+              </span>
+              <button
+                type="button"
+                onClick={removeMobileImage}
+                aria-label="Remove mobile image"
+                className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white hover:bg-black"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Submit */}
       <button
         type="submit"
         disabled={loading}
-        className={`w-full py-2 rounded text-white ${loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
-          }`}
+        className={`w-full py-2 rounded text-white ${
+          loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
+        }`}
       >
         {loading ? "Creating..." : "Create Banner"}
       </button>
     </form>
   );
 };
+
+const UploadIcon = () => (
+  <svg
+    className="w-10 h-10 mb-2 text-gray-400"
+    fill="none"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={2}
+      d="M7 16V12m0 0l2 2m-2-2l-2 2m6-6h.01M12 16v-4m0 0l2 2m-2-2l-2 2m6-6h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+    />
+  </svg>
+);
 
 export default OfferSliderForm;

@@ -12,8 +12,6 @@ import Label from "../form/Label";
 import Button from "../ui/button/Button";
 import { fetchProductCategory } from "@/services/product-category/categoryService";
 import { setCategories } from "@/redux/productCategory";
-import { SubCategory } from "../types/category";
-import { BASE_URL } from "@/services/apis";
 import { updateSubCategoryById } from "@/services/subCategoryService/subCategoryService";
 interface Props {
   isOpen: boolean;

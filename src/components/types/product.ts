@@ -41,6 +41,10 @@ export interface Product {
     id: number;
     name: string;
   };
+  childSubCategory?: {
+  id: number;
+  name: string;
+};
   description: string;
   material: string;
    isActive?: boolean;
@@ -57,12 +61,20 @@ export interface Product {
   length: string;
   width: string;
   height: string;
+  dimensionUnit: string;
   weight: string;
   weightUnit: string;
   // stock: string;
   shippingAvailable: boolean;
+  variantGroupId?: number;
   skuCode: string;
-  returnPolicy: string;
+  // returnPolicy: string;
+  returnEligible: boolean;
+returnWindowDays: number;
+replacementEligible: boolean;
+replacementWindowDays: number;
+  /** customer may cancel an order with this product before dispatch */
+  cancelable?: boolean;
   warrantyInfo: string;
   images?: ProductImage[];
   variants: Variant[];

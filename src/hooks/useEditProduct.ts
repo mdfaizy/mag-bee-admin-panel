@@ -13,6 +13,13 @@ export interface Product {
   category?: { id: number; name: string };
   slug?: string;
   imageUrl: string;
+   length?: number | string;
+  width?: number | string;
+  height?: number | string;
+  dimensionUnit?: "cm";
+
+  weight?: number | string;
+  weightUnit?: "kg" | "g";
   createdAt: string;
   updatedAt: string;
 }
@@ -127,6 +134,15 @@ export const useProductTableLogic = () => {
           originalPrice: editData.originalPrice,
           offer: editData.offer,
           imageUrl: editData.imageUrl || null,
+
+           length: editData.length,
+  width: editData.width,
+  height: editData.height,
+  dimensionUnit: editData.dimensionUnit || "cm",
+
+  // Weight
+  weight: editData.weight,
+  weightUnit: editData.weightUnit || "kg",
         }),
       });
 
