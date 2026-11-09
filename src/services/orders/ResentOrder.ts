@@ -67,8 +67,12 @@ export const getAllOrdersForAnalytics = async () => {
 //   }
 // };
 
+/** Staff: retry cancelling a cancelled order's shipment at Shiprocket (verified result) */
+export const retryShiprocketCancellation = async (shipmentId: number) =>
+  apiConnector("POST", `/shipments/${shipmentId}/provider-cancel`);
+
 export const downloadInvoice = (orderId: string) => {
-  const url = `http://localhost:8000/api/orders/${orderId}/invoice`;
+  const url = `https://ecommerce.magaritatech.com/api/orders/${orderId}/invoice`;
 
   // browser me PDF open / download
   window.open(url, "_blank");

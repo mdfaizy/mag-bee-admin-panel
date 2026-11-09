@@ -222,12 +222,13 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
     if (status === "REQUESTED" || status === "APPROVED") {
       actions.push({
         key: "pickup",
-        title: "Book reverse pickup?",
-        description:
-          status === "REQUESTED"
+        title: request.returnPickupError ? "Retry the reverse pickup?" : "Book reverse pickup?",
+        description: request.returnPickupError
+          ? "Tries the Shiprocket reverse pickup again. If the last attempt may have reached Shiprocket, it checks Shiprocket first and never books a second pickup."
+          : status === "REQUESTED"
             ? "Books a pickup with the courier. This also approves the return."
             : "Books a pickup with the courier for this return.",
-        confirmLabel: "Book pickup",
+        confirmLabel: request.returnPickupError ? "Retry pickup booking" : "Book pickup",
         input: "none",
         run: () => bookReturnPickup(rid),
       });
@@ -436,10 +437,21 @@ const ReturnDetailModal: React.FC<Props> = ({ returnRequestId, onClose, onChange
               ))}
             </section>
 
-            {(request.returnAwbCode || request.returnProviderStatus) && (
+            {(request.returnAwbCode || request.returnProviderStatus || request.returnProviderOrderId) && (
               <p className="text-gray-600 dark:text-gray-400">
                 Pickup AWB: <strong>{request.returnAwbCode || "—"}</strong>
-                {request.returnProviderStatus && ` · Courier status: ${request.returnProviderStatus}`}
+                {request.returnCourierName && ` · ${request.returnCourierName}`}
+                {request.returnProviderStatus &&
+                  !["PICKUP_BOOKING", "PICKUP_UNKNOWN"].includes(request.returnProviderStatus) &&
+                  ` · Courier status: ${request.returnProviderStatus}`}
+                {request.returnProviderOrderId && ` · Shiprocket return order ${request.returnProviderOrderId}`}
+              </p>
+            )}
+
+            {request.returnPickupError && (
+              <p role="alert" className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800">
+                Last pickup attempt{request.returnPickupAttemptedAt ? ` (${date(request.returnPickupAttemptedAt)})` : ""}:{" "}
+                {request.returnPickupError}
               </p>
             )}
 

@@ -750,6 +750,80 @@ import {
   RotateCcw,
 } from "lucide-react";
 import { getCancellationReasonLabel } from "@/utils/cancellationReasons";
+import { retryShiprocketCancellation } from "@/services/orders/ResentOrder";
+
+// ==========================================================
+// COURIER CANCELLATION (Shiprocket) for a cancelled order
+// ==========================================================
+
+const COURIER_CANCEL_TEXT: Record<string, string> = {
+  CANCELLED: "Cancelled at Shiprocket (confirmed by Shiprocket).",
+  REQUESTED: "Cancellation requested at Shiprocket; waiting for the courier to confirm.",
+  IN_PROGRESS: "Cancellation at Shiprocket is in progress.",
+  NOT_REQUIRED: "Not booked with Shiprocket; nothing to cancel there.",
+};
+
+const CourierCancelPanel = ({ order, shipment }: { order: any; shipment: any }) => {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const [current, setCurrent] = useState<{ status: string | null; error: string | null }>({
+    status: shipment?.providerCancelStatus ?? null,
+    error: shipment?.providerCancelError ?? null,
+  });
+
+  const orderCancelled = ["CANCELLED", "FAILED"].includes(String(order?.status || "").toUpperCase());
+  const atShiprocket =
+    String(shipment?.provider || "").toUpperCase() === "SHIPROCKET" && Boolean(shipment?.providerOrderId);
+  if (!orderCancelled || !atShiprocket) return null;
+
+  const confirmed = current.status === "CANCELLED" || String(shipment?.status || "").toUpperCase() === "CANCELLED";
+  const text =
+    COURIER_CANCEL_TEXT[current.status || ""] ||
+    current.error ||
+    "Not yet confirmed as cancelled at Shiprocket.";
+
+  const retry = async () => {
+    setBusy(true);
+    setResult(null);
+    try {
+      const response: any = await retryShiprocketCancellation(Number(shipment.id));
+      const data = response?.data?.data || {};
+      setCurrent({ status: data.providerCancelStatus ?? data.outcome ?? null, error: data.error ?? null });
+      setResult({ ok: true, text: response?.data?.message || "Updated" });
+    } catch (error: any) {
+      const data = error?.response?.data;
+      if (data?.data) setCurrent({ status: data.data.providerCancelStatus ?? data.data.outcome ?? null, error: data.data.error ?? null });
+      setResult({ ok: false, text: data?.data?.error || data?.message || "Shiprocket cancellation failed" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div
+      role="status"
+      className={`mt-4 rounded-lg border p-3 text-sm ${
+        confirmed ? "border-green-200 bg-green-50 text-green-800" : "border-amber-200 bg-amber-50 text-amber-800"
+      }`}
+    >
+      <p className="font-semibold">Courier cancellation</p>
+      <p className="mt-0.5">{confirmed ? COURIER_CANCEL_TEXT.CANCELLED : text}</p>
+      {!confirmed && current.error && current.error !== text && <p className="mt-0.5">{current.error}</p>}
+      {!confirmed && (
+        <button
+          type="button"
+          onClick={retry}
+          disabled={busy || current.status === "IN_PROGRESS"}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-60"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          {busy ? "Contacting Shiprocket…" : current.status === "NOT_CANCELLABLE" ? "Check Shiprocket again" : "Retry Shiprocket cancellation"}
+        </button>
+      )}
+      {result && <p className={`mt-2 text-xs ${result.ok ? "text-green-700" : "text-red-700"}`}>{result.text}</p>}
+    </div>
+  );
+};
 
 interface OrderViewModalProps {
   isOpen: boolean;
@@ -1425,6 +1499,8 @@ export default function AdminOrderViewModal({
                       />
                     </div>
                   </div>
+
+                  <CourierCancelPanel order={order} shipment={shipment} />
                 </Section>
               )}
             </div>

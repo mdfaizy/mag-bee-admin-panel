@@ -78,6 +78,11 @@ export interface ReturnRequest {
   returnAwbCode: string | null;
   returnShipmentId: string | null;
   returnProviderStatus: string | null;
+  /** Shiprocket return order id, courier, last booking failure */
+  returnProviderOrderId?: string | null;
+  returnCourierName?: string | null;
+  returnPickupError?: string | null;
+  returnPickupAttemptedAt?: string | null;
   pickupScheduledAt: string | null;
   receivedAt: string | null;
   inspectedAt: string | null;
