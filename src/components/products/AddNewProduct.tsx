@@ -17,6 +17,8 @@ import { useRouter } from "next/navigation";
 import { calculateFinalPrice, calculateOfferPercentage } from "@/utils/priceUtils";
 import { ProductFormData, productSchema } from "@/validations/product.schema";
 import RichTextEditor from "@/components/form/input/RichTextEditor";
+import ReturnReplacementPolicyFields from "@/components/products/ReturnReplacementPolicyFields";
+import { PolicyErrors, ReturnReplacementPolicy, policyToPayload } from "@/validations/returnPolicy";
 const parseNumber = (v: any) => {
   if (v === "" || v === null || v === undefined) return undefined;
   const num = Number(v);
@@ -74,10 +76,12 @@ export default function AddNewProduct() {
       shippingAvailable: false,
       skuCode: "",
       // returnPolicy: "",
-      returnEligible: true,
-returnWindowDays: 7,
-replacementEligible: false,
-replacementWindowDays: 0,
+      // Return & Replacement: OFF until the admin configures them
+      returnEligible: false,
+      returnWindowDays: 0,
+      replacementEligible: false,
+      replacementWindowDays: 0,
+      returnPolicyConditions: "",
       warrantyInfo: "",
       hasVariants: false,
       variants: [],
@@ -92,11 +96,24 @@ replacementWindowDays: 0,
   const watchVariants = watch("variants");
 
 
-  const watchReturnEligible = watch("returnEligible");
-const watchReplacementEligible = watch("replacementEligible");
-
-const isReturnEnabled = watchReturnEligible === true;
-const isReplacementEnabled = watchReplacementEligible === true;
+  const policyValue: ReturnReplacementPolicy = {
+    returnEligible: watch("returnEligible") === true,
+    returnWindowDays: Number(watch("returnWindowDays")) || 0,
+    replacementEligible: watch("replacementEligible") === true,
+    replacementWindowDays: Number(watch("replacementWindowDays")) || 0,
+    returnPolicyConditions: watch("returnPolicyConditions") ?? "",
+  };
+  const policyErrors: PolicyErrors = {
+    returnWindowDays: errors.returnWindowDays?.message as string | undefined,
+    replacementWindowDays: errors.replacementWindowDays?.message as string | undefined,
+    returnPolicyConditions: errors.returnPolicyConditions?.message as string | undefined,
+  };
+  const updatePolicy = (patch: Partial<ReturnReplacementPolicy>) => {
+    (Object.entries(patch) as [keyof ReturnReplacementPolicy, never][]).forEach(([key, value]) =>
+      setValue(key, value, { shouldDirty: true })
+    );
+    trigger(["returnWindowDays", "replacementWindowDays", "returnPolicyConditions"]);
+  };
   // Update showVariants state when hasVariants changes
   useEffect(() => {
     setShowVariants(watchHasVariants);
@@ -326,11 +343,14 @@ const isReplacementEnabled = watchReplacementEligible === true;
         weight: data.weight,
         weightUnit: data.weightUnit,
         //returnPolicy: data.returnPolicy || null,
-        returnEligible: data.returnEligible,
-        returnWindowDays: data.returnEligible? Number(data.returnWindowDays || 0): 0,
-        replacementEligible: data.replacementEligible,
-        replacementWindowDays: data.replacementEligible
-          ? Number(data.replacementWindowDays || 0): 0,
+        // Return & Replacement (schema-validated; the API validates again)
+        ...policyToPayload({
+          returnEligible: data.returnEligible === true,
+          returnWindowDays: Number(data.returnWindowDays) || 0,
+          replacementEligible: data.replacementEligible === true,
+          replacementWindowDays: Number(data.replacementWindowDays) || 0,
+          returnPolicyConditions: data.returnPolicyConditions ?? "",
+        }),
         warrantyInfo: data.warrantyInfo || null,
         keywords: JSON.stringify(data.keywords),
         shippingAvailable: data.shippingAvailable,
@@ -732,103 +752,12 @@ const isReplacementEnabled = watchReplacementEligible === true;
 
   <div className="p-4 space-y-5">
 
-    {/* Return Available */}
-    <div>
-      <Label>Return Available</Label>
-
-      <div className="flex items-center gap-6 mt-2">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            value="true"
-            {...register("returnEligible")}
-            className="w-4 h-4"
-          />
-          <span>Yes</span>
-        </label>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            value="false"
-            {...register("returnEligible")}
-            className="w-4 h-4"
-          />
-          <span>No</span>
-        </label>
-      </div>
-    </div>
-
-    {/* Return Window */}
-    {isReturnEnabled && (
-      <div>
-        <Label>Return Window (Days)</Label>
-
-        <Input
-          type="number"
-          min="1"
-          {...register("returnWindowDays", {
-            setValueAs: (v) =>
-              v === "" ? 0 : Number(v),
-          })}
-          placeholder="e.g. 7"
-        />
-
-        <p className="text-xs text-gray-500 mt-1">
-          Number of days after delivery in which the customer can
-          request a return.
-        </p>
-      </div>
-    )}
-
-    {/* Replacement Available */}
-    <div>
-      <Label>Replacement Available</Label>
-
-      <div className="flex items-center gap-6 mt-2">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            value="true"
-            {...register("replacementEligible")}
-            className="w-4 h-4"
-          />
-          <span>Yes</span>
-        </label>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="radio"
-            value="false"
-            {...register("replacementEligible")}
-            className="w-4 h-4"
-          />
-          <span>No</span>
-        </label>
-      </div>
-    </div>
-
-    {/* Replacement Window */}
-    {isReplacementEnabled && (
-      <div>
-        <Label>Replacement Window (Days)</Label>
-
-        <Input
-          type="number"
-          min="1"
-          {...register("replacementWindowDays", {
-            setValueAs: (v) =>
-              v === "" ? 0 : Number(v),
-          })}
-          placeholder="e.g. 7"
-        />
-
-        <p className="text-xs text-gray-500 mt-1">
-          Number of days after delivery in which the customer can
-          request a replacement.
-        </p>
-      </div>
-    )}
+    {/* Return & Replacement */}
+    <ReturnReplacementPolicyFields
+      value={policyValue}
+      errors={policyErrors}
+      onChange={updatePolicy}
+    />
 
     {/* Warranty Information */}
     <div>

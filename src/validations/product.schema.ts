@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_POLICY_CONDITIONS_LENGTH, MAX_POLICY_WINDOW_DAYS, validateReturnPolicy } from "./returnPolicy";
 
 /* -------------------- HELPERS -------------------- */
 
@@ -92,7 +93,10 @@ returnWindowDays: z.preprocess(
     if (val === "" || val === undefined || val === null) return 0;
     return Number(val);
   },
-  z.number().min(0, "Return window cannot be negative")
+  z.number()
+    .int("Return window must be a whole number of days")
+    .min(0, "Return window cannot be negative")
+    .max(MAX_POLICY_WINDOW_DAYS, `Return window cannot exceed ${MAX_POLICY_WINDOW_DAYS} days`)
 ),
 
 replacementEligible: z.preprocess(
@@ -105,8 +109,15 @@ replacementWindowDays: z.preprocess(
     if (val === "" || val === undefined || val === null) return 0;
     return Number(val);
   },
-  z.number().min(0, "Replacement window cannot be negative")
+  z.number()
+    .int("Replacement window must be a whole number of days")
+    .min(0, "Replacement window cannot be negative")
+    .max(MAX_POLICY_WINDOW_DAYS, `Replacement window cannot exceed ${MAX_POLICY_WINDOW_DAYS} days`)
 ),
+returnPolicyConditions: z
+  .string()
+  .max(MAX_POLICY_CONDITIONS_LENGTH, `Conditions cannot exceed ${MAX_POLICY_CONDITIONS_LENGTH} characters`)
+  .optional(),
 cancelable: z.preprocess(
   (val) => (val === undefined ? undefined : val === "true" || val === true),
   z.boolean().optional()
@@ -130,7 +141,20 @@ cancelable: z.preprocess(
 /* -------------------- FINAL SCHEMA WITH CONDITIONAL VALIDATION -------------------- */
 
 export const productSchema = baseProductSchema.superRefine((data, ctx) => {
-  
+
+  /* ================= RETURN & REPLACEMENT ================= */
+  // an enabled option needs a 1–7 day window; a disabled one is not applicable
+  const policyErrors = validateReturnPolicy({
+    returnEligible: data.returnEligible,
+    returnWindowDays: data.returnWindowDays,
+    replacementEligible: data.replacementEligible,
+    replacementWindowDays: data.replacementWindowDays,
+    returnPolicyConditions: data.returnPolicyConditions,
+  });
+  Object.entries(policyErrors).forEach(([path, message]) =>
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [path], message })
+  );
+
   /* ================= VARIANT PRODUCT ================= */
   if (data.hasVariants) {
     if (!data.variants || data.variants.length === 0) {

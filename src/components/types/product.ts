@@ -68,11 +68,13 @@ export interface Product {
   shippingAvailable: boolean;
   variantGroupId?: number;
   skuCode: string;
-  // returnPolicy: string;
+  // Return & Replacement (1–7 days after delivery; 0 when disabled)
   returnEligible: boolean;
-returnWindowDays: number;
-replacementEligible: boolean;
-replacementWindowDays: number;
+  returnWindowDays: number;
+  replacementEligible: boolean;
+  replacementWindowDays: number;
+  /** conditions / instructions shown to customers */
+  returnPolicyConditions?: string | null;
   /** customer may cancel an order with this product before dispatch */
   cancelable?: boolean;
   warrantyInfo: string;

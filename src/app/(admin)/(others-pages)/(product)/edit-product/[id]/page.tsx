@@ -23,6 +23,14 @@ import { fetchSubCategoryAll } from "@/services/subCategoryService/subCategorySe
 import { Product, Variant } from "@/components/types/product";
 import { apiConnector } from "@/services/apiConnector";
 import { calculateOfferPercentage } from "@/utils/priceUtils"
+import ReturnReplacementPolicyFields from "@/components/products/ReturnReplacementPolicyFields";
+import {
+  PolicyErrors,
+  ReturnReplacementPolicy,
+  policyFromProduct,
+  policyToPayload,
+  validateReturnPolicy,
+} from "@/validations/returnPolicy";
 type ProductImageType = {
   id: number;
   imageUrl: string;
@@ -56,8 +64,18 @@ const computeSellingPrice = (price: number, offer: number): number => {
   return Math.round((priceNum * (1 - offerNum / 100) + Number.EPSILON) * 100) / 100;
 };
 
+// Current Return & Replacement values from the form data
+const policyFromForm = (data: any): ReturnReplacementPolicy => ({
+  returnEligible: data?.returnEligible === true,
+  returnWindowDays: Number(data?.returnWindowDays) || 0,
+  replacementEligible: data?.replacementEligible === true,
+  replacementWindowDays: Number(data?.replacementWindowDays) || 0,
+  returnPolicyConditions: data?.returnPolicyConditions ?? "",
+});
+
 const EditProductPage: React.FC = () => {
   const dispatch = useDispatch();
+  const [policyErrors, setPolicyErrors] = useState<PolicyErrors>({});
   const { id } = useParams();
   const router = useRouter();
 
@@ -314,32 +332,10 @@ useEffect(() => {
           selectedProduct.price,
           0
         ),
-//         returnEligible:
-//   selectedProduct.returnEligible === true ||
-//   selectedProduct.returnEligible === "true",
-
-// returnWindowDays: Number(
-//   selectedProduct.returnWindowDays ?? 7
-// ),
-
-// replacementEligible:
-//   selectedProduct.replacementEligible === true ||
-//   selectedProduct.replacementEligible === "true",
-
-// replacementWindowDays: Number(
-//   selectedProduct.replacementWindowDays ?? 0
-// ),
-returnEligible:
-  selectedProduct.returnEligible ?? true,
-
-returnWindowDays:
-  Number(selectedProduct.returnWindowDays ?? 7),
-
-replacementEligible:
-  selectedProduct.replacementEligible ?? false,
-
-replacementWindowDays:
-  Number(selectedProduct.replacementWindowDays ?? 0),
+// Return & Replacement: the product's saved values only (no assumed
+// defaults — previously a missing value became "Return ON, 7 days" and was
+// saved back on every edit)
+...policyFromProduct(selectedProduct),
 
 cancelable: selectedProduct.cancelable ?? true,
 
@@ -649,6 +645,13 @@ useEffect(() => {
         return;
       }
     }
+    const policy = policyFromForm(formState.data);
+    const policyIssues = validateReturnPolicy(policy);
+    setPolicyErrors(policyIssues);
+    if (Object.keys(policyIssues).length > 0) {
+      toast.error(Object.values(policyIssues)[0] as string);
+      return;
+    }
     setFormState(prev => ({ ...prev, loading: true }));
     try {
       const sanitizedVariants = formState.variants
@@ -699,34 +702,14 @@ useEffect(() => {
       productData.append("dimensionUnit",formState.data.dimensionUnit || "cm");
       productData.append("shippingAvailable", String(formState.data.shippingAvailable ?? false));
       productData.append("skuCode", formState.data.skuCode?.trim() || "");
-      productData.append("returnEligible",String(formState.data.returnEligible ?? false));
+      // Return & Replacement (validated above; the API validates again)
+      Object.entries(policyToPayload(policy)).forEach(([key, value]) =>
+        productData.append(key, value)
+      );
 
-      productData.append("returnWindowDays",String(formState.data.returnEligible? Number(formState.data.returnWindowDays || 0): 0)
-);
+      productData.append("cancelable", String(formState.data.cancelable ?? true));
 
-productData.append(
-  "replacementEligible",
-  String(formState.data.replacementEligible ?? false)
-);
-
-productData.append(
-  "replacementWindowDays",
-  String(
-    formState.data.replacementEligible
-      ? Number(formState.data.replacementWindowDays || 0)
-      : 0
-  )
-);
-
-productData.append(
-  "cancelable",
-  String(formState.data.cancelable ?? true)
-);
-
-productData.append(
-  "warrantyInfo",
-  formState.data.warrantyInfo?.trim() || ""
-);
+      // appended once: a duplicate key made the API store "NO, NO"
       productData.append("warrantyInfo", formState.data.warrantyInfo?.trim() || "");
       productData.append("manufactureDetails", formState.data.manufactureDetails?.trim() || "");
       productData.append("hasVariants", String(hasVariants));
@@ -783,14 +766,6 @@ productData.append(
       setFormState(prev => ({ ...prev, loading: false }));
     }
   };
-
-  console.log("Return/Replacement Policy:", {
-  returnEligible: formState.data?.returnEligible,
-  returnWindowDays: formState.data?.returnWindowDays,
-  replacementEligible: formState.data?.replacementEligible,
-  replacementWindowDays: formState.data?.replacementWindowDays,
-  warrantyInfo: formState.data?.warrantyInfo,
-});
 
   // ✅ Loading state
   if (!formState.data || options.loading) {
@@ -983,143 +958,20 @@ productData.append(
                   </div>
                 </div> */}
 
-                {/* Return Available */}
-<div>
-  <Label>Return Available</Label>
-
-  <div className="flex items-center gap-6 mt-2">
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="radio"
-        name="returnEligible"
-        value="true"
-        checked={formState.data?.returnEligible === true}
-        onChange={() =>
-          setFormState((prev) => ({
-            ...prev,
-            data: {
-              ...prev.data,
-              returnEligible: true,
-            },
-          }))
-        }
-        className="w-4 h-4"
-      />
-      <span>Yes</span>
-    </label>
-
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="radio"
-        name="returnEligible"
-        value="false"
-        checked={formState.data?.returnEligible === false}
-        onChange={() =>
-          setFormState((prev) => ({
-            ...prev,
-            data: {
-              ...prev.data,
-              returnEligible: false,
-              returnWindowDays: 0,
-            },
-          }))
-        }
-        className="w-4 h-4"
-      />
-      <span>No</span>
-    </label>
-  </div>
-</div>
-
-{/* Return Window */}
-{formState.data?.returnEligible === true && (
-  <div>
-    <Label>Return Window (Days)</Label>
-
-    <Input
-      type="number"
-      name="returnWindowDays"
-      min="1"
-      value={formState.data?.returnWindowDays ?? 7}
-      onChange={handleChange}
-      placeholder="e.g. 7"
-    />
-
-    <p className="text-xs text-gray-500 mt-1">
-      Number of days after delivery in which the customer can
-      request a return.
-    </p>
-  </div>
-)}
-
-{/* Replacement Available */}
-<div>
-  <Label>Replacement Available</Label>
-
-  <div className="flex items-center gap-6 mt-2">
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="radio"
-        name="replacementEligible"
-        value="true"
-        checked={formState.data?.replacementEligible === true}
-        onChange={() =>
-          setFormState((prev) => ({
-            ...prev,
-            data: {
-              ...prev.data,
-              replacementEligible: true,
-            },
-          }))
-        }
-        className="w-4 h-4"
-      />
-      <span>Yes</span>
-    </label>
-
-    <label className="flex items-center gap-2 cursor-pointer">
-      <input
-        type="radio"
-        name="replacementEligible"
-        value="false"
-        checked={formState.data?.replacementEligible === false}
-        onChange={() =>
-          setFormState((prev) => ({
-            ...prev,
-            data: {
-              ...prev.data,
-              replacementEligible: false,
-              replacementWindowDays: 0,
-            },
-          }))
-        }
-        className="w-4 h-4"
-      />
-      <span>No</span>
-    </label>
-  </div>
-</div>
-
-{/* Replacement Window */}
-{formState.data?.replacementEligible === true && (
-  <div>
-    <Label>Replacement Window (Days)</Label>
-
-    <Input
-      type="number"
-      name="replacementWindowDays"
-      min="1"
-      value={formState.data?.replacementWindowDays ?? 0}
-      onChange={handleChange}
-      placeholder="e.g. 7"
-    />
-
-    <p className="text-xs text-gray-500 mt-1">
-      Number of days after delivery in which the customer can
-      request a replacement.
-    </p>
-  </div>
-)}
+                {/* Return & Replacement */}
+<div className="p-4 space-y-5">
+  <ReturnReplacementPolicyFields
+    value={policyFromForm(formState.data)}
+    errors={policyErrors}
+    onChange={(patch) => {
+      setFormState((prev) => ({ ...prev, data: { ...prev.data, ...patch } }));
+      setPolicyErrors((prev) => {
+        const next = { ...prev };
+        (Object.keys(patch) as (keyof ReturnReplacementPolicy)[]).forEach((k) => delete next[k]);
+        return next;
+      });
+    }}
+  />
 
 {/* Cancellation */}
 <div className="flex items-start gap-2">
@@ -1157,6 +1009,7 @@ productData.append(
   <p className="text-xs text-gray-500 mt-1">
     Enter warranty details if applicable.
   </p>
+</div>
 </div>
               </div>
             </div>
