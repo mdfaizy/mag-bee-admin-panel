@@ -1,12 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeadCell,
-  TableCell,
+  Table, TableHeader, TableBody, TableRow, TableCell
 } from "../ui/table";
 import Pagination from "./Pagination";
 import { toast } from "react-toastify";
@@ -146,18 +141,18 @@ const fetchAllVariants = async () => {
           </div>
         )}</div>
         <Table className="divide-y divide-gray-200 dark:divide-white/[0.05] text-sm dark:text-white">
-          <TableHead className="bg-gray-100 dark:bg-white/[0.05] dark:text-white">
+          <TableHeader className="bg-gray-100 dark:bg-white/[0.05] dark:text-white">
             <TableRow className="">
-              <TableHeadCell className="dark:text-white">ID</TableHeadCell>
-              <TableHeadCell className="dark:text-white">SKU</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Price</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Selling Price</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Offer</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Stock</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Product</TableHeadCell>
-              <TableHeadCell className="dark:text-white">Actions</TableHeadCell>
+              <TableCell isHeader className="dark:text-white">ID</TableCell>
+              <TableCell className="dark:text-white">SKU</TableCell>
+              <TableCell className="dark:text-white">Price</TableCell>
+              <TableCell className="dark:text-white">Selling Price</TableCell>
+              <TableCell className="dark:text-white">Offer</TableCell>
+              <TableCell className="dark:text-white">Stock</TableCell>
+              <TableCell className="dark:text-white">Product</TableCell>
+              <TableCell className="dark:text-white">Actions</TableCell>
             </TableRow>
-          </TableHead>
+          </TableHeader>
           <TableBody className="divide-y  divide-gray-200 dark:divide-white/[0.05]">
             {visibleData.map((variant) => (
               <TableRow

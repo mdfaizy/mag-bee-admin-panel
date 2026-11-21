@@ -14,18 +14,10 @@ export const fetchCustomer = async (): Promise<Customer[]> => {
 };
 
 export async function toggleUserStatus(id: number) {
-  const token = localStorage.getItem("token")?.replace(/^"|"$/g, "");
-  console.log("Token:", token); // Check if the token is being retrieved correctly
-
+ 
   try {
     const response = await apiConnector(
-      "PATCH",
-      `${BASE_URL}/customers/${id}/toggle`,
-      undefined,
-      {
-        Authorization: `Bearer ${token}`,
-      }
-    );
+      "PATCH",`${BASE_URL}/customers/${id}/toggle`);
     console.log("Response:", response); // Log the response from the server
     return response.data;
   } catch (error) {

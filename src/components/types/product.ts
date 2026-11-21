@@ -41,6 +41,10 @@ export interface Product {
     id: number;
     name: string;
   };
+  childSubCategory?: {
+  id: number;
+  name: string;
+};
   description: string;
   material: string;
    isActive?: boolean;
@@ -57,17 +61,44 @@ export interface Product {
   length: string;
   width: string;
   height: string;
+  dimensionUnit: string;
   weight: string;
   weightUnit: string;
   // stock: string;
   shippingAvailable: boolean;
+  variantGroupId?: number;
   skuCode: string;
-  returnPolicy: string;
+  // Return & Replacement (1–7 days after delivery; 0 when disabled)
+  returnEligible: boolean;
+  returnWindowDays: number;
+  replacementEligible: boolean;
+  replacementWindowDays: number;
+  /** conditions / instructions shown to customers */
+  returnPolicyConditions?: string | null;
+  /** customer may cancel an order with this product before dispatch */
+  cancelable?: boolean;
   warrantyInfo: string;
   images?: ProductImage[];
   variants: Variant[];
    imageUrl: string;
    
+   hsnId?: number;
+gstRateId?: number;
+
+hsn?: {
+  id: number;
+  hsnCode: string;
+  description?: string;
+} | null;
+
+gstRate?: {
+  id: number;
+  rateName: string;
+  totalRate: number;
+  cgstRate: number;
+  sgstRate: number;
+  igstRate: number;
+} | null;
 
  
   hasVariants?: boolean;
