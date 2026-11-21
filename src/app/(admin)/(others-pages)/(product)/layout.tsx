@@ -14,9 +14,9 @@ export default function ProductLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-full border-2">
-  <div className="bg-white border-b px-2 py-4">
-    <h1 className="text-xl font-semibold text-gray-800">
+    <div className="w-full border-2 dark:bg-slate-950">
+  <div className="bg-white dark:border-slate-700 dark:border-b px-2 py-4 dark:bg-slate-950">
+    <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
       Product Management
     </h1>
   </div>

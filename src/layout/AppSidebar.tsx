@@ -78,23 +78,6 @@ const navItems: NavItem[] = [
     name: "Dashboard",
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
-//   {
-//   name: "Ecommerce",
-//   icon: <FaShoppingCart />,
-//  permissions: ["VIEW_PRODUCT"],
-//   subItems: [
-//     // { name: "Category", path: "/category",permissions: ["CREATE_CATEGORY"], pro: false },
-//     // { name: "Product Category List", path: "/product-category-table",  permissions: ["VIEW_CATEGORY"],pro: false },
-//     { name: "Add Product", path: "/add-new-product", pro: false },
-//     { name: "Products List", path: "/product", pro: false },
-//     // {name: "Create Sub Category",path:'/create-sub-category',pro:false},
-//     // {name:'Sub Category Table',path:'/subCategoryTable',pro:false},
-//     // { name: "Create New Banner", path: "/banner", pro: false },
-//     // { name: "Banner Slider List", path: "/banner-slider", pro: false },
-
-
-//   ],
-// },
 {
   name: "Ecommerce",
   icon: <FaShoppingCart />,
@@ -144,15 +127,6 @@ const navItems: NavItem[] = [
     { name: "New Category", path: "/category", permissions: ["CREATE_CATEGORY"] },
   ],
 },
-  // {
-  //   name: "Tables",
-  //   icon: <FaTable />,
-  //   subItems: [{ name: "Resent Order", path: "/orders-tables", pro: false },
-  //      { name: "Employees For MagBee", path: "/user-table", pro: false },
-  //      { name: "Customer List", path: "/customer", pro: false },
-  //        { name: "Product Varient", path: "/product-varient", pro: false },
-  //   ],
-  // },
 
   {
     name: "Orders",
@@ -180,6 +154,31 @@ const navItems: NavItem[] = [
       { name: "Assign Privelege", path: "/assign-privelege",  },
     ],
   }, 
+  {
+  name: "AI Lab Equipment",
+  icon: <LuFileText />,
+  subItems: [
+    {
+      name: "AI Lab Equipment Create",
+      path: "/lab-equipment/create",
+    },
+    {
+      name: "AI Lab Equipment List",
+      path: "/lab-equipment",
+    },
+  
+  ],
+},
+  {
+  name: "GST Management",
+  icon: <LuFileText />,
+  subItems: [
+    { name: "GST Rates",  path: "/gst/rates/create",},
+    { name: "GST Rates List",  path: "/gst/rates",},
+    {name: "HSN List",path: "/gst/hsn/create",},
+    { name: "HSN Master List", path: "/gst/hsn",},
+  ],
+},
   // 
    {
     icon: <BiPieChart />,

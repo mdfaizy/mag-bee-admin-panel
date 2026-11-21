@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableCell,
 } from "@tiptap/extension-table";
+import Image from "@tiptap/extension-image";
 
 interface RichTextEditorProps {
   value: string;
@@ -28,6 +29,10 @@ export default function RichTextEditor({
     extensions: [
       StarterKit,
 
+       Image.configure({
+    inline: false,
+    allowBase64: false,
+  }),
       Link.configure({
         openOnClick: false,
       }),
@@ -337,6 +342,28 @@ useEffect(() => {
         </button>
 
         <div className="mx-1 h-6 w-px bg-gray-200" />
+{/* Insert Image */}
+<button
+  type="button"
+  title="Insert Image"
+  onClick={() => {
+    const imageUrl = window.prompt("Enter Image URL");
+
+    if (!imageUrl) return;
+
+    editor
+      .chain()
+      .focus()
+      .setImage({
+        src: imageUrl,
+        alt: "Equipment Image",
+      })
+      .run();
+  }}
+  className={buttonClass()}
+>
+  🖼️
+</button>
 
         {/* Table */}
         <button
@@ -402,6 +429,10 @@ useEffect(() => {
             [&_.ProseMirror_blockquote]:pl-4
             [&_.ProseMirror_blockquote]:italic
 
+            [&_.ProseMirror_img]:my-4
+[&_.ProseMirror_img]:max-w-full
+[&_.ProseMirror_img]:h-auto
+[&_.ProseMirror_img]:rounded-lg
             [&_.ProseMirror_table]:my-4
             [&_.ProseMirror_table]:w-full
             [&_.ProseMirror_table]:border-collapse

@@ -10,13 +10,13 @@ const ACCEPTED_IMAGE_TYPES = [
 export const createCategorySchema = z.object({
   name: z
     .string()
-    .min(2, "Category name must be at least 2 characters")
-    .max(30, "Category name must not exceed 30 characters"),
+    .min(2, "Category name must be at least 2 characters"),
+    // .max(30, "Category name must not exceed 30 characters"),
 
   description: z
     .string()
-    .min(5, "Description must be at least 5 characters")
-    .max(300, "Description must not exceed 300 characters"),
+    .min(5, "Description must be at least 5 characters"),
+    // .max(300, "Description must not exceed 300 characters"),
 
   image: z
     .instanceof(File, { message: "Category image is required" })

@@ -82,6 +82,23 @@ export interface Product {
   variants: Variant[];
    imageUrl: string;
    
+   hsnId?: number;
+gstRateId?: number;
+
+hsn?: {
+  id: number;
+  hsnCode: string;
+  description?: string;
+} | null;
+
+gstRate?: {
+  id: number;
+  rateName: string;
+  totalRate: number;
+  cgstRate: number;
+  sgstRate: number;
+  igstRate: number;
+} | null;
 
  
   hasVariants?: boolean;

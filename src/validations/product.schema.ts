@@ -81,6 +81,12 @@ offer: z.preprocess(
   parseNumber,
   z.number().min(0).max(100).optional()  // <-- YEH CHANGE KARO
 ),
+
+hsnId: z.string().min(1, "HSN Code is required"),
+
+gstRateId: z.string().min(1, "GST Rate is required"),
+  // effectiveFrom: z.string().min(1, "Effective From date is required"),
+  // effectiveTo: z.string().nullable().optional(),
   /* Others */
   // returnPolicy: z.string().optional(),
   returnEligible: z.preprocess(

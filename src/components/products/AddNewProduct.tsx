@@ -19,6 +19,15 @@ import { ProductFormData, productSchema } from "@/validations/product.schema";
 import RichTextEditor from "@/components/form/input/RichTextEditor";
 import ReturnReplacementPolicyFields from "@/components/products/ReturnReplacementPolicyFields";
 import { PolicyErrors, ReturnReplacementPolicy, policyToPayload } from "@/validations/returnPolicy";
+import {
+  getAllHsnAPI,
+  getAllGstRatesAPI,
+} from "@/components/features/gst/service/gst.api";
+
+import {
+  HsnMaster,
+  GstRate,
+} from "@/components/features/gst/type/gst.types";
 const parseNumber = (v: any) => {
   if (v === "" || v === null || v === undefined) return undefined;
   const num = Number(v);
@@ -39,6 +48,10 @@ export default function AddNewProduct() {
   const [isActive, setIsActive] = useState(false);
   const [skuSearch, setSkuSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [hsnList, setHsnList] = useState<HsnMaster[]>([]);
+const [gstRateList, setGstRateList] = useState<GstRate[]>([]);
+const [gstLoading, setGstLoading] = useState(false);
+const [gstFetchError, setGstFetchError] = useState("");
   const router = useRouter();
 
   const {
@@ -85,6 +98,10 @@ export default function AddNewProduct() {
       warrantyInfo: "",
       hasVariants: false,
       variants: [],
+
+      hsnId: "",
+gstRateId: "",
+// effectiveFrom: new Date().toISOString().slice(0, 10),
     },
   });
 
@@ -246,6 +263,8 @@ export default function AddNewProduct() {
     fetchAllSubCategories();
   }, []);
 
+
+
   // Filter subcategories when category changes
   const handleCategoryChange = (value: string) => {
     setValue("categoryId", value);
@@ -310,6 +329,56 @@ export default function AddNewProduct() {
       console.error(err);
     }
   };
+
+
+ 
+useEffect(() => {
+  const fetchGstMasterData = async () => {
+    try {
+      setGstLoading(true);
+      setGstFetchError("");
+
+      const [hsnResponse, gstResponse] = await Promise.all([
+        getAllHsnAPI(),
+        getAllGstRatesAPI(),
+      ]);
+
+      console.log("HSN API Response:", hsnResponse.data);
+      console.log("GST API Response:", gstResponse.data);
+
+      // Extract actual arrays from API response
+const hsnData = hsnResponse.data.data;
+const gstData = gstResponse.data.data;
+
+      // Set active HSN records
+      setHsnList(
+        Array.isArray(hsnData)
+          ? hsnData.filter((item: HsnMaster) => item.isActive)
+          : []
+      );
+
+      // Set active GST records
+      setGstRateList(
+        Array.isArray(gstData)
+          ? gstData.filter((item: GstRate) => item.isActive)
+          : []
+      );
+
+    } catch (error: any) {
+      console.error("GST master fetch error:", error);
+
+      setGstFetchError(
+        error?.response?.data?.message ||
+          "Unable to load HSN and GST rates"
+      );
+    } finally {
+      setGstLoading(false);
+    }
+  };
+
+  fetchGstMasterData();
+}, []);
+
   // Toggle variants
   const toggleVariants = () => {
     const newValue = !watchHasVariants;
@@ -357,6 +426,9 @@ export default function AddNewProduct() {
         packQuantity: data.packQuantity || 1,
         hasVariants: data.hasVariants,
         isActive: isActive,
+        hsnId: Number(data.hsnId),
+gstRateId: Number(data.gstRateId),
+// effectiveFrom: data.effectiveFrom,
       };
 
       // 🔥 ADD THIS BLOCK (MANDATORY)
@@ -988,6 +1060,199 @@ export default function AddNewProduct() {
   {...register("packQuantity", { valueAsNumber: true })}
   placeholder="Optional (e.g. 10)" */}
                   {/* /> */}
+
+
+
+{/* HSN AND GST RATE */}
+<div className="border-t pt-4 mt-4 space-y-4">
+  <h3 className="font-semibold text-gray-800">
+    Tax Information (GST)
+  </h3>
+
+  {gstFetchError && (
+    <p className="text-sm text-red-600">{gstFetchError}</p>
+  )}
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    {/* HSN DROPDOWN */}
+    <div>
+      <Label>
+        HSN Code <span className="text-red-500">*</span>
+      </Label>
+
+      <Controller
+        name="hsnId"
+        control={control}
+        render={({ field }) => (
+          <Select
+            options={hsnList.map((item) => ({
+              value: String(item.id),
+              label: `${item.hsnCode} - ${item.description}`,
+            }))}
+            placeholder={
+              gstLoading ? "Loading HSN..." : "Select HSN Code"
+            }
+            value={field.value}
+            onChange={field.onChange}
+          />
+        )}
+      />
+
+      {errors.hsnId && (
+        <p className="text-sm text-red-500 mt-1">
+          {errors.hsnId.message}
+        </p>
+      )}
+    </div>
+
+    {/* GST RATE DROPDOWN */}
+    <div>
+      <Label>
+        GST Rate <span className="text-red-500">*</span>
+      </Label>
+
+      <Controller
+        name="gstRateId"
+        control={control}
+        render={({ field }) => (
+          <Select
+            options={gstRateList.map((item) => ({
+              value: String(item.id),
+              label: `${item.rateName} (${item.totalRate}%)`,
+            }))}
+            placeholder={
+              gstLoading ? "Loading GST Rates..." : "Select GST Rate"
+            }
+            value={field.value}
+            onChange={field.onChange}
+          />
+        )}
+      />
+
+      {errors.gstRateId && (
+        <p className="text-sm text-red-500 mt-1">
+          {errors.gstRateId.message}
+        </p>
+      )}
+    </div>
+  </div>
+
+  {/* EFFECTIVE FROM */}
+
+
+  
+
+  {/* SELECTED GST DETAILS */}
+  {/* {(() => {
+    const selectedRate = gstRateList.find(
+      (item) => String(item.id) === String(watch("gstRateId"))
+    );
+
+    if (!selectedRate) return null;
+
+    return (
+      <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+        <h4 className="font-semibold text-gray-800 mb-3">
+          Selected GST Details
+        </h4>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div>
+            <p className="text-xs text-gray-500">Total GST</p>
+            <p className="font-semibold">
+              {selectedRate.totalRate}%
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs text-gray-500">CGST</p>
+            <p className="font-semibold">
+              {selectedRate.cgstRate}%
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs text-gray-500">SGST</p>
+            <p className="font-semibold">
+              {selectedRate.sgstRate}%
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs text-gray-500">IGST</p>
+            <p className="font-semibold">
+              {selectedRate.igstRate}%
+            </p>
+          </div>
+        </div>
+
+        <p className="text-xs text-blue-700 mt-3">
+          Product price is GST-inclusive. Tax will be calculated
+          from the final selling price.
+        </p>
+      </div>
+    );
+  })()} */}
+
+  {/* SELECTED GST DETAILS */}
+{(() => {
+  const selectedRate = gstRateList.find(
+    (item) => String(item.id) === String(watch("gstRateId"))
+  );
+
+  if (!selectedRate) return null;
+
+  return (
+    <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+      <h4 className="font-semibold text-gray-800 mb-3">
+        Selected GST Details
+      </h4>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div>
+          <p className="text-xs text-gray-500">Total GST</p>
+          <p className="font-semibold">{selectedRate.totalRate}%</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500">CGST</p>
+          <p className="font-semibold">{selectedRate.cgstRate}%</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500">SGST</p>
+          <p className="font-semibold">{selectedRate.sgstRate}%</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500">IGST</p>
+          <p className="font-semibold">{selectedRate.igstRate}%</p>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500">GST Effective From</p>
+          <p className="font-semibold">
+            {selectedRate.effectiveFrom}
+          </p>
+        </div>
+
+        <div>
+          <p className="text-xs text-gray-500">GST Effective To</p>
+          <p className="font-semibold">
+            {selectedRate.effectiveTo || "No end date"}
+          </p>
+        </div>
+      </div>
+
+      <p className="text-xs text-blue-700 mt-3">
+        Product price is GST-inclusive. Tax will be calculated
+        from the final selling price.
+      </p>
+    </div>
+  );
+})()}
+</div>
+
                   <div className="flex items-center justify-between p-4 border rounded-xl shadow-sm">
                     <div>
                       <p className="text-sm font-semibold text-gray-800">Free Shipping</p>
@@ -1574,3 +1839,4 @@ const returnPolicyOptions = [
   { value: "30-day return", label: "30-day return" },
   { value: "No return", label: "No return" },
 ];
+

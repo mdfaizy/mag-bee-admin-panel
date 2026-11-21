@@ -7,6 +7,10 @@ import { toast } from "react-toastify";
 // import { useNavigate } from "react-router-dom";
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import {
+  getAllGstRatesAPI,
+  getAllHsnAPI,
+} from "@/components/features/gst/service/gst.api";
 import Input from "../../../../../../components/form/input/InputField";
 import { HiChevronDown, HiX, HiPlus, HiUpload } from 'react-icons/hi';
 import Label from "../../../../../../components/form/Label";
@@ -47,6 +51,7 @@ type ProductLite = {
   id: number;
   name: string;
   skuCode: string;
+  
   variantGroupId?: number;
   // images?: { imageUrl: string }[];
   images?: ProductImageType[];
@@ -108,6 +113,9 @@ const EditProductPage: React.FC = () => {
   const [isActive, setIsActive] = useState(true);
   const [filteredSubCategory, setFilteredSubCategory] = useState<{ value: string; label: string }[]>([]);
 
+  const [hsnOptions, setHsnOptions] = useState<any[]>([]);
+const [gstRateOptions, setGstRateOptions] = useState<any[]>([]);
+
   // ✅ Fetch product by ID on mount
   useEffect(() => {
     const loadProduct = async () => {
@@ -168,7 +176,20 @@ const EditProductPage: React.FC = () => {
 
         const categoriesRes = await apiConnector("GET", "/category");
         const subCategoriesRes = await fetchSubCategoryAll();
+const [hsnRes, gstRes] = await Promise.all([
+  getAllHsnAPI(),
+  getAllGstRatesAPI(),
+]);
 
+console.log("HSN Response:", hsnRes);
+console.log("GST Response:", gstRes);
+// HSN options
+const hsnList = hsnRes.data?.data || [];
+setHsnOptions(hsnList.filter((item: any) => item.isActive));
+
+// GST options
+const gstList = gstRes.data?.data || [];
+setGstRateOptions(gstList.filter((item: any) => item.isActive));
         const categories = Array.isArray(categoriesRes.data?.categories)
           ? categoriesRes.data.categories
           : [];
@@ -303,6 +324,8 @@ useEffect(() => {
     setFormState({
       data: {
         ...selectedProduct,
+        hsnId: String(selectedProduct.hsn?.id || ""),
+gstRateId: String(selectedProduct.gstRate?.id || ""),
         dimensionUnit: selectedProduct.dimensionUnit ?? "cm",
 
         description: selectedProduct.description ?? "",
@@ -691,6 +714,8 @@ useEffect(() => {
       // productData.append("offer", String(formState.data.offer ?? 0));
       productData.append("originalPrice", String(formState.data.originalPrice || 0));
       productData.append("finalPrice", String(formState.data.finalPrice || 0));
+      productData.append("hsnId", String(formState.data.hsnId));
+productData.append("gstRateId", String(formState.data.gstRateId));
       productData.append("price",String(hasVariants ? 0 : formState.data.finalPrice || 0));
       productData.append("material", formState.data.material?.trim() || "");
       productData.append("stock", String(hasVariants ? 0 : formState.data.stock ?? 0));
@@ -1134,6 +1159,51 @@ useEffect(() => {
                     </div>
                   )}
 
+
+{/* HSN & GST */}
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+  <div>
+    <Label>HSN Code *</Label>
+
+    <select
+      name="hsnId"
+      value={formState.data?.hsnId || ""}
+      onChange={handleChange}
+      className="w-full border rounded-lg p-3"
+      required
+    >
+      <option value="">Select HSN Code</option>
+
+      {hsnOptions.map((hsn) => (
+        <option key={hsn.id} value={hsn.id}>
+          {hsn.hsnCode} - {hsn.description}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div>
+    <Label>GST Rate *</Label>
+
+    <select
+      name="gstRateId"
+      value={formState.data?.gstRateId || ""}
+      onChange={handleChange}
+      className="w-full border rounded-lg p-3"
+      required
+    >
+      <option value="">Select GST Rate</option>
+
+      {gstRateOptions.map((gst) => (
+        <option key={gst.id} value={gst.id}>
+          {gst.totalRate}%
+        </option>
+      ))}
+    </select>
+  </div>
+
+</div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {!showVariants && (
                       <div>

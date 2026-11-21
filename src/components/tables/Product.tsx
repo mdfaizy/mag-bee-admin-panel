@@ -1010,15 +1010,6 @@ const ProductTable = () => {
         {/* ============ HEADER ============ */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
-            {/* <div className="flex items-center gap-2 mb-1">
-              <span className="text-[11px] font-semibold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
-                Catalog
-              </span>
-              <span className="text-slate-300 dark:text-slate-700">/</span>
-              <span className="text-[11px] font-semibold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
-                Inventory
-              </span>
-            </div> */}
             <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100 tracking-tight">
               Product Management
             </h1>

@@ -20,7 +20,8 @@ export const createSubCategory  = async ({ formData, router }: CreateCategoryPar
       formData,
     );
 
-    toast.success("Product category created successfully!");
+    // Remove this
+      toast.success("SubCategory Created Successfully");
     router.push("/"); // redirect after creation
   } catch (err: any) {
     const errMessage =

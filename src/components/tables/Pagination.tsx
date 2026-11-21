@@ -38,12 +38,7 @@ const Pagination: React.FC<PaginationProps> = ({
   const end = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 flex-wrap">
-      {/* <div className="text-sm text-gray-600">
-        Showing <strong>{start}</strong> to <strong>{end}</strong> of <strong>{totalItems}</strong> products
-      </div>*/}
-
-
+    <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 flex-wrap p-2">
 {!isNaN(start) && !isNaN(end) && !isNaN(totalItems) && (
   <div className="text-sm text-gray-600">
     Showing <strong>{start}</strong> to <strong>{end}</strong> of <strong>{totalItems}</strong> products
@@ -54,7 +49,7 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="px-3 py-2 border rounded disabled:opacity-50 text-sm text-black dar:text-white hover:bg-gray-30"
+          className="px-3 py-2 border rounded disabled:opacity-50 text-sm text-black dar:text-white hover:bg-gray-30 dark:text-white"
         >
           Previous
         </button>
@@ -66,7 +61,7 @@ const Pagination: React.FC<PaginationProps> = ({
             className={`px-3 py-2 border rounded text-sm ${
               currentPage === page
                 ? "bg-blue-600 text-white border-blue-600"
-                : "hover:bg-gray-100"
+                : "hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
             }`}
           >
             {page}
@@ -74,13 +69,13 @@ const Pagination: React.FC<PaginationProps> = ({
         ))}
 
         {totalPages > 5 && currentPage < totalPages - 2 && (
-          <span className="px-2 py-2">...</span>
+          <span className="px-2 py-2 dark:text-white">...</span>
         )}
 
         <button
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="px-3 py-2 border rounded disabled:opacity-50 text-sm text-black dar:text-white hover:bg-gray-30"
+          className="px-3 py-2 border rounded disabled:opacity-50 text-sm text-black dar:text-white hover:bg-gray-30 dark:text-white"
         >
           Next
         </button>
