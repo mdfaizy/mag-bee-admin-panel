@@ -82,7 +82,7 @@ offer: z.preprocess(
   z.number().min(0).max(100).optional()  // <-- YEH CHANGE KARO
 ),
 
-hsnId: z.string().min(1, "HSN Code is required"),
+hsnCode: z.string().min(1, "HSN Code is required"),
 
 gstRateId: z.string().min(1, "GST Rate is required"),
   // effectiveFrom: z.string().min(1, "Effective From date is required"),
@@ -131,15 +131,41 @@ cancelable: z.preprocess(
   warrantyInfo: z.string().optional(),
   keywords: z.array(z.string()),
   
+  // shippingAvailable: z.preprocess(
+  //   (val) => val === "true" || val === true,
+  //   z.boolean()
+  // ),
   shippingAvailable: z.preprocess(
-    (val) => val === "true" || val === true,
-    z.boolean()
-  ),
+  (val) => val === "true" || val === true,
+  z.boolean()
+),
 
-  hasVariants: z.preprocess(
-    (val) => val === "true" || val === true,
-    z.boolean()
-  ),
+// NEW SHIPPING SETTINGS
+codAvailable: z.preprocess(
+  (val) => val === "true" || val === true,
+  z.boolean().default(true)
+),
+
+shippingMode: z.enum(["FREE", "FLAT", "CALCULATED", "QUOTE"]).default("CALCULATED"),
+
+shippingCharge: z.preprocess(
+  (val) => {
+    if (val === "" || val === null || val === undefined) return undefined;
+    return Number(val);
+  },
+  z.number().min(0, "Shipping charge cannot be negative").optional()
+),
+
+freeShippingEligible: z.preprocess(
+  (val) => val === "true" || val === true,
+  z.boolean().default(false)
+),
+
+hasVariants: z.preprocess(
+  (val) => val === "true" || val === true,
+  z.boolean()
+),
+
   
   variants: z.array(variantSchema).optional(),
 });

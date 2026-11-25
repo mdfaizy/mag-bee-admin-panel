@@ -23,6 +23,39 @@ export const fetchProductAll = async () => {
   }
 };
 
+// ======================================
+// PRODUCT DRAFT API
+// ======================================
+
+// SAVE / UPDATE PRODUCT DRAFT
+export const saveProductDraft = async (data: any) => {
+  try {
+    const res = await apiConnector("POST", "/product/draft", data);
+    return res.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Failed to save product draft"
+    );
+  }
+};
+
+// GET CURRENT PRODUCT DRAFT
+export const fetchCurrentProductDraft = async () => {
+  try {
+    const response = await apiConnector(
+      "GET",
+      "/product/draft/current"
+    );
+
+    return response.data ?? null;
+  } catch (error: any) {
+    if (error.response?.status === 404) {
+      return null;
+    }
+
+    throw error;
+  }
+};
 export const fetchProductById = async (id: number) => {
   const res = await apiConnector(
     "GET",
@@ -125,150 +158,3 @@ export const fetchPaginatedProducts = async (page: number, limit: number = 10) =
 };
 
 
-
-
-// import { apiConnector } from "../apiConnector";
-// import { endpointsProduct } from "../apis";
-
-// const {
-//   CREATE_PRODUCT,
-//   PRODUCT_GET_ALL,
-//   PRODUCT_BY_ID,
-//   PRODUCT_PAGINATION
-// } = endpointsProduct;
-
-
-// // CREATE PRODUCT
-// export const createProduct = async (formData: FormData) => {
-//   try {
-//     const res = await apiConnector("POST", CREATE_PRODUCT, formData);
-//     return res.data;
-//   } catch (error: any) {
-//     throw new Error(
-//       error.response?.data?.message || "Failed to create product"
-//     );
-//   }
-// };
-
-
-// // GET ALL PRODUCTS
-// export const fetchProductAll = async () => {
-//   try {
-//     const res = await apiConnector("GET", PRODUCT_GET_ALL);
-//     return res.data?.products || [];
-//   } catch (error: any) {
-//     console.error("API Error:", error.response?.data || error.message);
-//     throw error;
-//   }
-// };
-
-
-// // GET PRODUCT BY ID
-// export const fetchProductById = async (id: number) => {
-//   try {
-//     const res = await apiConnector("GET", `${PRODUCT_BY_ID}/${id}`);
-//     return res.data;
-//   } catch (error: any) {
-//     throw new Error(
-//       error.response?.data?.message || "Failed to fetch product"
-//     );
-//   }
-// };
-
-
-// // UPDATE PRODUCT
-// export const updateProductById = async (
-//   id: number,
-//   formData: FormData
-// ) => {
-//   try {
-//     const res = await apiConnector("PUT", `${PRODUCT_BY_ID}/${id}`, formData);
-//     return res.data;
-//   } catch (error: any) {
-//     throw new Error(
-//       error.response?.data?.message || "Failed to update product"
-//     );
-//   }
-// };
-
-
-// // DELETE PRODUCT
-// export const deleteProductById = async (id: number) => {
-//   try {
-//     const res = await apiConnector("DELETE", `${PRODUCT_BY_ID}/${id}`);
-//     return res.data?.message || "Product deleted successfully";
-//   } catch (error: any) {
-//     throw new Error(
-//       error.response?.data?.message || "Failed to delete product"
-//     );
-//   }
-// };
-
-
-// // TOGGLE PRODUCT STATUS
-// export const toggleProductStatus = async (productId: number) => {
-//   try {
-//     const res = await apiConnector(
-//       "PATCH",
-//       `${PRODUCT_BY_ID}/${productId}/toggle-active`
-//     );
-//     return res.data;
-//   } catch (error: any) {
-//     throw new Error(
-//       error.response?.data?.message ||
-//         "Failed to update product status"
-//     );
-//   }
-// };
-
-
-// // UPDATE PRODUCT STOCK
-// export const updateProductStock = async (
-//   productId: number,
-//   newStock: number
-// ) => {
-//   try {
-//     const res = await apiConnector(
-//       "PATCH",
-//       `${PRODUCT_BY_ID}/${productId}`,
-//       { stock: newStock }
-//     );
-
-//     return res.data;
-
-//   } catch (error: any) {
-
-//     throw new Error(
-//       error.response?.data?.message ||
-//         "Failed to update product stock"
-//     );
-
-//   }
-// };
-
-
-// // PAGINATION
-// export const fetchPaginatedProducts = async (
-//   page: number,
-//   limit: number = 10
-// ) => {
-
-//   try {
-
-//     const res = await apiConnector(
-//       "GET",
-//       `${PRODUCT_PAGINATION}?page=${page}&limit=${limit}`
-//     );
-
-//     return res.data;
-
-//   } catch (error: any) {
-
-//     throw new Error(
-//       error.response?.data?.message ||
-//         "Failed to fetch paginated products"
-//     );
-
-//   }
-
-// };

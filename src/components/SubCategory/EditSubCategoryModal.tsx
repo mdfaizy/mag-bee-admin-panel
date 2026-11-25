@@ -96,13 +96,22 @@ const EditSubCategoryModal: React.FC<Props> = ({ isOpen, onClose }) => {
     }));
   };
 
+  // const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   if (e.target.files && e.target.files[0]) {
+  //     const file = e.target.files[0];
+  //     setFormData((prev) => ({ ...prev, imageUrl: file }));
+  //     setImagePreview(URL.createObjectURL(file));
+  //   }
+  // };
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setFormData((prev) => ({ ...prev, imageUrl: file }));
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  setFormData((prev) => ({ ...prev, imageUrl: file }));
+
+  const previewUrl = URL.createObjectURL(file);
+  setImagePreview(previewUrl);
+};
   const handleSubmit = async () => {
     if (!selectedSubCategory) return;
 

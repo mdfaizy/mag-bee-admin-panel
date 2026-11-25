@@ -140,17 +140,7 @@ export default function GstRateViewModal({
               Validity
             </h3>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Detail
-                label="Effective From"
-                value={formatDate(rate.effectiveFrom)}
-              />
-
-              <Detail
-                label="Effective To"
-                value={formatDate(rate.effectiveTo)}
-              />
-            </div>
+            
           </div>
 
           {/* Description */}

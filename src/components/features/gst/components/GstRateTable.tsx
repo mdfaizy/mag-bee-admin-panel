@@ -576,10 +576,7 @@ export default function GstRateTable() {
                     <td className="px-5 py-3.5 text-right text-slate-700">{rate.cgstRate}%</td>
                     <td className="px-5 py-3.5 text-right text-slate-700">{rate.sgstRate}%</td>
                     <td className="px-5 py-3.5 text-right text-slate-700">{rate.igstRate}%</td>
-                    <td className="px-5 py-3.5 text-slate-700">{formatDate(rate.effectiveFrom)}</td>
-                    <td className="px-5 py-3.5 text-slate-700">
-                      {formatDate(rate.effectiveTo) ?? <span className="text-slate-400 italic">No expiry</span>}
-                    </td>
+                    
                     <td className="px-5 py-3.5">
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${

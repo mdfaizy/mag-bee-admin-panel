@@ -14,20 +14,17 @@ import { SubCategory, CategoryOption } from "@/components/types/category";
 import { apiConnector } from "@/services/apiConnector";
 // import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
+import {
+  saveProductDraft,
+  fetchCurrentProductDraft,
+} from "@/services/product/productService";
 import { calculateFinalPrice, calculateOfferPercentage } from "@/utils/priceUtils";
 import { ProductFormData, productSchema } from "@/validations/product.schema";
 import RichTextEditor from "@/components/form/input/RichTextEditor";
 import ReturnReplacementPolicyFields from "@/components/products/ReturnReplacementPolicyFields";
 import { PolicyErrors, ReturnReplacementPolicy, policyToPayload } from "@/validations/returnPolicy";
-import {
-  getAllHsnAPI,
-  getAllGstRatesAPI,
-} from "@/components/features/gst/service/gst.api";
-
-import {
-  HsnMaster,
-  GstRate,
-} from "@/components/features/gst/type/gst.types";
+import { getAllGstRatesAPI, } from "@/components/features/gst/service/gst.api";
+import { GstRate, } from "@/components/features/gst/type/gst.types";
 const parseNumber = (v: any) => {
   if (v === "" || v === null || v === undefined) return undefined;
   const num = Number(v);
@@ -43,15 +40,15 @@ export default function AddNewProduct() {
   const [selectedNestedIds, setSelectedNestedIds] = useState<string[]>([]);
   const [filteredSubCategory, setFilteredSubCategory] = useState<SubCategory[]>([]);
   const [showVariants, setShowVariants] = useState(false);
-  // const [subCategoryChildren, setSubCategoryChildren] = useState<SubCategory[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isActive, setIsActive] = useState(false);
+  const [draftId, setDraftId] = useState<number | null>(null);
+  const [isDraftSaving, setIsDraftSaving] = useState(false);
   const [skuSearch, setSkuSearch] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [hsnList, setHsnList] = useState<HsnMaster[]>([]);
-const [gstRateList, setGstRateList] = useState<GstRate[]>([]);
-const [gstLoading, setGstLoading] = useState(false);
-const [gstFetchError, setGstFetchError] = useState("");
+  const [gstRateList, setGstRateList] = useState<GstRate[]>([]);
+  const [gstLoading, setGstLoading] = useState(false);
+  const [gstFetchError, setGstFetchError] = useState("");
   const router = useRouter();
 
   const {
@@ -61,6 +58,7 @@ const [gstFetchError, setGstFetchError] = useState("");
     watch,
     setValue,
     getValues,
+    reset,
     formState: { errors },
     trigger,
     setError,
@@ -87,8 +85,8 @@ const [gstFetchError, setGstFetchError] = useState("");
       weightUnit: "kg",
       stock: undefined,
       shippingAvailable: false,
+      codAvailable: true,
       skuCode: "",
-      // returnPolicy: "",
       // Return & Replacement: OFF until the admin configures them
       returnEligible: false,
       returnWindowDays: 0,
@@ -98,21 +96,14 @@ const [gstFetchError, setGstFetchError] = useState("");
       warrantyInfo: "",
       hasVariants: false,
       variants: [],
-
-      hsnId: "",
-gstRateId: "",
-// effectiveFrom: new Date().toISOString().slice(0, 10),
+      hsnCode: "",
+      gstRateId: "",
     },
   });
-
-  // const watchOriginalPrice = watch("originalPrice");
-  // const watchOffer = watch("offer");
   const watchOriginalPrice = watch("originalPrice");
   const watchFinalPrice = watch("price");
   const watchHasVariants = watch("hasVariants");
   const watchVariants = watch("variants");
-
-
   const policyValue: ReturnReplacementPolicy = {
     returnEligible: watch("returnEligible") === true,
     returnWindowDays: Number(watch("returnWindowDays")) || 0,
@@ -136,56 +127,29 @@ gstRateId: "",
     setShowVariants(watchHasVariants);
   }, [watchHasVariants]);
 
-
-
   const handleSkuSearch = async (value: string) => {
     setSkuSearch(value);
-
     if (value.length < 2) return;
-
-    const res = await apiConnector(
-      "GET",
-      `/search?sku=${value}`
-    );
-
+    const res = await apiConnector("GET", `/search?sku=${value}`);
     setSearchResults(res.data.products);
   };
-
   const [selectedVariants, setSelectedVariants] = useState<any[]>([]);
-
   const handleAddVariant = (
-  product: any
-) => {
-
-  // ❌ duplicate avoid
-  if (
-    selectedVariants.some(
-      (v) => v.id === product.id
-    )
-  ) {
-    return;
-  }
-
-  // ✅ add variant
-  setSelectedVariants(
-    (prev) => [
-      ...prev,
-      product,
-    ]
-  );
-
-  // ✅ clear input
-  setSkuSearch("");
-
-  // ✅ close dropdown
-  setSearchResults([]);
-};
-  // const handleAddVariant = (product: any) => {
-  //   // ❌ duplicate avoid
-  //   if (selectedVariants.some(v => v.id === product.id)) return;
-
-  //   setSelectedVariants(prev => [...prev, product]);
-  // };
+    product: any) => {
+    // ❌ duplicate avoid
+    if (selectedVariants.some((v) => v.id === product.id)) { return; }
+    // ✅ add variant
+    setSelectedVariants(
+      (prev) => [
+        ...prev,
+        product,
+      ]
+    );
+    // ✅ clear input
+    setSkuSearch("");
+    // ✅ close dropdown
+    setSearchResults([]);
+  };
   // Initialize variants when toggling on
   useEffect(() => {
     if (watchHasVariants && (!watchVariants || watchVariants.length === 0)) {
@@ -216,17 +180,6 @@ gstRateId: "",
     const currentAttributes = getValues(`variants.${variantIndex}.attributes`) || [];
     setValue(`variants.${variantIndex}.attributes`, currentAttributes.filter((_, i) => i !== attrIndex));
   };
-
-  // Calculate selling price for variant
-  const updateOfferFromSelling = (
-    variantIndex: number,
-    price: number,
-    sellingPrice: number
-  ) => {
-    const offer = calculateOfferPercentage(price, sellingPrice); // ✅ correct
-    setValue(`variants.${variantIndex}.offer`, offer);
-  };
-
   // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
@@ -263,21 +216,13 @@ gstRateId: "",
     fetchAllSubCategories();
   }, []);
 
-
-
   // Filter subcategories when category changes
   const handleCategoryChange = (value: string) => {
     setValue("categoryId", value);
     setValue("subCategoryId", "");
-    setFilteredSubCategory(
-      subCategory.filter(
-        (sc) => sc.categoryId === value
-      )
-    );
-
+    setFilteredSubCategory(subCategory.filter((sc) => sc.categoryId === value));
     setNestedLevels([]);
     setSelectedNestedIds([]);
-
     trigger("categoryId");
   };
   // Fetch children subcategories
@@ -286,24 +231,11 @@ gstRateId: "",
     level: number
   ) => {
     try {
-      const res = await apiConnector(
-        "GET",
-        `/subcategories/${parentId}/children`
-      );
-      const children = Array.isArray(
-        res.data.children
-      )
-        ? res.data.children
-        : [];
-      const formatted = children.map(
-        (item: any) => ({
-          value: String(item.id),
-          label: item.name,
-        })
-      );
-      const updatedLevels = [
-        ...nestedLevels.slice(0, level),
-      ];
+      const res = await apiConnector("GET", `/subcategories/${parentId}/children`);
+      const children = Array.isArray(res.data.children)
+        ? res.data.children : [];
+      const formatted = children.map((item: any) => ({ value: String(item.id), label: item.name, }));
+      const updatedLevels = [...nestedLevels.slice(0, level),];
       if (formatted.length > 0) {
         updatedLevels.push(formatted);
       }
@@ -329,56 +261,28 @@ gstRateId: "",
       console.error(err);
     }
   };
-
-
- 
-useEffect(() => {
-  const fetchGstMasterData = async () => {
-    try {
-      setGstLoading(true);
-      setGstFetchError("");
-
-      const [hsnResponse, gstResponse] = await Promise.all([
-        getAllHsnAPI(),
-        getAllGstRatesAPI(),
-      ]);
-
-      console.log("HSN API Response:", hsnResponse.data);
-      console.log("GST API Response:", gstResponse.data);
-
-      // Extract actual arrays from API response
-const hsnData = hsnResponse.data.data;
-const gstData = gstResponse.data.data;
-
-      // Set active HSN records
-      setHsnList(
-        Array.isArray(hsnData)
-          ? hsnData.filter((item: HsnMaster) => item.isActive)
-          : []
-      );
-
-      // Set active GST records
-      setGstRateList(
-        Array.isArray(gstData)
-          ? gstData.filter((item: GstRate) => item.isActive)
-          : []
-      );
-
-    } catch (error: any) {
-      console.error("GST master fetch error:", error);
-
-      setGstFetchError(
-        error?.response?.data?.message ||
-          "Unable to load HSN and GST rates"
-      );
-    } finally {
-      setGstLoading(false);
-    }
-  };
-
-  fetchGstMasterData();
-}, []);
-
+  useEffect(() => {
+    const fetchGstMasterData = async () => {
+      try {
+        setGstLoading(true);
+        setGstFetchError("");
+        const [gstResponse] = await Promise.all([
+          getAllGstRatesAPI(),
+        ]);
+        console.log("GST API Response:", gstResponse.data);
+        // Extract actual arrays from API response
+        const gstData = gstResponse.data.data;
+        // Set active GST record
+        setGstRateList(Array.isArray(gstData) ? gstData.filter((item: GstRate) => item.isActive) : []);
+      } catch (error: any) {
+        console.error("GST master fetch error:", error);
+        setGstFetchError(error?.response?.data?.message || "Unable to load HSN and GST rates");
+      } finally {
+        setGstLoading(false);
+      }
+    };
+    fetchGstMasterData();
+  }, []);
   // Toggle variants
   const toggleVariants = () => {
     const newValue = !watchHasVariants;
@@ -387,6 +291,162 @@ const gstData = gstResponse.data.data;
       setValue("variants", []);
     }
   };
+  const handleSaveDraft = async () => {
+    if (isDraftSaving) return;
+    setIsDraftSaving(true);
+    const toastId = toast.loading("Saving draft...");
+    try {
+      const data = getValues();
+      const payload: any = {
+        name: data.name || null,
+        skuCode: data.skuCode || null,
+        material: data.material || null,
+        description: data.description || null,
+        categoryId: data.categoryId || null,
+        subCategoryId: data.subCategoryId || null,
+        childSubCategoryId: data.childSubCategoryId || null,
+        length: data.length || null,
+        width: data.width || null,
+        height: data.height || null,
+        dimensionUnit: data.dimensionUnit || "cm",
+
+        weight: data.weight || null,
+        weightUnit: data.weightUnit || "kg",
+
+        originalPrice: data.originalPrice ?? null,
+        price: data.price ?? null,
+        offer: data.offer ?? null,
+        stock: data.stock ?? null,
+
+        shippingAvailable: data.shippingAvailable,
+        codAvailable: data.codAvailable,
+        packQuantity: data.packQuantity || 1,
+
+        returnEligible: data.returnEligible,
+        returnWindowDays: data.returnWindowDays,
+        replacementEligible: data.replacementEligible,
+        replacementWindowDays: data.replacementWindowDays,
+        returnPolicyConditions: data.returnPolicyConditions || null,
+
+        warrantyInfo: data.warrantyInfo || null,
+
+        hasVariants: data.hasVariants,
+
+        variants: data.hasVariants
+          ? JSON.stringify(data.variants || [])
+          : null,
+
+        keywords: JSON.stringify(data.keywords || []),
+
+        hsnCode: data.hsnCode || null,
+        gstRateId: data.gstRateId || null,
+
+        isActive: false,
+      };
+
+      const res = await saveProductDraft({
+        ...payload,
+        draftId: draftId ?? undefined,
+      });
+
+      const savedProduct = res.product;
+
+      if (savedProduct?.id) {
+        setDraftId(savedProduct.id);
+      }
+
+      toast.dismiss(toastId);
+      toast.success("Draft saved successfully!");
+
+    } catch (error: any) {
+      toast.dismiss(toastId);
+
+      console.error("Draft save error:", error);
+
+      toast.error(
+        error?.message || "Failed to save draft"
+      );
+    } finally {
+      setIsDraftSaving(false);
+    }
+  };
+  useEffect(() => {
+    const loadDraft = async () => {
+      try {
+        const res = await fetchCurrentProductDraft();
+        console.log('res', res);
+        const product = res?.product;
+
+        if (!product) return;
+
+        setDraftId(product.id);
+
+        reset({
+          name: product.name || "",
+          skuCode: product.skuCode || "",
+          material: product.material || "",
+          description: product.description || "",
+
+          categoryId: product.categoryId
+            ? String(product.categoryId)
+            : "",
+
+          subCategoryId: product.subCategoryId
+            ? String(product.subCategoryId)
+            : "",
+
+          childSubCategoryId: product.childSubCategoryId
+            ? String(product.childSubCategoryId)
+            : "",
+
+          length: product.length ?? "",
+          width: product.width ?? "",
+          height: product.height ?? "",
+          dimensionUnit: product.dimensionUnit || "cm",
+
+          weight: product.weight ?? "",
+          weightUnit: product.weightUnit || "kg",
+
+          originalPrice: product.originalPrice ?? undefined,
+          price: product.price ?? undefined,
+          offer: product.offer ?? undefined,
+          stock: product.stock ?? undefined,
+          shippingAvailable: product.shippingAvailable ?? false,
+          codAvailable: product.codAvailable ?? true,
+          packQuantity: product.packQuantity ?? 1,
+          returnEligible: product.returnEligible ?? false,
+          returnWindowDays: product.returnWindowDays ?? 0,
+          replacementEligible: product.replacementEligible ?? false,
+          replacementWindowDays: product.replacementWindowDays ?? 0,
+          returnPolicyConditions: product.returnPolicyConditions || "",
+          warrantyInfo: product.warrantyInfo || "",
+          hasVariants: product.hasVariants ?? false,
+          variants: product.variants || [],
+          keywords: Array.isArray(product.keywords)
+            ? product.keywords
+            : typeof product.keywords === "string"
+              ? JSON.parse(product.keywords || "[]")
+              : [],
+
+          hsnCode: product.hsnCode || "",
+          gstRateId: product.gstRateId ? String(product.gstRateId) : "",
+        } as ProductFormData);
+        setShowVariants(product.hasVariants ?? false);
+        if (product.categoryId) {
+          setFilteredSubCategory(
+            subCategory.filter(
+              (sc) =>
+                sc.categoryId === String(product.categoryId)
+            )
+          );
+        }
+        toast.info("Previous draft loaded");
+      } catch (error) {
+        console.error("Draft loading error:", error);
+      }
+    };
+    loadDraft();
+  }, [reset]);
   const onSubmit = async (data: ProductFormData) => {
     if (isSubmitting) return;
     // ✅ Image validation
@@ -411,7 +471,6 @@ const gstData = gstResponse.data.data;
         dimensionUnit: data.dimensionUnit,
         weight: data.weight,
         weightUnit: data.weightUnit,
-        //returnPolicy: data.returnPolicy || null,
         // Return & Replacement (schema-validated; the API validates again)
         ...policyToPayload({
           returnEligible: data.returnEligible === true,
@@ -423,16 +482,14 @@ const gstData = gstResponse.data.data;
         warrantyInfo: data.warrantyInfo || null,
         keywords: JSON.stringify(data.keywords),
         shippingAvailable: data.shippingAvailable,
+        codAvailable: data.codAvailable,
         packQuantity: data.packQuantity || 1,
         hasVariants: data.hasVariants,
         isActive: isActive,
-        hsnId: Number(data.hsnId),
-gstRateId: Number(data.gstRateId),
-// effectiveFrom: data.effectiveFrom,
+        gstRateId: Number(data.gstRateId),
+        hsnCode: data.hsnCode,
       };
-
       // 🔥 ADD THIS BLOCK (MANDATORY)
-
       const originalPrice = Number(data.originalPrice);
       const finalPrice = Number(data.price);
 
@@ -448,12 +505,10 @@ gstRateId: Number(data.gstRateId),
         setIsSubmitting(false);
         return;
       }
-
       // ✅ calculate offer
       const offer = Math.round(
         ((originalPrice - finalPrice) / originalPrice) * 100
       );
-
       // ✅ assign payload
       payload.originalPrice = originalPrice;
       payload.price = finalPrice;
@@ -778,76 +833,39 @@ gstRateId: Number(data.gstRateId),
                   </div>
                 </div>
               </div>
-
-              {/* Policies */}
-              {/* <div className="border border-gray-200 rounded-lg">
+              <div className="border border-gray-200 rounded-lg">
                 <div className="bg-gray-100 p-3 border-b border-gray-200">
-                  <h2 className="font-semibold text-gray-700">Policies</h2>
+                  <h2 className="font-semibold text-gray-700">
+                    Policies
+                  </h2>
                 </div>
-                <div className="p-4 space-y-4">
-                  <div className="relative">
-                    <Label>Return Policy</Label>
-                    <Controller
-                      name="returnPolicy"
-                      control={control}
-                      render={({ field }) => (
-                        <Select
-                          options={returnPolicyOptions}
-                          placeholder="Select Return Policy"
-                          onChange={field.onChange}
-                          value={field.value}
-                        />
-                      )}
-                    />
-                    <span className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-gray-500 top-7">
-                      <HiChevronDown className="w-4 h-4" />
-                    </span>
-                  </div>
 
+                <div className="p-4 space-y-5">
+
+                  {/* Return & Replacement */}
+                  <ReturnReplacementPolicyFields
+                    value={policyValue}
+                    errors={policyErrors}
+                    onChange={updatePolicy}
+                  />
+
+                  {/* Warranty Information */}
                   <div>
-                    <Label>Warranty Info</Label>
+                    <Label>Warranty Information</Label>
+
                     <TextArea
                       {...register("warrantyInfo")}
-                      placeholder="e.g., 1-year replacement warranty"
-                      rows={2}
+                      placeholder="e.g. 1-year manufacturer warranty"
+                      rows={3}
                     />
+
+                    <p className="text-xs text-gray-500 mt-1">
+                      Enter warranty details if applicable.
+                    </p>
                   </div>
+
                 </div>
-              </div> */}
-
-              <div className="border border-gray-200 rounded-lg">
-  <div className="bg-gray-100 p-3 border-b border-gray-200">
-    <h2 className="font-semibold text-gray-700">
-      Policies
-    </h2>
-  </div>
-
-  <div className="p-4 space-y-5">
-
-    {/* Return & Replacement */}
-    <ReturnReplacementPolicyFields
-      value={policyValue}
-      errors={policyErrors}
-      onChange={updatePolicy}
-    />
-
-    {/* Warranty Information */}
-    <div>
-      <Label>Warranty Information</Label>
-
-      <TextArea
-        {...register("warrantyInfo")}
-        placeholder="e.g. 1-year manufacturer warranty"
-        rows={3}
-      />
-
-      <p className="text-xs text-gray-500 mt-1">
-        Enter warranty details if applicable.
-      </p>
-    </div>
-
-  </div>
-</div>
+              </div>
             </div>
 
             {/* Right Column */}
@@ -894,10 +912,6 @@ gstRateId: Number(data.gstRateId),
                           <Select
                             options={filteredSubCategory}
                             placeholder="Select SubCategory"
-                            // onChange={(value) => {
-                            //   field.onChange(value);
-                            //   fetchChildren(value);
-                            // }}
                             onChange={(value) => {
                               field.onChange(value);
 
@@ -980,10 +994,6 @@ gstRateId: Number(data.gstRateId),
                           <Input
                             type="number"
                             {...register("originalPrice")}
-                            //                           {...register("originalPrice", {
-                            //   setValueAs: (v) => (v === "" ? undefined : Number(v)),
-                            // })}
-
                             placeholder="Original Price"
                             className={errors.originalPrice ? "border-red-500" : ""}
                           />
@@ -1006,15 +1016,6 @@ gstRateId: Number(data.gstRateId),
                         </div>
                         <div>
                           <Label>Final Price</Label>
-                          {/* <Input
-                            type="number"
-                            value={calculateFinalPrice(
-                              Number(watchOriginalPrice || 0),
-                              Number(watchOffer || 0)
-                            )}
-                           {...({ readOnly: true } as any)}
-                            className="bg-gray-100 cursor-not-allowed"
-                          /> */}
                           <Input
                             type="number"
                             {...register("price", {
@@ -1041,219 +1042,108 @@ gstRateId: Number(data.gstRateId),
                       </div>
                     </>
                   )}
+                  {/* HSN AND GST RATE */}
+                  <div className="border-t pt-4 mt-4 space-y-4">
+                    <h3 className="font-semibold text-gray-800">
+                      Tax Information (GST)
+                    </h3>
 
-                  {/* <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      {...register("shippingAvailable")}
-                      className="w-4 h-4"
-                    />
-                    <label className="text-sm">
-                      Free Shipping Available
-                    </label>
+                    {gstFetchError && (
+                      <p className="text-sm text-red-600">{gstFetchError}</p>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* HSN DROPDOWN */}
+                      <div>
+                        <Label>
+                          HSN Code <span className="text-red-500">*</span>
+                        </Label>
+                        <input
+                          type="text"
+                          {...register("hsnCode")}
+                          placeholder="Enter HSN Code"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-3 text-sm
+             focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        />
+                      </div>
+
+                      {/* GST RATE DROPDOWN */}
+                      <div>
+                        <Label>
+                          GST Rate <span className="text-red-500">*</span>
+                        </Label>
+
+                        <Controller
+                          name="gstRateId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select
+                              options={gstRateList.map((item) => ({
+                                value: String(item.id),
+                                label: `${item.rateName} (${item.totalRate}%)`,
+                              }))}
+                              placeholder={
+                                gstLoading ? "Loading GST Rates..." : "Select GST Rate"
+                              }
+                              value={field.value}
+                              onChange={field.onChange}
+                            />
+                          )}
+                        />
+
+                        {errors.gstRateId && (
+                          <p className="text-sm text-red-500 mt-1">
+                            {errors.gstRateId.message}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* SELECTED GST DETAILS */}
+                    {(() => {
+                      const selectedRate = gstRateList.find(
+                        (item) => String(item.id) === String(watch("gstRateId"))
+                      );
+
+                      if (!selectedRate) return null;
+
+                      return (
+                        <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                          <h4 className="font-semibold text-gray-800 mb-3">
+                            Selected GST Details
+                          </h4>
+
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            <div>
+                              <p className="text-xs text-gray-500">Total GST</p>
+                              <p className="font-semibold">{selectedRate.totalRate}%</p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs text-gray-500">CGST</p>
+                              <p className="font-semibold">{selectedRate.cgstRate}%</p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs text-gray-500">SGST</p>
+                              <p className="font-semibold">{selectedRate.sgstRate}%</p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs text-gray-500">IGST</p>
+                              <p className="font-semibold">{selectedRate.igstRate}%</p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-blue-700 mt-3">
+                            Product price is GST-inclusive. Tax will be calculated
+                            from the final selling price.
+                          </p>
+                        </div>
+                      );
+                    })()}
                   </div>
 
-                  <label>Pack Quantity</label>
-<input
-  type="number"
-  min={1}
-  {...register("packQuantity", { valueAsNumber: true })}
-  placeholder="Optional (e.g. 10)" */}
-                  {/* /> */}
-
-
-
-{/* HSN AND GST RATE */}
-<div className="border-t pt-4 mt-4 space-y-4">
-  <h3 className="font-semibold text-gray-800">
-    Tax Information (GST)
-  </h3>
-
-  {gstFetchError && (
-    <p className="text-sm text-red-600">{gstFetchError}</p>
-  )}
-
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-    {/* HSN DROPDOWN */}
-    <div>
-      <Label>
-        HSN Code <span className="text-red-500">*</span>
-      </Label>
-
-      <Controller
-        name="hsnId"
-        control={control}
-        render={({ field }) => (
-          <Select
-            options={hsnList.map((item) => ({
-              value: String(item.id),
-              label: `${item.hsnCode} - ${item.description}`,
-            }))}
-            placeholder={
-              gstLoading ? "Loading HSN..." : "Select HSN Code"
-            }
-            value={field.value}
-            onChange={field.onChange}
-          />
-        )}
-      />
-
-      {errors.hsnId && (
-        <p className="text-sm text-red-500 mt-1">
-          {errors.hsnId.message}
-        </p>
-      )}
-    </div>
-
-    {/* GST RATE DROPDOWN */}
-    <div>
-      <Label>
-        GST Rate <span className="text-red-500">*</span>
-      </Label>
-
-      <Controller
-        name="gstRateId"
-        control={control}
-        render={({ field }) => (
-          <Select
-            options={gstRateList.map((item) => ({
-              value: String(item.id),
-              label: `${item.rateName} (${item.totalRate}%)`,
-            }))}
-            placeholder={
-              gstLoading ? "Loading GST Rates..." : "Select GST Rate"
-            }
-            value={field.value}
-            onChange={field.onChange}
-          />
-        )}
-      />
-
-      {errors.gstRateId && (
-        <p className="text-sm text-red-500 mt-1">
-          {errors.gstRateId.message}
-        </p>
-      )}
-    </div>
-  </div>
-
-  {/* EFFECTIVE FROM */}
-
-
-  
-
-  {/* SELECTED GST DETAILS */}
-  {/* {(() => {
-    const selectedRate = gstRateList.find(
-      (item) => String(item.id) === String(watch("gstRateId"))
-    );
-
-    if (!selectedRate) return null;
-
-    return (
-      <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-        <h4 className="font-semibold text-gray-800 mb-3">
-          Selected GST Details
-        </h4>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div>
-            <p className="text-xs text-gray-500">Total GST</p>
-            <p className="font-semibold">
-              {selectedRate.totalRate}%
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-gray-500">CGST</p>
-            <p className="font-semibold">
-              {selectedRate.cgstRate}%
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-gray-500">SGST</p>
-            <p className="font-semibold">
-              {selectedRate.sgstRate}%
-            </p>
-          </div>
-
-          <div>
-            <p className="text-xs text-gray-500">IGST</p>
-            <p className="font-semibold">
-              {selectedRate.igstRate}%
-            </p>
-          </div>
-        </div>
-
-        <p className="text-xs text-blue-700 mt-3">
-          Product price is GST-inclusive. Tax will be calculated
-          from the final selling price.
-        </p>
-      </div>
-    );
-  })()} */}
-
-  {/* SELECTED GST DETAILS */}
-{(() => {
-  const selectedRate = gstRateList.find(
-    (item) => String(item.id) === String(watch("gstRateId"))
-  );
-
-  if (!selectedRate) return null;
-
-  return (
-    <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-      <h4 className="font-semibold text-gray-800 mb-3">
-        Selected GST Details
-      </h4>
-
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <div>
-          <p className="text-xs text-gray-500">Total GST</p>
-          <p className="font-semibold">{selectedRate.totalRate}%</p>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-500">CGST</p>
-          <p className="font-semibold">{selectedRate.cgstRate}%</p>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-500">SGST</p>
-          <p className="font-semibold">{selectedRate.sgstRate}%</p>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-500">IGST</p>
-          <p className="font-semibold">{selectedRate.igstRate}%</p>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-500">GST Effective From</p>
-          <p className="font-semibold">
-            {selectedRate.effectiveFrom}
-          </p>
-        </div>
-
-        <div>
-          <p className="text-xs text-gray-500">GST Effective To</p>
-          <p className="font-semibold">
-            {selectedRate.effectiveTo || "No end date"}
-          </p>
-        </div>
-      </div>
-
-      <p className="text-xs text-blue-700 mt-3">
-        Product price is GST-inclusive. Tax will be calculated
-        from the final selling price.
-      </p>
-    </div>
-  );
-})()}
-</div>
-
-                  <div className="flex items-center justify-between p-4 border rounded-xl shadow-sm">
+                  {/* <div className="flex items-center justify-between p-4 border rounded-xl shadow-sm">
                     <div>
                       <p className="text-sm font-semibold text-gray-800">Free Shipping</p>
                       <p className="text-xs text-gray-500">Enable delivery without extra charges</p>
@@ -1263,6 +1153,36 @@ gstRateId: Number(data.gstRateId),
                       {...register("shippingAvailable")}
                       className="w-5 h-5 text-blue-600"
                     />
+                  </div> */}
+
+                  {/* SHIPPING SETTINGS */}
+                  <div className="border border-gray-200 rounded-lg">
+                    <div className="bg-gray-100 p-3 border-b border-gray-200">
+                      <h2 className="font-semibold text-gray-700">
+                        Shipping Settings
+                      </h2>
+                    </div>
+
+                    <div className="p-4 space-y-4">
+
+                      {/* COD AVAILABLE */}
+                      <div className="flex items-center justify-between p-3 border rounded-lg">
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">
+                            Cash on Delivery (COD)
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Allow customers to pay on delivery
+                          </p>
+                        </div>
+
+                        <input
+                          type="checkbox"
+                          {...register("codAvailable")}
+                          className="w-5 h-5"
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <label className="text-sm font-medium text-gray-700">
@@ -1316,72 +1236,44 @@ gstRateId: Number(data.gstRateId),
               </div>
             </div>
           </div>
-
           {/* Description - Full Width */}
-          {/* <div className="mt-6 border border-gray-200 rounded-lg">
+          <div className="mt-6 border border-gray-200 rounded-lg">
             <div className="bg-gray-100 p-3 border-b border-gray-200">
-              <h2 className="font-semibold text-gray-700">Details</h2>
+              <h2 className="font-semibold text-gray-700">
+                Details
+              </h2>
             </div>
             <div className="p-4 space-y-2">
+
               <Label className="text-sm font-medium text-gray-700">
-                Product Description <span className="text-red-500">*</span>
+                Product Description{" "}
+                <span className="text-red-500">*</span>
               </Label>
-              <TextArea
-                {...register("description")}
-                placeholder="Write detailed product description (features, specifications, warranty, etc.)"
-                rows={6}
-                className={`w-full rounded-lg border p-3 text-sm 
-                           focus:border-blue-500 focus:ring-1 focus:ring-blue-500
-                           resize-y min-h-[140px] ${errors.description ? "border-red-500" : "border-gray-300"}`}
+
+              <Controller
+                name="description"
+                control={control}
+                render={({ field }) => (
+                  <RichTextEditor
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                  />
+                )}
               />
+
               {errors.description && (
-                <p className="text-red-500 text-sm">{errors.description.message}</p>
+                <p className="text-red-500 text-sm">
+                  {errors.description.message}
+                </p>
               )}
+
               <p className="text-xs text-gray-500">
-                Add full product details like features, specifications, material, warranty etc.
+                Add full product details like features, specifications,
+                material, warranty etc.
               </p>
+
             </div>
-          </div> */}
-
-          <div className="mt-6 border border-gray-200 rounded-lg">
-
-  <div className="bg-gray-100 p-3 border-b border-gray-200">
-    <h2 className="font-semibold text-gray-700">
-      Details
-    </h2>
-  </div>
-
-  <div className="p-4 space-y-2">
-
-    <Label className="text-sm font-medium text-gray-700">
-      Product Description{" "}
-      <span className="text-red-500">*</span>
-    </Label>
-
-    <Controller
-      name="description"
-      control={control}
-      render={({ field }) => (
-        <RichTextEditor
-          value={field.value || ""}
-          onChange={field.onChange}
-        />
-      )}
-    />
-
-    {errors.description && (
-      <p className="text-red-500 text-sm">
-        {errors.description.message}
-      </p>
-    )}
-
-    <p className="text-xs text-gray-500">
-      Add full product details like features, specifications,
-      material, warranty etc.
-    </p>
-
-  </div>
-</div>
+          </div>
 
           {/* Product Images - Full Width */}
           <div className="mt-6 border border-gray-200 rounded-lg">
@@ -1752,16 +1644,16 @@ gstRateId: Number(data.gstRateId),
                         Add
                       </span> */}
                       {selectedVariants.some(
-  (item: any) => item.id === p.id
-) ? (
-  <span className="text-green-600 text-sm font-medium">
-    Added
-  </span>
-) : (
-  <span className="text-blue-600 text-sm font-medium">
-    Add
-  </span>
-)}
+                        (item: any) => item.id === p.id
+                      ) ? (
+                        <span className="text-green-600 text-sm font-medium">
+                          Added
+                        </span>
+                      ) : (
+                        <span className="text-blue-600 text-sm font-medium">
+                          Add
+                        </span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -1810,7 +1702,7 @@ gstRateId: Number(data.gstRateId),
             )}
           </div>
           {/* Submit Button */}
-          <div className="mt-8 text-center">
+          {/* <div className="mt-8 text-center">
             <button
               type="submit"
               disabled={isSubmitting}
@@ -1826,17 +1718,41 @@ gstRateId: Number(data.gstRateId),
                 "Submit"
               )}
             </button>
+          </div> */}
+          {/* Save Draft & Publish Buttons */}
+          <div className="mt-8 flex justify-end gap-4">
+
+            <button
+              type="button"
+              disabled={isSubmitting || isDraftSaving}
+              onClick={handleSaveDraft}
+              className={`px-6 py-3 border border-gray-300 text-gray-700
+    font-semibold rounded-lg hover:bg-gray-100 transition
+    ${isDraftSaving ? "opacity-60 cursor-not-allowed" : ""}`}
+            >
+              {isDraftSaving ? "Saving Draft..." : "Save Draft"}
+            </button>
+
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`px-6 py-3 text-white font-semibold rounded-lg transition-colors flex items-center justify-center gap-2
+      ${isSubmitting ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"}`}
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  Creating...
+                </>
+              ) : (
+                "Publish"
+              )}
+            </button>
+
           </div>
         </form>
       </div>
     </div>
   );
 }
-
-// Return policy options
-const returnPolicyOptions = [
-  { value: "7-day return", label: "7-day return" },
-  { value: "30-day return", label: "30-day return" },
-  { value: "No return", label: "No return" },
-];
 

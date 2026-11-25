@@ -82,7 +82,7 @@ export interface Product {
   variants: Variant[];
    imageUrl: string;
    
-   hsnId?: number;
+   hsnCode?: number;
 gstRateId?: number;
 
 hsn?: {
