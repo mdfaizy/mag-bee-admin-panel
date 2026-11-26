@@ -6253,7 +6253,17 @@ const EditProductPage: React.FC = () => {
       productData.append("codAvailable", String(formState.data.codAvailable ?? false));
       productData.append("skuCode", formState.data.skuCode?.trim() || "");
 
-      Object.entries(policyToPayload(policy)).forEach(([key, value]) => productData.append(key, value));
+      // Object.entries(policyToPayload(policy)).forEach(([key, value]) => productData.append(key, value));
+      Object.entries(policyToPayload(policy)).forEach(([key, value]) => {
+  const normalizedValue =
+    value === "true"
+      ? "1"
+      : value === "false"
+        ? "0"
+        : String(value ?? "");
+
+  productData.append(key, normalizedValue);
+});
 
       productData.append("cancelable", String(formState.data.cancelable ?? true));
       productData.append("warrantyInfo", formState.data.warrantyInfo?.trim() || "");
