@@ -79,7 +79,7 @@ const navItems: NavItem[] = [
     subItems: [{ name: "Ecommerce", path: "/", pro: false }],
   },
 {
-  name: "Ecommerce",
+  name: "Products",
   icon: <FaShoppingCart />,
   permissions: ["VIEW_PRODUCT"],
   subItems: [
@@ -175,8 +175,30 @@ const navItems: NavItem[] = [
   subItems: [
     { name: "GST Rates",  path: "/gst/rates/create",},
     { name: "GST Rates List",  path: "/gst/rates",},
-    {name: "HSN List",path: "/gst/hsn/create",},
-    { name: "HSN Master List", path: "/gst/hsn",},
+  ],
+},
+
+{
+  name: "Shipping",
+  icon: <LuFileText />,
+  subItems: [
+    {
+      name: "Shipping List",
+      path: "/settings/shipping",
+      pro: false,
+    },
+  ],
+},
+
+{
+  name: "Enquiry",
+  icon: <LuFileText />,
+  subItems: [
+    {
+      name: "Enquiry List",
+      path: "/enquiries",
+      pro: false,
+    },
   ],
 },
   // 
