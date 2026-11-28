@@ -2,7 +2,7 @@ import { toast } from "react-toastify";
 import { apiConnector } from "@/services/apiConnector";
 import { BASE_URL, endPointSubCategory } from "../apis";
 
-const { CREATE_SUB_CATEGORY, SUB_CATEGORY_GELL_ALL, UPDATE_SUB_CATEGORY } = endPointSubCategory;
+const { CREATE_SUB_CATEGORY, SUB_CATEGORY_GELL_ALL, UPDATE_SUB_CATEGORY ,DELETE_SUB_CATEGORY} = endPointSubCategory;
 
 interface CreateCategoryParams {
   formData: FormData;
@@ -19,7 +19,6 @@ export const createSubCategory  = async ({ formData, router }: CreateCategoryPar
       CREATE_SUB_CATEGORY,
       formData,
     );
-
     // Remove this
       toast.success("SubCategory Created Successfully");
     router.push("/"); // redirect after creation
@@ -116,3 +115,19 @@ export async function fetchChildSubCategories(parentId: number) {
   }
 }
 
+
+export const deleteSubCategoryById = async (id: number | string) => {
+  const toastId = toast.loading("Deleting SubCategory...");
+
+  try {
+    const res = await apiConnector("DELETE",`${DELETE_SUB_CATEGORY}/${id}`);
+    toast.success("SubCategory deleted successfully!");
+    return res.data;
+  } catch (err: any) {
+    const errMessage=err.response?.data?.message|| err.message ||"SubCategory deletion failed.";
+    toast.error(errMessage);
+    throw err;
+  } finally {
+    toast.dismiss(toastId);
+  }
+};

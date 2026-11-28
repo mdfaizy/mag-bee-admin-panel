@@ -48,6 +48,7 @@ export const endPointSubCategory={
   CREATE_SUB_CATEGORY:`${BASE_URL}/subcategories`,
   SUB_CATEGORY_GELL_ALL:`${BASE_URL}/subcategories`,
   UPDATE_SUB_CATEGORY:`${BASE_URL}/subcategories`,
+  DELETE_SUB_CATEGORY: "/subcategories"
 
 }
 
